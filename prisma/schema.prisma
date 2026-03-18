@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  role      String   // 'student' or 'teacher'
+  avatar    String?
+  stars     Int?     @default(0)
+  className String?
+
+  conversations Participant[]
+  messages      Message[]
+}
+
+model Course {
+  id            String   @id @default(uuid())
+  title         String
+  color         String
+  icon          String
+  teacher       String
+  studentsCount Int      @default(0)
+  progress      Int?
+  description   String?
+
+  assignments   Assignment[]
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  title       String
+  courseId    String
+  courseName  String
+  dueDate     String
+  starsReward Int      @default(0)
+  status      String   // 'pending' | 'submitted' | 'graded'
+  type        String   // 'quiz' | 'drawing' | 'reading' | 'writing'
+  description String?
+
+  course      Course   @relation(fields: [courseId], references: [id])
+}
+
+model Reward {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  icon        String
+  color       String
+  dateEarned  String
+}
+
+model Conversation {
+  id          String   @id @default(uuid())
+  unreadCount Int      @default(0)
+  
+  participants Participant[]
+  messages     Message[]
+}
+
+model Participant {
+  id             String       @id @default(uuid())
+  userId         String
+  conversationId String
+
+  user           User         @relation(fields: [userId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  
+  @@unique([userId, conversationId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String
+  timestamp      String
+  isRead         Boolean      @default(false)
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  sender         User         @relation(fields: [senderId], references: [id])
+}
