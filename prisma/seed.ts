@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -14,13 +15,15 @@ async function main() {
   await prisma.reward.deleteMany();
   await prisma.user.deleteMany();
 
+  const hashedPassword = await bcrypt.hash("123456", 10);
+
   // Create Users
   const studentAn = await prisma.user.create({
-    data: { id: "stu1", name: "Bé An", email: "hocsinh@gmail.com", role: "student", stars: 120, className: "Lớp 3A" }
+    data: { id: "stu1", name: "Bé An", email: "hocsinh@gmail.com", password: hashedPassword, role: "student", stars: 120, className: "Lớp 3A" }
   });
 
   const teacherDiep = await prisma.user.create({
-    data: { id: "t1", name: "Cô Nguyễn Thị Ngọc Điệp", email: "ngocdiep@gmail.com", role: "teacher", className: "Tất cả các môn" }
+    data: { id: "t1", name: "Cô Nguyễn Thị Ngọc Điệp", email: "ngocdiep@gmail.com", password: hashedPassword, role: "teacher", className: "Tất cả các môn" }
   });
 
   // Create Courses

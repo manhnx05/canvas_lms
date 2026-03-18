@@ -14,6 +14,7 @@ model User {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
+  password  String
   otp       String?
   role      String   // 'student' or 'teacher'
   avatar    String?
