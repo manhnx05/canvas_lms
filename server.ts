@@ -103,6 +103,54 @@ async function startServer() {
     });
   });
 
+  app.post("/api/conversations/:id/messages", async (req, res) => {
+    const { senderId, content } = req.body;
+    const message = await prisma.message.create({
+      data: {
+        content,
+        senderId,
+        conversationId: req.params.id,
+        timestamp: "Vừa xong"
+      },
+      include: { sender: true }
+    });
+
+    await prisma.conversation.update({
+      where: { id: req.params.id },
+      data: { unreadCount: { increment: 1 } }
+    });
+
+    res.json({
+      id: message.id,
+      senderId: message.senderId,
+      senderName: message.sender.name,
+      senderRole: message.sender.role,
+      content: message.content,
+      timestamp: message.timestamp,
+      isRead: message.isRead
+    });
+  });
+
+  app.post("/api/assignments/:id/submit", async (req, res) => {
+    const assignment = await prisma.assignment.update({
+      where: { id: req.params.id },
+      data: { status: 'submitted' }
+    });
+    res.json(assignment);
+  });
+
+  app.post("/api/assignments/:id/grade", async (req, res) => {
+    const { stars } = req.body;
+    const assignment = await prisma.assignment.update({
+      where: { id: req.params.id },
+      data: { 
+        status: 'graded',
+        starsReward: parseInt(stars) || 0
+      }
+    });
+    res.json(assignment);
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

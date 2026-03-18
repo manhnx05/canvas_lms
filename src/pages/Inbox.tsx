@@ -31,20 +31,24 @@ export function Inbox({ role }: { role: Role }) {
     }
   }, [activeConv]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim() || !activeConv) return;
-    const newMsg: Message = {
-      id: Date.now().toString(),
-      senderId: role,
-      senderName: role === 'student' ? 'Bé An (Bạn)' : 'Cô Lan (Bạn)',
-      senderRole: role,
-      content: input,
-      timestamp: 'Vừa xong',
-      isRead: true
-    };
-    setMessages([...messages, newMsg]);
+    
+    const content = input;
     setInput("");
-    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    
+    try {
+      const res = await fetch(`/api/conversations/${activeConv.id}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senderId: role === 'student' ? 'stu1' : 't1', content })
+      });
+      const newMsg = await res.json();
+      setMessages([...messages, newMsg]);
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch (e) {
+      console.error("Lỗi gửi tin nhắn", e);
+    }
   };
 
   if (loading) return <div className="flex justify-center p-12"><div className="animate-spin w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full"></div></div>;
