@@ -1,34 +1,61 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Users, Star } from 'lucide-react';
+import { BookOpen, Users, Star, X } from 'lucide-react';
 import { Role, Course } from '../types';
 
 export function Courses({ role }: { role: Role }) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  
+  // Form states
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [color, setColor] = useState('bg-blue-500');
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const fetchCourses = () => {
     fetch('/api/courses')
       .then(res => res.json())
-      .then(data => {
-        setCourses(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Failed to fetch courses", err);
-        setLoading(false);
-      });
+      .then(data => { setCourses(data); setLoading(false); })
+      .catch(err => { console.error("Failed to fetch courses", err); setLoading(false); });
+  };
+
+  useEffect(() => {
+    fetchCourses();
   }, []);
+
+  const handleCreateCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title, description, color, icon: 'BookOpen'
+        })
+      });
+      if (res.ok) {
+        setIsCreating(false);
+        setTitle(''); setDescription(''); setColor('bg-blue-500');
+        fetchCourses();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-extrabold text-sky-900">{role === 'student' ? 'Môn Học Của Bé' : 'Quản Lý Lớp Học'}</h1>
         {role === 'teacher' && (
-          <button className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2.5 rounded-xl font-bold transition-colors shadow-sm shadow-sky-200">
+          <button 
+            onClick={() => setIsCreating(true)}
+            className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2.5 rounded-xl font-bold transition-colors shadow-sm shadow-sky-200"
+          >
             + Tạo lớp mới
           </button>
         )}
@@ -85,6 +112,40 @@ export function Courses({ role }: { role: Role }) {
           </div>
         ))}
       </div>
+
+      {isCreating && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden p-6 relative">
+            <button onClick={() => setIsCreating(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors">
+              <X className="w-6 h-6" />
+            </button>
+            <h2 className="text-2xl font-extrabold text-sky-900 mb-6">Tạo Lớp Học Mới</h2>
+            
+            <form onSubmit={handleCreateCourse} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Tên môn học</label>
+                <input required value={title} onChange={e=>setTitle(e.target.value)} type="text" className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 outline-none focus:border-sky-500 font-medium" placeholder="VD: Lập trình Cơ bản" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Mô tả tóm tắt</label>
+                <textarea required value={description} onChange={e=>setDescription(e.target.value)} rows={3} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 outline-none focus:border-sky-500 font-medium whitespace-pre-wrap" placeholder="Giới thiệu về môn học..." />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Màu chủ đạo</label>
+                <div className="flex gap-3">
+                  {['bg-blue-500', 'bg-rose-500', 'bg-emerald-500', 'bg-amber-500', 'bg-indigo-500', 'bg-purple-500'].map(c => (
+                    <button type="button" key={c} onClick={() => setColor(c)} className={`w-8 h-8 rounded-full ${c} ${color === c ? 'ring-4 ring-offset-2 ring-sky-300' : ''}`} />
+                  ))}
+                </div>
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setIsCreating(false)} className="flex-1 px-4 py-2.5 font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">Hủy</button>
+                <button type="submit" className="flex-1 px-4 py-2.5 font-bold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-colors shadow-lg shadow-sky-500/30">Lưu Lớp Học</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

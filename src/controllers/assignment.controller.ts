@@ -49,3 +49,19 @@ export const gradeAssignment = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Lỗi chấm bài' });
   }
 };
+
+export const createAssignment = async (req: Request, res: Response) => {
+  try {
+    const { title, courseId, courseName, dueDate, starsReward, type, description } = req.body;
+    const assignment = await prisma.assignment.create({
+      data: {
+        title, courseId, courseName, dueDate, type, description,
+        starsReward: parseInt(starsReward) || 0,
+        status: 'pending'
+      }
+    });
+    res.status(201).json(assignment);
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi giao bài tập' });
+  }
+};

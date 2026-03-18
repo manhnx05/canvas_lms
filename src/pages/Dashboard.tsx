@@ -9,6 +9,7 @@ export function Dashboard({ role }: { role: Role }) {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
 
   useEffect(() => {
     Promise.all([
@@ -57,7 +58,7 @@ export function Dashboard({ role }: { role: Role }) {
             </div>
             <div>
               <p className="text-sm font-bold text-sky-500 uppercase tracking-wider">Điểm Thưởng</p>
-              <p className="text-3xl font-extrabold text-sky-900">120 <span className="text-lg text-sky-400 font-semibold">Sao</span></p>
+              <p className="text-3xl font-extrabold text-sky-900">{user.stars || 0} <span className="text-lg text-sky-400 font-semibold">Sao</span></p>
             </div>
           </div>
           <div className="bg-white p-6 rounded-3xl border-2 border-sky-100 shadow-sm flex items-center gap-5 hover:border-sky-300 transition-colors cursor-pointer">
@@ -75,7 +76,10 @@ export function Dashboard({ role }: { role: Role }) {
             </div>
             <div>
               <p className="text-sm font-bold text-sky-500 uppercase tracking-wider">Hoàn Thành</p>
-              <p className="text-3xl font-extrabold text-sky-900">85<span className="text-lg text-sky-400 font-semibold">%</span></p>
+              <p className="text-3xl font-extrabold text-sky-900">
+                {assignments.length > 0 ? Math.round((assignments.filter(a => a.status === 'graded').length / assignments.length) * 100) : 0}
+                <span className="text-lg text-sky-400 font-semibold">%</span>
+              </p>
             </div>
           </div>
         </div>

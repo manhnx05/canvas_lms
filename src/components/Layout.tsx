@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut } from 'lucide-react';
 import { Role } from '../types';
 
-export function Layout({ role, onLogout }: { role: Role, onLogout: () => void }) {
+export function Layout({ role, onLogout, children }: { role: Role, onLogout: () => void, children?: React.ReactNode }) {
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
 
@@ -96,7 +96,7 @@ export function Layout({ role, onLogout }: { role: Role, onLogout: () => void })
 
         <div className="flex-1 overflow-auto p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
-            <Outlet />
+            {children || <Outlet />}
           </div>
         </div>
       </main>

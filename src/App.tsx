@@ -7,6 +7,7 @@ import { Assignments } from './pages/Assignments';
 import { Inbox } from './pages/Inbox';
 import { CourseDetail } from './pages/CourseDetail';
 import { AssignmentDetail } from './pages/AssignmentDetail';
+import { Rewards } from './pages/Rewards';
 import { Login } from './pages/Login';
 import { Role } from './types';
 
@@ -44,6 +45,7 @@ function App() {
           <Route path="/assignments" element={<Assignments role={role} />} />
           <Route path="/assignments/:id" element={<AssignmentDetail role={role} />} />
           <Route path="/inbox" element={<Inbox role={role} />} />
+          <Route path="/rewards" element={<Rewards role={role} />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Layout>
