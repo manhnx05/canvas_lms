@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PenTool, Star, Clock, CheckCircle, AlertCircle, Search, Filter } from 'lucide-react';
 import { Role, Assignment } from '../types';
 
 export function Assignments({ role }: { role: Role }) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch('/api/assignments')
@@ -19,9 +21,7 @@ export function Assignments({ role }: { role: Role }) {
       });
   }, []);
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
-  }
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
 
   return (
     <div className="space-y-8">
@@ -51,7 +51,7 @@ export function Assignments({ role }: { role: Role }) {
       <div className="bg-white rounded-3xl border-2 border-sky-100 shadow-sm overflow-hidden">
         <div className="grid grid-cols-1 divide-y-2 divide-sky-50">
           {assignments.map(assignment => (
-            <div key={assignment.id} className="p-6 flex flex-col md:flex-row md:items-center gap-6 hover:bg-sky-50/50 transition-colors group">
+            <div key={assignment.id} onClick={() => navigate(`/assignments/${assignment.id}`)} className="cursor-pointer p-6 flex flex-col md:flex-row md:items-center gap-6 hover:bg-sky-50/50 transition-colors group">
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${
                 assignment.status === 'pending' ? 'bg-amber-100 text-amber-500' : 
                 assignment.status === 'submitted' ? 'bg-sky-100 text-sky-500' : 'bg-emerald-100 text-emerald-500'
@@ -80,27 +80,27 @@ export function Assignments({ role }: { role: Role }) {
               <div className="flex items-center gap-3 shrink-0">
                 {role === 'student' ? (
                   assignment.status === 'pending' ? (
-                    <button className="w-full md:w-auto bg-amber-400 hover:bg-amber-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-sm shadow-amber-200">
+                    <div className="w-full md:w-auto bg-amber-400 hover:bg-amber-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-sm shadow-amber-200 text-center">
                       Làm bài ngay
-                    </button>
+                    </div>
                   ) : assignment.status === 'submitted' ? (
-                    <span className="px-6 py-3 bg-sky-100 text-sky-600 rounded-xl font-bold border-2 border-sky-200">
+                    <span className="px-6 py-3 bg-sky-100 text-sky-600 rounded-xl font-bold border-2 border-sky-200 text-center">
                       Đang chờ chấm
                     </span>
                   ) : (
-                    <span className="px-6 py-3 bg-emerald-100 text-emerald-600 rounded-xl font-bold border-2 border-emerald-200 flex items-center gap-2">
+                    <span className="px-6 py-3 bg-emerald-100 text-emerald-600 rounded-xl font-bold border-2 border-emerald-200 flex items-center gap-2 justify-center">
                       <CheckCircle className="w-5 h-5" /> Đã hoàn thành
                     </span>
                   )
                 ) : (
                   assignment.status === 'submitted' ? (
-                    <button className="w-full md:w-auto bg-rose-500 hover:bg-rose-600 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-sm shadow-rose-200">
+                    <div className="w-full md:w-auto bg-rose-500 hover:bg-rose-600 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-sm shadow-rose-200 text-center">
                       Chấm bài
-                    </button>
+                    </div>
                   ) : (
-                    <button className="w-full md:w-auto bg-sky-50 hover:bg-sky-100 text-sky-600 px-8 py-3 rounded-xl font-bold transition-colors border-2 border-sky-100">
+                    <div className="w-full md:w-auto bg-sky-50 hover:bg-sky-100 text-sky-600 px-8 py-3 rounded-xl font-bold transition-colors border-2 border-sky-100 text-center">
                       Xem chi tiết
-                    </button>
+                    </div>
                   )
                 )}
               </div>

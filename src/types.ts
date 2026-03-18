@@ -4,7 +4,7 @@ export interface User {
   id: string;
   name: string;
   role: Role;
-  avatar: string;
+  avatar?: string;
   stars?: number;
   className?: string;
 }
@@ -17,6 +17,7 @@ export interface Course {
   teacher: string;
   studentsCount: number;
   progress?: number;
+  description?: string;
 }
 
 export interface Assignment {
@@ -28,6 +29,7 @@ export interface Assignment {
   starsReward: number;
   status: 'pending' | 'submitted' | 'graded';
   type: 'quiz' | 'drawing' | 'reading' | 'writing';
+  description?: string;
 }
 
 export interface Reward {
@@ -37,4 +39,22 @@ export interface Reward {
   icon: string;
   color: string;
   dateEarned: string;
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: Role;
+  senderAvatar?: string;
+  content: string;
+  timestamp: string;
+  isRead: boolean;
+}
+
+export interface Conversation {
+  id: string;
+  participants: User[];
+  lastMessage: Message;
+  unreadCount: number;
 }

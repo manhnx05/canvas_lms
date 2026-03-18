@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen, Users, Star } from 'lucide-react';
 import { Role, Course } from '../types';
 
 export function Courses({ role }: { role: Role }) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch('/api/courses')
@@ -19,9 +21,7 @@ export function Courses({ role }: { role: Role }) {
       });
   }, []);
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
-  }
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
 
   return (
     <div className="space-y-8">
@@ -36,7 +36,7 @@ export function Courses({ role }: { role: Role }) {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {courses.map(course => (
-          <div key={course.id} className="bg-white rounded-3xl border-2 border-sky-100 shadow-sm overflow-hidden hover:shadow-lg hover:border-sky-300 transition-all cursor-pointer group flex flex-col h-full">
+          <div key={course.id} onClick={() => navigate(`/courses/${course.id}`)} className="bg-white rounded-3xl border-2 border-sky-100 shadow-sm overflow-hidden hover:shadow-lg hover:border-sky-300 transition-all cursor-pointer group flex flex-col h-full">
             <div className={`h-36 ${course.color} p-6 flex flex-col justify-between relative overflow-hidden shrink-0`}>
               <div className="absolute right-[-20px] bottom-[-20px] opacity-20 transform rotate-12 group-hover:scale-110 transition-transform duration-500">
                 <BookOpen className="w-40 h-40 text-white" />
@@ -73,12 +73,12 @@ export function Courses({ role }: { role: Role }) {
                 </div>
               ) : (
                 <div className="mt-auto flex gap-3">
-                  <button className="flex-1 bg-sky-50 hover:bg-sky-100 text-sky-600 font-bold py-2.5 rounded-xl transition-colors border-2 border-sky-100">
+                  <div className="flex-1 bg-sky-50 hover:bg-sky-100 text-sky-600 text-center font-bold py-2.5 rounded-xl transition-colors border-2 border-sky-100">
                     Sửa
-                  </button>
-                  <button className="flex-1 bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 rounded-xl transition-colors shadow-sm shadow-sky-200">
+                  </div>
+                  <div className="flex-1 bg-sky-500 hover:bg-sky-600 text-white text-center font-bold py-2.5 rounded-xl transition-colors shadow-sm shadow-sky-200">
                     Vào lớp
-                  </button>
+                  </div>
                 </div>
               )}
             </div>

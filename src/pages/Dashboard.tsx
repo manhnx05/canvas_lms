@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, CheckCircle, AlertCircle, Star, Trophy, Users, FileText, TrendingUp } from 'lucide-react';
 import { Role, Course, Assignment } from '../types';
 
@@ -7,6 +8,7 @@ export function Dashboard({ role }: { role: Role }) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     Promise.all([
@@ -42,7 +44,6 @@ export function Dashboard({ role }: { role: Role }) {
               : 'Hôm nay cô có 12 bài tập cần chấm và 3 lớp học sắp diễn ra.'}
           </p>
         </div>
-        {/* Decorative elements */}
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
         <div className="absolute bottom-0 right-20 -mb-10 w-32 h-32 bg-white opacity-10 rounded-full blur-xl"></div>
       </div>
@@ -120,16 +121,15 @@ export function Dashboard({ role }: { role: Role }) {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Column */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-extrabold text-sky-900">{role === 'student' ? 'Môn Học Của Bé' : 'Lớp Học Đang Dạy'}</h2>
-            <button className="text-sky-600 font-bold hover:text-sky-800">Xem tất cả</button>
+            <button onClick={() => navigate('/courses')} className="text-sky-600 font-bold hover:text-sky-800">Xem tất cả</button>
           </div>
           
           <div className="grid sm:grid-cols-2 gap-6">
             {courses.slice(0, 4).map(course => (
-              <div key={course.id} className="bg-white rounded-3xl border-2 border-sky-100 shadow-sm overflow-hidden hover:shadow-md hover:border-sky-300 transition-all cursor-pointer group transform hover:-translate-y-1">
+              <div key={course.id} onClick={() => navigate(`/courses/${course.id}`)} className="bg-white rounded-3xl border-2 border-sky-100 shadow-sm overflow-hidden hover:shadow-md hover:border-sky-300 transition-all cursor-pointer group transform hover:-translate-y-1">
                 <div className={`h-28 ${course.color} p-5 flex flex-col justify-between relative overflow-hidden`}>
                   <div className="absolute right-[-20px] bottom-[-20px] opacity-20 transform rotate-12">
                     <BookOpen className="w-32 h-32 text-white" />
@@ -159,12 +159,11 @@ export function Dashboard({ role }: { role: Role }) {
           </div>
         </div>
 
-        {/* Sidebar Column */}
         <div className="space-y-6">
           <h2 className="text-2xl font-extrabold text-sky-900">{role === 'student' ? 'Nhiệm Vụ Cần Làm' : 'Cần Chấm Điểm'}</h2>
           <div className="bg-white rounded-3xl border-2 border-sky-100 shadow-sm p-2">
             {assignments.filter(a => role === 'student' ? a.status === 'pending' : a.status === 'submitted').map((task) => (
-              <div key={task.id} className="flex gap-4 items-center p-4 hover:bg-sky-50 rounded-2xl transition-colors cursor-pointer group">
+              <div key={task.id} onClick={() => navigate(`/assignments/${task.id}`)} className="flex gap-4 items-center p-4 hover:bg-sky-50 rounded-2xl transition-colors cursor-pointer group">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
                   task.dueDate.includes('Hôm nay') ? 'bg-rose-100 text-rose-500' : 'bg-amber-100 text-amber-500'
                 }`}>
