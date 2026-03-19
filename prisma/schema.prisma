@@ -21,6 +21,7 @@ model User {
   conversations Participant[]
   messages      Message[]
   enrollments   Enrollment[]
+  notifications Notification[]
 }
 
 model Course {
@@ -119,4 +120,15 @@ model Message {
 
   conversation   Conversation @relation(fields: [conversationId], references: [id])
   sender         User         @relation(fields: [senderId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  content   String
+  date      String
+  isRead    Boolean  @default(false)
+
+  user      User     @relation(fields: [userId], references: [id])
 }

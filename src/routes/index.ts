@@ -5,6 +5,7 @@ import conversationRoutes from './conversation.routes';
 import rewardRoutes from './reward.routes';
 import teacherRoutes from './teacher.routes';
 import authRoutes from './auth.routes';
+import notificationRoutes from './notification.routes';
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.use('/conversations', conversationRoutes);
 router.use('/rewards', rewardRoutes);
 router.use('/teacher', teacherRoutes);
 router.use('/auth', authRoutes);
+router.use('/notifications', notificationRoutes);
 
 export default router;

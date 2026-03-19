@@ -127,3 +127,24 @@ export const forgotPasswordConfirm = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Lỗi xác nhận đổi mật khẩu' });
   }
 };
+
+// 6. Update Profile
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const { email, name, avatar, className } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.status(404).json({ error: 'Không tìm thấy người dùng' });
+
+    const updated = await prisma.user.update({
+      where: { email },
+      data: { name, avatar, className }
+    });
+
+    res.json({
+      message: 'Cập nhật thành công',
+      user: { id: updated.id, name: updated.name, email: updated.email, role: updated.role, avatar: updated.avatar, className: updated.className }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi cập nhật hồ sơ' });
+  }
+};

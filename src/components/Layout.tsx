@@ -71,17 +71,19 @@ export function Layout({ role, onLogout, children }: { role: Role, onLogout: () 
           </div>
           
           <div className="flex items-center gap-6">
-            <button className="p-2.5 hover:bg-sky-100 rounded-full relative text-sky-600 transition-colors">
+            <Link to="/notifications" className="p-2.5 hover:bg-sky-100 rounded-full relative text-sky-600 transition-colors">
               <Bell className="w-6 h-6" />
               <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
-            </button>
+            </Link>
             
             <div className="flex items-center gap-4 pl-6 border-l-2 border-sky-100">
-              <div className="hidden md:flex flex-col items-end">
-                <p className="text-sm font-bold text-sky-900">{user.name}</p>
+              <Link to="/profile" className="hidden md:flex flex-col items-end hover:bg-sky-50 px-3 py-1 rounded-xl transition-colors cursor-pointer group">
+                <p className="text-sm font-bold text-sky-900 group-hover:text-sky-700">{user.name}</p>
                 <p className="text-xs font-semibold text-sky-500">{user.email}</p>
-              </div>
-              <img src={role === 'student' ? 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4' : 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mia&backgroundColor=ffdfbf'} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-sky-200 bg-sky-100" />
+              </Link>
+              <Link to="/profile">
+                <img src={user.avatar || (role === 'student' ? 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4' : 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mia&backgroundColor=ffdfbf')} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-sky-200 bg-sky-100 hover:ring-2 ring-sky-300 transition-all" />
+              </Link>
               
               <button 
                 onClick={onLogout} 

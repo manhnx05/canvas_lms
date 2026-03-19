@@ -58,3 +58,12 @@ export interface Conversation {
   lastMessage: Message;
   unreadCount: number;
 }
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  date: string;
+  isRead: boolean;
+}
