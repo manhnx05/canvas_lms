@@ -8,9 +8,12 @@ import authRoutes from './auth.routes';
 import notificationRoutes from './notification.routes';
 import userRoutes from './user.routes';
 
+import aiRoutes from './ai.routes';
+
 const router = Router();
 
 router.get('/health', (req, res) => res.json({ status: "ok" }));
+router.use('/ai', aiRoutes);
 router.use('/courses', courseRoutes);
 router.use('/assignments', assignmentRoutes);
 router.use('/conversations', conversationRoutes);

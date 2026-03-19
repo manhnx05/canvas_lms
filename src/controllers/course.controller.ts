@@ -17,7 +17,10 @@ export const getCourseById = async (req: Request, res: Response) => {
       include: { 
         assignments: { orderBy: { id: 'desc' } },
         announcements: { orderBy: { id: 'desc' } },
-        lectures: { orderBy: { id: 'asc' } },
+        modules: {
+          orderBy: { order: 'asc' },
+          include: { items: { orderBy: { order: 'asc' } } }
+        },
         enrollments: {
           include: { user: { select: { id: true, name: true, email: true, role: true, avatar: true } } }
         }
@@ -66,18 +69,6 @@ export const postAnnouncement = async (req: Request, res: Response) => {
   }
 };
 
-export const postLecture = async (req: Request, res: Response) => {
-  try {
-    const { title, content } = req.body;
-    const lecture = await prisma.lecture.create({
-      data: { title, content, courseId: req.params.id }
-    });
-    res.status(201).json(lecture);
-  } catch (error) {
-    res.status(500).json({ error: 'Lỗi thêm bài giảng' });
-  }
-};
-
 export const updateAnnouncement = async (req: Request, res: Response) => {
   try {
     const { title, content } = req.body;
@@ -96,20 +87,79 @@ export const deleteAnnouncement = async (req: Request, res: Response) => {
   } catch (error) { res.status(500).json({ error: 'Lỗi xóa thông báo' }); }
 };
 
-export const updateLecture = async (req: Request, res: Response) => {
+export const createModule = async (req: Request, res: Response) => {
   try {
-    const { title, content } = req.body;
-    const lec = await prisma.lecture.update({
-      where: { id: req.params.lectureId },
-      data: { title, content }
+    const { title } = req.body;
+    
+    // Find highest order
+    const maxMod = await prisma.courseModule.findFirst({
+      where: { courseId: req.params.id },
+      orderBy: { order: 'desc' }
     });
-    res.json(lec);
-  } catch (error) { res.status(500).json({ error: 'Lỗi sửa bài giảng' }); }
+    
+    const nextOrder = maxMod ? maxMod.order + 1 : 0;
+
+    const mod = await prisma.courseModule.create({
+      data: { title, order: nextOrder, courseId: req.params.id },
+      include: { items: true }
+    });
+    res.status(201).json(mod);
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi tạo module' });
+  }
 };
 
-export const deleteLecture = async (req: Request, res: Response) => {
+export const createModuleItem = async (req: Request, res: Response) => {
   try {
-    await prisma.lecture.delete({ where: { id: req.params.lectureId } });
+    const { title, type, url, content } = req.body;
+    const moduleId = req.params.moduleId;
+    
+    const maxItem = await prisma.moduleItem.findFirst({
+      where: { moduleId },
+      orderBy: { order: 'desc' }
+    });
+    
+    const nextOrder = maxItem ? maxItem.order + 1 : 0;
+
+    const item = await prisma.moduleItem.create({
+      data: { title, type, url, content, order: nextOrder, moduleId }
+    });
+    res.status(201).json(item);
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi thêm nội dung' });
+  }
+};
+
+export const reorderModuleItems = async (req: Request, res: Response) => {
+  try {
+    const { items } = req.body; // array of { id, order }
+
+    // Dùng transaction bulk update
+    await prisma.$transaction(
+      items.map((item: any) =>
+        prisma.moduleItem.update({
+          where: { id: item.id },
+          data: { order: item.order }
+        })
+      )
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi sắp xếp module items' });
+  }
+};
+
+export const deleteModule = async (req: Request, res: Response) => {
+  try {
+    await prisma.courseModule.delete({ where: { id: req.params.moduleId } });
     res.json({ message: 'Deleted' });
-  } catch (error) { res.status(500).json({ error: 'Lỗi xóa bài giảng' }); }
+  } catch (error) { res.status(500).json({ error: 'Lỗi xóa module' }); }
+};
+
+export const deleteModuleItem = async (req: Request, res: Response) => {
+  try {
+    await prisma.moduleItem.delete({ where: { id: req.params.itemId } });
+    res.json({ message: 'Deleted' });
+  } catch (error) { res.status(500).json({ error: 'Lỗi xóa nội dung' }); }
 };

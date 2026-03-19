@@ -13,7 +13,8 @@ async function main() {
   await prisma.assignment.deleteMany();
   await prisma.enrollment.deleteMany();
   await prisma.announcement.deleteMany();
-  await prisma.lecture.deleteMany();
+  await prisma.moduleItem.deleteMany();
+  await prisma.courseModule.deleteMany();
   await prisma.course.deleteMany();
   await prisma.reward.deleteMany();
   await prisma.user.deleteMany();
@@ -46,10 +47,36 @@ async function main() {
     ]
   });
 
-  // Create Lectures
-  await prisma.lecture.create({ data: { title: "Bài 1: Phép cộng trong phạm vi 10", content: "Các con hãy chú ý cách đếm ngón tay nhé.", courseId: "c1" }});
-  await prisma.lecture.create({ data: { title: "Bài 2: Nhận biết hình học", content: "Phân biệt hình vuông, hình tròn, hình tam giác.", courseId: "c1" }});
-  await prisma.lecture.create({ data: { title: "Tập đọc: Cháu nghe chú đánh đàn", content: "Đọc to rõ chữ, ngắt nhịp đúng chỗ.", courseId: "c2" }});
+  // Thay vì thêm Lecture, ta thêm CourseModule và ModuleItem
+  console.log('Seeding modules...');
+  for (const course of [c1, c2, c3]) {
+    const mod = await prisma.courseModule.create({
+      data: {
+        title: 'Tuần 01 - Giới thiệu Môn học',
+        order: 0,
+        courseId: course.id,
+      }
+    });
+    
+    await prisma.moduleItem.createMany({
+      data: [
+        {
+          title: 'Bài giảng chuẩn SCORM',
+          type: 'elearning',
+          url: 'https://example.com/elearning',
+          order: 0,
+          moduleId: mod.id
+        },
+        {
+          title: 'Tài liệu đọc thêm (PDF)',
+          type: 'file',
+          url: 'https://example.com/document.pdf',
+          order: 1,
+          moduleId: mod.id
+        }
+      ]
+    });
+  }
 
   // Create Announcements
   await prisma.announcement.create({ data: { title: "Chào mừng các con đến với môn Toán!", content: "Hôm nay chúng ta sẽ bắt đầu học chuyên đề mới nhé. Mọi người chú ý làm bài đầy đủ.", date: "15/03/2026", courseId: "c1" }});

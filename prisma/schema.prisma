@@ -22,6 +22,7 @@ model User {
   messages      Message[]
   enrollments   Enrollment[]
   notifications Notification[]
+  submissions   Submission[]
 }
 
 model Course {
@@ -35,17 +36,29 @@ model Course {
   description   String?
 
   assignments   Assignment[]
-  lectures      Lecture[]
+  modules       CourseModule[]
   announcements Announcement[]
   enrollments   Enrollment[]
 }
 
-model Lecture {
-  id        String   @id @default(uuid())
+model CourseModule {
+  id        String       @id @default(uuid())
   title     String
-  content   String
+  order     Int          @default(0)
   courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
+  course    Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  items     ModuleItem[]
+}
+
+model ModuleItem {
+  id        String       @id @default(uuid())
+  title     String
+  type      String       // 'file' | 'link' | 'page' | 'elearning'
+  url       String?
+  content   String?
+  order     Int          @default(0)
+  moduleId  String
+  module    CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 }
 
 model Announcement {
@@ -78,8 +91,26 @@ model Assignment {
   status      String   // 'pending' | 'submitted' | 'graded'
   type        String   // 'quiz' | 'drawing' | 'reading' | 'writing'
   description String?
+  questions   Json?    // Dành cho tự động ra đề
 
-  course      Course   @relation(fields: [courseId], references: [id])
+  course      Course       @relation(fields: [courseId], references: [id])
+  submissions Submission[]
+}
+
+model Submission {
+  id           String     @id @default(uuid())
+  assignmentId String
+  userId       String
+  answers      Json?
+  status       String     @default("submitted") // 'submitted' | 'graded'
+  score        Int?
+  aiFeedback   String?
+  timestamp    String?
+
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, userId])
 }
 
 model Reward {
