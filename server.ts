@@ -1,4 +1,6 @@
 import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import apiRoutes from "./src/routes";
@@ -27,7 +29,21 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  const httpServer = createServer(app);
+  const io = new Server(httpServer, {
+    cors: { origin: "*" }
+  });
+
+  app.set("io", io);
+
+  io.on("connection", (socket) => {
+    socket.on("join", (userId) => {
+      socket.join(userId);
+      console.log(`User ${userId} joined their room`);
+    });
+  });
+
+  httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }

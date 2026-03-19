@@ -62,8 +62,8 @@ model Enrollment {
   userId    String
   courseId  String
   
-  user      User     @relation(fields: [userId], references: [id])
-  course    Course   @relation(fields: [courseId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
 }
@@ -104,8 +104,8 @@ model Participant {
   userId         String
   conversationId String
 
-  user           User         @relation(fields: [userId], references: [id])
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   
   @@unique([userId, conversationId])
 }
@@ -118,8 +118,8 @@ model Message {
   timestamp      String
   isRead         Boolean      @default(false)
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
-  sender         User         @relation(fields: [senderId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
@@ -130,5 +130,5 @@ model Notification {
   date      String
   isRead    Boolean  @default(false)
 
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -6,6 +6,7 @@ import rewardRoutes from './reward.routes';
 import teacherRoutes from './teacher.routes';
 import authRoutes from './auth.routes';
 import notificationRoutes from './notification.routes';
+import userRoutes from './user.routes';
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.use('/rewards', rewardRoutes);
 router.use('/teacher', teacherRoutes);
 router.use('/auth', authRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/users', userRoutes);
 
 export default router;

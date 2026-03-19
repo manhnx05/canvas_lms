@@ -3,7 +3,13 @@ import prisma from '../lib/prisma';
 
 export const getConversations = async (req: Request, res: Response) => {
   try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
     const conversations = await prisma.conversation.findMany({
+      where: {
+        participants: { some: { userId: String(userId) } }
+      },
       include: {
         participants: { include: { user: true } },
         messages: { orderBy: { id: 'desc' }, take: 1 }
@@ -13,7 +19,7 @@ export const getConversations = async (req: Request, res: Response) => {
     const formatted = conversations.map(c => ({
       id: c.id,
       unreadCount: c.unreadCount,
-      participants: c.participants.map(p => p.user),
+      participants: c.participants.filter(p => p.userId !== userId).map(p => p.user),
       lastMessage: c.messages[0] || null
     }));
     
@@ -46,34 +52,87 @@ export const getMessages = async (req: Request, res: Response) => {
   }
 };
 
-export const sendMessage = async (req: Request, res: Response) => {
+  export const sendMessage = async (req: Request, res: Response) => {
   try {
     const { senderId, content } = req.body;
+    const conversationId = req.params.id;
+
     const message = await prisma.message.create({
       data: {
         content,
         senderId,
-        conversationId: req.params.id,
-        timestamp: "Vừa xong"
+        conversationId,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       },
       include: { sender: true }
     });
 
-    await prisma.conversation.update({
-      where: { id: req.params.id },
-      data: { unreadCount: { increment: 1 } }
+    const conversation = await prisma.conversation.update({
+      where: { id: conversationId },
+      data: { unreadCount: { increment: 1 } },
+      include: { participants: true }
     });
 
-    res.json({
+    const formattedMessage = {
       id: message.id,
       senderId: message.senderId,
       senderName: message.sender.name,
       senderRole: message.sender.role,
       content: message.content,
       timestamp: message.timestamp,
-      isRead: message.isRead
-    });
+      isRead: message.isRead,
+      conversationId: conversationId
+    };
+
+    // Emit socket event to all participants
+    const io = req.app.get('io');
+    if (io) {
+      conversation.participants.forEach(p => {
+        io.to(p.userId).emit('newMessage', formattedMessage);
+      });
+    }
+
+    res.json(formattedMessage);
   } catch (error) {
     res.status(500).json({ error: 'Lỗi gửi tin nhắn' });
+  }
+};
+
+export const createConversation = async (req: Request, res: Response) => {
+  try {
+    const { senderId, receiverId } = req.body;
+    if (!senderId || !receiverId) return res.status(400).json({ error: 'Missing users' });
+
+    // Check if conversation already exists
+    const existing = await prisma.conversation.findFirst({
+      where: {
+        AND: [
+          { participants: { some: { userId: senderId } } },
+          { participants: { some: { userId: receiverId } } }
+        ]
+      }
+    });
+
+    if (existing) return res.json(existing);
+
+    // Create new conversation with participants
+    const newConv = await prisma.conversation.create({
+      data: {
+        participants: {
+          create: [
+            { userId: senderId },
+            { userId: receiverId }
+          ]
+        }
+      },
+      include: {
+        participants: { include: { user: true } },
+        messages: true
+      }
+    });
+
+    res.json(newConv);
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi tạo tin nhắn mới' });
   }
 };

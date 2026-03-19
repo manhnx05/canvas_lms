@@ -1,22 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut } from 'lucide-react';
+import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Role } from '../types';
 
 export function Layout({ role, onLogout, children }: { role: Role, onLogout: () => void, children?: React.ReactNode }) {
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const studentNav = [
     { icon: Home, label: 'Bảng điều khiển', path: '/' },
     { icon: BookOpen, label: 'Môn học', path: '/courses' },
     { icon: PenTool, label: 'Bài tập', path: '/assignments' },
+    { icon: Users, label: 'Thành viên', path: '/students' },
     { icon: Trophy, label: 'Góc khen thưởng', path: '/rewards' },
   ];
 
   const teacherNav = [
     { icon: Home, label: 'Tổng quan', path: '/' },
-    { icon: Users, label: 'Lớp học', path: '/courses' },
+    { icon: BookOpen, label: 'Lớp học', path: '/courses' },
+    { icon: Users, label: 'Quản lý Học Sinh', path: '/students' },
     { icon: PenTool, label: 'Chấm bài', path: '/assignments' },
     { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
   ];
@@ -25,29 +28,37 @@ export function Layout({ role, onLogout, children }: { role: Role, onLogout: () 
 
   return (
     <div className="flex h-screen bg-sky-50 font-sans">
-      <aside className="w-20 lg:w-64 bg-white border-r border-sky-100 flex flex-col transition-all duration-300 shadow-sm z-10">
-        <div className="h-20 flex items-center justify-center lg:justify-start lg:px-6 border-b border-sky-100">
-          <div className="w-10 h-10 bg-amber-400 rounded-2xl flex items-center justify-center rotate-3 shadow-sm">
+      <aside className={`bg-white border-r border-sky-100 flex flex-col transition-all duration-300 shadow-sm z-20 relative ${isSidebarCollapsed ? 'w-20' : 'w-20 lg:w-64'}`}>
+        <button 
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+          className="absolute -right-3 top-24 bg-white border border-sky-200 text-sky-500 rounded-full p-1 shadow-sm hover:bg-sky-50 transition-colors z-30 hidden lg:block"
+        >
+          {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
+
+        <div className="h-20 flex items-center justify-center lg:px-6 border-b border-sky-100">
+          <div className="w-10 h-10 bg-amber-400 rounded-2xl flex items-center justify-center rotate-3 shadow-sm shrink-0">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
-          <span className="ml-3 text-2xl font-extrabold text-sky-900 hidden lg:block tracking-tight">LớpHọc<span className="text-amber-500">Vui</span></span>
+          {!isSidebarCollapsed && <span className="ml-3 text-2xl font-extrabold text-sky-900 hidden lg:block tracking-tight truncate">LớpHọc<span className="text-amber-500">Vui</span></span>}
         </div>
         
-        <nav className="flex-1 py-6 flex flex-col gap-3 px-4">
+        <nav className="flex-1 py-6 flex flex-col gap-3 px-4 overflow-x-hidden">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center px-4 py-3.5 rounded-2xl transition-all duration-200 font-semibold ${
+                className={`flex items-center px-4 py-3.5 rounded-2xl transition-all duration-200 font-semibold group ${
                   isActive 
-                    ? 'bg-sky-500 text-white shadow-md shadow-sky-200 translate-y-[-2px]' 
+                    ? 'bg-sky-500 text-white shadow-md shadow-sky-200 lg:translate-y-[-2px]' 
                     : 'text-sky-700 hover:bg-sky-100'
                 }`}
+                title={isSidebarCollapsed ? item.label : undefined}
               >
                 <item.icon className={`w-6 h-6 shrink-0 ${isActive ? 'text-white' : 'text-sky-500'}`} />
-                <span className="ml-3 hidden lg:block text-[15px]">{item.label}</span>
+                {!isSidebarCollapsed && <span className="ml-3 hidden lg:block text-[15px] truncate">{item.label}</span>}
               </Link>
             );
           })}

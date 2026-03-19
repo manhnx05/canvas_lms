@@ -11,6 +11,7 @@ import { Rewards } from './pages/Rewards';
 import { Login } from './pages/Login';
 import { Profile } from './pages/Profile';
 import { Notifications } from './pages/Notifications';
+import { Students } from './pages/Students';
 import { Role } from './types';
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
           <Route path="/rewards" element={<Rewards role={role} />} />
           <Route path="/profile" element={<Profile role={role} />} />
           <Route path="/notifications" element={<Notifications role={role} />} />
+          <Route path="/students" element={<Students role={role} />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Layout>

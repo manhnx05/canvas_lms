@@ -100,7 +100,6 @@ export function CourseDetail({ role }: { role: Role }) {
     { id: 'announcements', icon: Megaphone, label: 'Thông Báo' },
     { id: 'assignments', icon: CheckSquare, label: 'Bài Tập' },
     { id: 'grades', icon: BarChart, label: 'Điểm Số' },
-    { id: 'people', icon: Users, label: 'Thành Viên' },
   ];
 
   if (loading || !course) return <div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
@@ -352,37 +351,6 @@ export function CourseDetail({ role }: { role: Role }) {
               </div>
             </div>
           )}
-
-          {/* TAB: THÀNH VIÊN */}
-          {activeTab === 'people' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-extrabold text-sky-900">Danh Sách Lớp Học</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 border-2 border-sky-100 rounded-2xl flex items-center gap-4 bg-sky-50 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-sky-500 text-white flex items-center justify-center font-bold text-lg shadow-sm">GV</div>
-                  <div>
-                    <h3 className="font-bold text-sky-900 text-lg">{course.teacher}</h3>
-                    <p className="text-sky-600 text-sm font-semibold">Giáo viên chủ nhiệm</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {course.people?.filter((p:any) => p.role === 'student').map((student: any) => (
-                  <div key={student.id} className="p-4 border-2 border-slate-100 hover:border-slate-300 rounded-2xl flex items-center gap-4 transition-colors">
-                    <div className="w-12 h-12 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold">
-                      {student.avatar ? <img src={student.avatar} className="w-full h-full rounded-full" /> : student.name.charAt(0)}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-800">{student.name}</h3>
-                      <p className="text-slate-500 text-xs font-medium">{student.email}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
         </div>
       </div>
     </div>
