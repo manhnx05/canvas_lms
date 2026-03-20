@@ -17,13 +17,14 @@ export const generateQuiz = async (req: Request, res: Response) => {
       "id": string (tạo uuid ngẫu nhiên),
       "question": string,
       "options": [{"id": "A", "text": string}, {"id": "B", "text": string}, {"id": "C", "text": string}, {"id": "D", "text": string}],
-      "correctOptionId": string ("A", "B", "C" hoặc "D")
+      "correctOptionId": string ("A", "B", "C" hoặc "D"),
+      "difficulty": "easy" | "medium" | "hard",
+      "explanation": string (giải thích ngắn tại sao đáp án đúng)
     }`;
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     
-    // Clean potential markdown formatting
     let cleanedText = text.trim();
     if (cleanedText.startsWith('```json')) cleanedText = cleanedText.slice(7);
     if (cleanedText.startsWith('```')) cleanedText = cleanedText.slice(3);
@@ -63,5 +64,37 @@ export const evaluateSubmission = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('AI Evaluate Error:', error);
     res.status(500).json({ error: 'Lỗi đánh giá AI', details: error.message });
+  }
+};
+
+// NEW: Free-form AI chatbot for student Q&A
+export const chat = async (req: Request, res: Response) => {
+  try {
+    const { message, context, studentName, gradeLevel = 'Tiểu học' } = req.body;
+    
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'System is missing GEMINI_API_KEY' });
+    }
+
+    const model = getGeminiModel();
+    const systemContext = context
+      ? `Context học tập của học sinh: ${JSON.stringify(context)}\n`
+      : '';
+
+    const prompt = `Bạn là trợ lý AI thân thiện, chuyên hỗ trợ học sinh tiểu học cấp ${gradeLevel}${studentName ? ` tên ${studentName}` : ''}.
+${systemContext}
+Hãy trả lời câu hỏi sau một cách đơn giản, dễ hiểu, vui tươi phù hợp với trẻ em. Dùng emoji để thêm sinh động. Nếu liên quan đến bài học, hãy giải thích từng bước.
+
+Câu hỏi: "${message}"
+
+Trả lời bằng Markdown, ngắn gọn nhưng đầy đủ.`;
+
+    const result = await model.generateContent(prompt);
+    const reply = result.response.text();
+    
+    res.json({ reply });
+  } catch (error: any) {
+    console.error('AI Chat Error:', error);
+    res.status(500).json({ error: 'Lỗi chatbot AI', details: error.message });
   }
 };
