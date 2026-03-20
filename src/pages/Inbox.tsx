@@ -73,7 +73,8 @@ export function Inbox({ role }: { role: string }) {
   };
 
   const fetchCourses = () => {
-    fetch(`/api/courses`)
+    // Load only courses this user is enrolled in / teaching
+    fetch(`/api/courses?userId=${currentUser.id}`)
       .then(r => r.json())
       .then(data => setCourses(Array.isArray(data) ? data : []));
   };
@@ -136,6 +137,7 @@ export function Inbox({ role }: { role: string }) {
 
   useEffect(() => {
     if (compose.courseId) {
+      // Fetch members of this specific course
       fetch(`/api/courses/${compose.courseId}`)
         .then(r => r.json())
         .then(data => {
@@ -143,6 +145,7 @@ export function Inbox({ role }: { role: string }) {
           setCourseMembers(people);
         });
     } else {
+      // No course selected: show all users except self
       fetch(`/api/users?excludeId=${currentUser.id}`)
         .then(r => r.json())
         .then(data => setCourseMembers(Array.isArray(data) ? data : []));
