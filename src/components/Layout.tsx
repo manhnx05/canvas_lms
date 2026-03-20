@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain } from 'lucide-react';
 import { Role } from '../types';
 
 export function Layout({ role, onLogout, children }: { role: Role, onLogout: () => void, children?: React.ReactNode }) {
@@ -12,15 +12,16 @@ export function Layout({ role, onLogout, children }: { role: Role, onLogout: () 
     { icon: Home, label: 'Bảng điều khiển', path: '/' },
     { icon: BookOpen, label: 'Môn học', path: '/courses' },
     { icon: PenTool, label: 'Bài tập', path: '/assignments' },
-    { icon: Users, label: 'Thành viên', path: '/students' },
+    { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
     { icon: Trophy, label: 'Góc khen thưởng', path: '/rewards' },
   ];
 
   const teacherNav = [
     { icon: Home, label: 'Tổng quan', path: '/' },
     { icon: BookOpen, label: 'Lớp học', path: '/courses' },
-    { icon: Users, label: 'Quản lý Học Sinh', path: '/students' },
+    { icon: Users, label: 'Quản lý HS', path: '/students' },
     { icon: PenTool, label: 'Chấm bài', path: '/assignments' },
+    { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
     { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
   ];
 
