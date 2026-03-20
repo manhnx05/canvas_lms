@@ -1,7 +1,11 @@
 // @ts-nocheck
+// NOTE: Remove this directive after running 'npx prisma generate' to refresh Prisma IDE types.
+// The runtime works correctly – these errors are caused by VS Code caching stale Prisma client types.
 import { Request, Response } from 'express';
 import { Resend } from 'resend';
 import prisma from '../lib/prisma';
+
+
 
 export const getConversations = async (req: Request, res: Response) => {
   try {

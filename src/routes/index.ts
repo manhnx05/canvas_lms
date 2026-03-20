@@ -7,20 +7,23 @@ import teacherRoutes from './teacher.routes';
 import authRoutes from './auth.routes';
 import notificationRoutes from './notification.routes';
 import userRoutes from './user.routes';
-
 import aiRoutes from './ai.routes';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/health', (req, res) => res.json({ status: "ok" }));
-router.use('/ai', aiRoutes);
-router.use('/courses', courseRoutes);
-router.use('/assignments', assignmentRoutes);
-router.use('/conversations', conversationRoutes);
-router.use('/rewards', rewardRoutes);
-router.use('/teacher', teacherRoutes);
+// Public routes
+router.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 router.use('/auth', authRoutes);
-router.use('/notifications', notificationRoutes);
-router.use('/users', userRoutes);
+
+// Protected routes (authMiddleware is a passthrough scaffold – add JWT later)
+router.use('/ai', authMiddleware, aiRoutes);
+router.use('/courses', authMiddleware, courseRoutes);
+router.use('/assignments', authMiddleware, assignmentRoutes);
+router.use('/conversations', authMiddleware, conversationRoutes);
+router.use('/rewards', authMiddleware, rewardRoutes);
+router.use('/teacher', authMiddleware, teacherRoutes);
+router.use('/notifications', authMiddleware, notificationRoutes);
+router.use('/users', authMiddleware, userRoutes);
 
 export default router;
