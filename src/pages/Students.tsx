@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Users, Plus, Edit, Trash2, Search, Mail, BookOpen, X, ShieldAlert } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, Plus, Edit, Trash2, Search, Mail, BookOpen, X, ShieldAlert, MessageSquare } from 'lucide-react';
 import { Role } from '../types';
 
 export function Students({ role }: { role: Role }) {
+  const navigate = useNavigate();
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -144,6 +146,13 @@ export function Students({ role }: { role: Role }) {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => navigate(`/inbox?compose=1&to=${student.id}&name=${encodeURIComponent(student.name)}`)}
+                          className="p-2 bg-white hover:bg-indigo-100 text-indigo-600 rounded-xl border border-indigo-200 transition-colors shadow-sm"
+                          title="Nhắn tin"
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                        </button>
                         <button 
                           onClick={() => handleEditClick(student)}
                           className="p-2 bg-white hover:bg-sky-100 text-sky-600 rounded-xl border border-sky-200 transition-colors shadow-sm"

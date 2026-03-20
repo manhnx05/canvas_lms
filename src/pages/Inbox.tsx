@@ -86,11 +86,43 @@ export function Inbox({ role }: { role: string }) {
     socketRef.current = io();
     socketRef.current.emit('join', currentUser.id);
 
-    return () => { socketRef.current?.disconnect(); };
+    // Polling fallback every 10s to catch new conversations from the other side
+    const pollTimer = setInterval(() => {
+      fetch(`/api/conversations?userId=${currentUser.id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) setConversations(data);
+        })
+        .catch(() => {});
+    }, 10000);
+
+    // Auto-open compose if navigated from Students page with ?compose=1&to=...
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('compose') === '1' && params.get('to')) {
+      setCompose(prev => ({
+        ...prev,
+        receiverId: params.get('to') || '',
+      }));
+      setShowCompose(true);
+    }
+
+    return () => {
+      socketRef.current?.disconnect();
+      clearInterval(pollTimer);
+    };
   }, []);
 
+
   useEffect(() => {
+    const refetch = () => {
+      fetch(`/api/conversations?userId=${currentUser.id}`)
+        .then(r => r.json())
+        .then(data => { if (Array.isArray(data)) setConversations(data); })
+        .catch(() => {});
+    };
+
     const handleNewMessage = (msg: any) => {
+      // Always append message if we're looking at this conversation
       if (activeConv && msg.conversationId === activeConv.id) {
         setMessages(prev => {
           if (prev.some(m => m.id === msg.id)) return prev;
@@ -102,6 +134,7 @@ export function Inbox({ role }: { role: string }) {
       setConversations(prev => {
         const idx = prev.findIndex(c => c.id === msg.conversationId);
         if (idx > -1) {
+          // Conversation already in list — update lastMessage and unread
           const copy = [...prev];
           const conv = { ...copy[idx] };
           conv.lastMessage = msg;
@@ -111,14 +144,22 @@ export function Inbox({ role }: { role: string }) {
           copy.splice(idx, 1);
           return [conv, ...copy];
         } else {
-          fetchConversations();
+          // New conversation created by teacher — fetch full list
+          refetch();
           return prev;
         }
       });
     };
 
+    // Also listen for explicit newConversation event
+    const handleNewConversation = () => refetch();
+
     socketRef.current?.on('newMessage', handleNewMessage);
-    return () => { socketRef.current?.off('newMessage', handleNewMessage); };
+    socketRef.current?.on('newConversation', handleNewConversation);
+    return () => {
+      socketRef.current?.off('newMessage', handleNewMessage);
+      socketRef.current?.off('newConversation', handleNewConversation);
+    };
   }, [activeConv]);
 
   useEffect(() => {

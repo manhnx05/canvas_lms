@@ -230,6 +230,8 @@ export const createConversation = async (req: Request, res: Response) => {
       if (io) {
         conversation.participants.forEach((p: any) => {
           io.to(p.userId).emit('newMessage', formattedMessage);
+          // Also emit newConversation so recipient's inbox list refreshes immediately
+          io.to(p.userId).emit('newConversation', { conversationId: conversation.id });
         });
       }
 
