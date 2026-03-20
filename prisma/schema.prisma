@@ -39,6 +39,7 @@ model Course {
   modules       CourseModule[]
   announcements Announcement[]
   enrollments   Enrollment[]
+  conversations Conversation[]
 }
 
 model CourseModule {
@@ -124,6 +125,9 @@ model Reward {
 
 model Conversation {
   id          String   @id @default(uuid())
+  subject     String?
+  courseId    String?
+  course      Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
   unreadCount Int      @default(0)
   
   participants Participant[]
@@ -146,6 +150,7 @@ model Message {
   conversationId String
   senderId       String
   content        String
+  attachments    Json?
   timestamp      String
   isRead         Boolean      @default(false)
 

@@ -48,14 +48,19 @@ export interface Message {
   senderRole: Role;
   senderAvatar?: string;
   content: string;
+  attachments?: any[];
   timestamp: string;
   isRead: boolean;
+  conversationId?: string;
 }
 
 export interface Conversation {
   id: string;
+  subject?: string;
+  courseId?: string;
+  courseName?: string;
   participants: User[];
-  lastMessage: Message;
+  lastMessage?: Message | null;
   unreadCount: number;
 }
 
