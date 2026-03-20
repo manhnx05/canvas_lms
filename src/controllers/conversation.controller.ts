@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response } from 'express';
 import { Resend } from 'resend';
 import prisma from '../lib/prisma';

@@ -67,23 +67,27 @@ export const evaluateSubmission = async (req: Request, res: Response) => {
   }
 };
 
-// NEW: Free-form AI chatbot for student Q&A
+// Free-form AI chatbot for student Q&A
 export const chat = async (req: Request, res: Response) => {
   try {
     const { message, context, studentName, gradeLevel = 'Tiểu học' } = req.body;
-    
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: 'System is missing GEMINI_API_KEY' });
+
+    if (!message || message.trim() === '') {
+      return res.status(400).json({ error: 'Thiếu nội dung câu hỏi' });
     }
 
-    const model = getGeminiModel();
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY is not set in environment variables');
+      return res.status(500).json({ error: 'Hệ thống chưa cấu hình GEMINI_API_KEY' });
+    }
+
+    const model = getGeminiModel(); // uses gemini-1.5-flash
     const systemContext = context
       ? `Context học tập của học sinh: ${JSON.stringify(context)}\n`
       : '';
 
     const prompt = `Bạn là trợ lý AI thân thiện, chuyên hỗ trợ học sinh tiểu học cấp ${gradeLevel}${studentName ? ` tên ${studentName}` : ''}.
-${systemContext}
-Hãy trả lời câu hỏi sau một cách đơn giản, dễ hiểu, vui tươi phù hợp với trẻ em. Dùng emoji để thêm sinh động. Nếu liên quan đến bài học, hãy giải thích từng bước.
+${systemContext}Hãy trả lời câu hỏi sau một cách đơn giản, dễ hiểu, vui tươi phù hợp với trẻ em. Dùng emoji để thêm sinh động. Nếu liên quan đến bài học, hãy giải thích từng bước rõ ràng.
 
 Câu hỏi: "${message}"
 
@@ -91,10 +95,18 @@ Trả lời bằng Markdown, ngắn gọn nhưng đầy đủ.`;
 
     const result = await model.generateContent(prompt);
     const reply = result.response.text();
-    
+
     res.json({ reply });
   } catch (error: any) {
-    console.error('AI Chat Error:', error);
-    res.status(500).json({ error: 'Lỗi chatbot AI', details: error.message });
+    console.error('[AI Chat Error]', {
+      message: error.message,
+      status: error.status,
+      code: error.code,
+      stack: error.stack?.slice(0, 300)
+    });
+    res.status(500).json({
+      error: 'Lỗi chatbot AI',
+      details: error.message || 'Unknown error'
+    });
   }
 };
