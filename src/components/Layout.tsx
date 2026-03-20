@@ -19,7 +19,7 @@ export function Layout({ role, onLogout, children }: { role: Role, onLogout: () 
   const teacherNav = [
     { icon: Home, label: 'Tổng quan', path: '/' },
     { icon: BookOpen, label: 'Lớp học', path: '/courses' },
-    { icon: Users, label: 'Quản lý HS', path: '/students' },
+    { icon: Users, label: 'Quản lý Học Sinh', path: '/students' },
     { icon: PenTool, label: 'Chấm bài', path: '/assignments' },
     { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
     { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
