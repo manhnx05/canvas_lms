@@ -18,7 +18,7 @@ export const getConversations = async (req: Request, res: Response) => {
       },
       orderBy: { id: 'desc' }
     });
-    
+
     const formatted = conversations.map((c: any) => ({
       id: c.id,
       subject: c.subject,
@@ -28,7 +28,7 @@ export const getConversations = async (req: Request, res: Response) => {
       participants: c.participants.filter((p: any) => p.userId !== userId).map((p: any) => p.user),
       lastMessage: c.messages[0] || null
     }));
-    
+
     res.json(formatted);
   } catch (error) {
     res.status(500).json({ error: 'Lỗi lấy danh sách tin nhắn' });
@@ -38,7 +38,7 @@ export const getConversations = async (req: Request, res: Response) => {
 export const getMessages = async (req: Request, res: Response) => {
   try {
     const conversationId = req.params.id;
-    
+
     // Đánh dấu đã đọc trên conversation này
     await prisma.conversation.update({
       where: { id: conversationId },
@@ -50,7 +50,7 @@ export const getMessages = async (req: Request, res: Response) => {
       orderBy: { id: 'asc' },
       include: { sender: true }
     });
-    
+
     const formatted = messages.map(m => ({
       id: m.id,
       senderId: m.senderId,
@@ -116,7 +116,7 @@ export const sendMessage = async (req: Request, res: Response) => {
     if (receivers.length > 0 && process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
-        await Promise.all(receivers.map((r: any) => 
+        await Promise.all(receivers.map((r: any) =>
           resend.emails.send({
             from: 'Canvas LMS <onboarding@resend.dev>',
             to: r.user.email,
@@ -211,7 +211,7 @@ export const createConversation = async (req: Request, res: Response) => {
           course: true
         }
       });
-      
+
       const formattedMessage = {
         id: message.id,
         senderId: message.senderId,
@@ -224,7 +224,7 @@ export const createConversation = async (req: Request, res: Response) => {
         isRead: message.isRead,
         conversationId: conversation.id
       };
-      
+
       const io = req.app.get('io');
       if (io) {
         conversation.participants.forEach((p: any) => {
@@ -233,7 +233,7 @@ export const createConversation = async (req: Request, res: Response) => {
       }
 
       // Send email
-      const receiverP = conversation.participants.find((p:any) => p.userId === receiverId);
+      const receiverP = conversation.participants.find((p: any) => p.userId === receiverId);
       if (receiverP && process.env.RESEND_API_KEY) {
         try {
           const resend = new Resend(process.env.RESEND_API_KEY);
@@ -253,7 +253,7 @@ export const createConversation = async (req: Request, res: Response) => {
                     <a href="http://localhost:3000/inbox" style="background:#0ea5e9; color:#fff; padding: 10px 20px; text-decoration:none; border-radius:5px;">Xem tin nhắn</a>
                    </div>`
           });
-        } catch (emailError) {}
+        } catch (emailError) { }
       }
     }
 
