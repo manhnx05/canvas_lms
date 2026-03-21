@@ -13,6 +13,7 @@ export function Layout({ role, onLogout, children }: { role: Role, onLogout: () 
     { icon: BookOpen, label: 'Môn học', path: '/courses' },
     { icon: PenTool, label: 'Bài tập', path: '/assignments' },
     { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
+    { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
     { icon: Trophy, label: 'Góc khen thưởng', path: '/rewards' },
   ];
 
