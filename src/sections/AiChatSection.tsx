@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, User, Loader, Trash2, BookOpen } from 'lucide-react';
+import apiClient from '../lib/apiClient';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -38,12 +39,8 @@ export function AiChatSection({ studentName, context }: AiChatSectionProps) {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, studentName, context })
-      });
-      const data = await res.json();
+      const res = await apiClient.post('/ai/chat', { message: text, studentName, context });
+      const data = res.data;
       setMessages(prev => [...prev, { role: 'assistant', text: data.reply || 'Cô chưa hiểu câu hỏi, bé hỏi lại nhé! 😊' }]);
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', text: '😢 Có lỗi kết nối, bé thử lại sau nhé!' }]);

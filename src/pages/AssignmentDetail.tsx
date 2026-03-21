@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Clock, Star, Upload, CheckCircle, Sparkles, BrainCircuit, Users } from 'lucide-react';
 import { Role } from '../types';
 import ReactMarkdown from 'react-markdown';
+import apiClient from '../lib/apiClient';
 
 export function AssignmentDetail({ role }: { role: Role }) {
   const { id } = useParams();
@@ -16,8 +17,8 @@ export function AssignmentDetail({ role }: { role: Role }) {
   const [evaluatingSubId, setEvaluatingSubId] = useState<string|null>(null);
 
   const loadData = () => {
-    fetch(`/api/assignments/${id}`)
-      .then(res => res.json())
+    apiClient.get(`/assignments/${id}`)
+      .then(res => res.data)
       .then(data => setAssignment(data));
   };
 
@@ -28,17 +29,14 @@ export function AssignmentDetail({ role }: { role: Role }) {
        return alert("Con vui lòng làm hết tất cả các câu hỏi rồi hãy nộp nhé!");
     }
     setLoading(true);
-    await fetch(`/api/assignments/${id}/submit`, { 
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answers })
-    });
+    await apiClient.post(`/assignments/${id}/submit`, { answers });
     setLoading(false);
     loadData();
   };
 
   const handleManualSubmit = async () => {
     setLoading(true);
-    await fetch(`/api/assignments/${id}/submit`, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ answers: null }) });
+    await apiClient.post(`/assignments/${id}/submit`, { answers: null });
     setLoading(false); loadData();
   };
 
@@ -47,11 +45,8 @@ export function AssignmentDetail({ role }: { role: Role }) {
     
     try {
       // 1. Hỏi AI chấm và sinh nhận xét
-      const aiRes = await fetch('/api/ai/evaluate-submission', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ questions: assignment.questions, answers: sub.answers, studentName: sub.user?.name || "Học sinh" })
-      });
-      const aiData = await aiRes.json();
+      const aiRes = await apiClient.post('/ai/evaluate-submission', { questions: assignment.questions, answers: sub.answers, studentName: sub.user?.name || "Học sinh" });
+      const aiData = aiRes.data;
       if (aiData.error) { alert("Lỗi gọi AI: " + aiData.error); setEvaluatingSubId(null); return; }
       
       // 2. Tính điểm tự động dựa trên số câu đúng
@@ -64,10 +59,7 @@ export function AssignmentDetail({ role }: { role: Role }) {
       const finalScore = Math.floor((correctCount / totalQs) * maxReward);
   
       // 3. Ghi vào Database
-      await fetch(`/api/assignments/${id}/grade`, {
-         method: 'POST', headers: {'Content-Type': 'application/json'},
-         body: JSON.stringify({ stars: finalScore, submissionId: sub.id, feedback: aiData.feedback })
-      });
+      await apiClient.post(`/assignments/${id}/grade`, { stars: finalScore, submissionId: sub.id, feedback: aiData.feedback });
     } catch (e) {
       alert("Đã xảy ra lỗi hệ thống chấm điểm!");
     }

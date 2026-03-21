@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import apiClient from '../lib/apiClient';
 
 type FlowState = 'LOGIN' | 'REGISTER_INIT' | 'REGISTER_CONFIRM' | 'FORGOT_INIT' | 'FORGOT_CONFIRM';
 
@@ -20,15 +21,10 @@ export function Login({ onLogin }: { onLogin: (user: any) => void }) {
     e.preventDefault();
     setLoading(true); setError(''); setSuccessMsg('');
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      onLogin(data.user);
-    } catch (err: any) { handleError(err); }
+      const res = await apiClient.post('/auth/login', { email, password });
+      localStorage.setItem('canvas_token', res.data.token);
+      onLogin(res.data.user);
+    } catch (err: any) { handleError(err.response?.data || err); }
     finally { setLoading(false); }
   };
 
@@ -36,16 +32,10 @@ export function Login({ onLogin }: { onLogin: (user: any) => void }) {
     e.preventDefault();
     setLoading(true); setError(''); setSuccessMsg('');
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setSuccessMsg(data.message);
+      const res = await apiClient.post('/auth/register', { email });
+      setSuccessMsg(res.data.message);
       setFlow('REGISTER_CONFIRM');
-    } catch (err: any) { handleError(err); }
+    } catch (err: any) { handleError(err.response?.data || err); }
     finally { setLoading(false); }
   };
 
@@ -53,15 +43,10 @@ export function Login({ onLogin }: { onLogin: (user: any) => void }) {
     e.preventDefault();
     setLoading(true); setError(''); setSuccessMsg('');
     try {
-      const res = await fetch('/api/auth/register/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp, password, name, role: 'student' })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      onLogin(data.user);
-    } catch (err: any) { handleError(err); }
+      const res = await apiClient.post('/auth/register/confirm', { email, otp, password, name, role: 'student' });
+      localStorage.setItem('canvas_token', res.data.token);
+      onLogin(res.data.user);
+    } catch (err: any) { handleError(err.response?.data || err); }
     finally { setLoading(false); }
   };
 
@@ -69,16 +54,10 @@ export function Login({ onLogin }: { onLogin: (user: any) => void }) {
     e.preventDefault();
     setLoading(true); setError(''); setSuccessMsg('');
     try {
-      const res = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setSuccessMsg(data.message);
+      const res = await apiClient.post('/auth/forgot-password', { email });
+      setSuccessMsg(res.data.message);
       setFlow('FORGOT_CONFIRM');
-    } catch (err: any) { handleError(err); }
+    } catch (err: any) { handleError(err.response?.data || err); }
     finally { setLoading(false); }
   };
 
@@ -86,18 +65,12 @@ export function Login({ onLogin }: { onLogin: (user: any) => void }) {
     e.preventDefault();
     setLoading(true); setError(''); setSuccessMsg('');
     try {
-      const res = await fetch('/api/auth/forgot-password/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp, newPassword: password })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setSuccessMsg(data.message);
+      const res = await apiClient.post('/auth/forgot-password/confirm', { email, otp, newPassword: password });
+      setSuccessMsg(res.data.message);
       setFlow('LOGIN');
       setPassword('');
       setOtp('');
-    } catch (err: any) { handleError(err); }
+    } catch (err: any) { handleError(err.response?.data || err); }
     finally { setLoading(false); }
   };
 

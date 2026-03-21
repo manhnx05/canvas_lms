@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, Edit, Trash2, Search, Mail, BookOpen, X, ShieldAlert, MessageSquare } from 'lucide-react';
 import { Role } from '../types';
+import apiClient from '../lib/apiClient';
 
 export function Students({ role }: { role: Role }) {
   const navigate = useNavigate();
@@ -21,8 +22,8 @@ export function Students({ role }: { role: Role }) {
 
   const fetchStudents = () => {
     setLoading(true);
-    fetch('/api/users?role=student')
-      .then(res => res.json())
+    apiClient.get('/users?role=student')
+      .then(res => res.data)
       .then(data => {
         setStudents(data);
         setLoading(false);
@@ -40,17 +41,9 @@ export function Students({ role }: { role: Role }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editId) {
-      await fetch(`/api/users/${editId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, className, avatar })
-      });
+      await apiClient.put(`/users/${editId}`, { name, email, className, avatar });
     } else {
-      await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, className, avatar, role: 'student' })
-      });
+      await apiClient.post('/users', { name, email, className, avatar, role: 'student' });
     }
     resetForm();
     fetchStudents();
@@ -67,7 +60,7 @@ export function Students({ role }: { role: Role }) {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Bạn có chắc chắn muốn xóa học sinh này không?\nToàn bộ dữ liệu liên quan sẽ bị xóa!')) return;
-    await fetch(`/api/users/${id}`, { method: 'DELETE' });
+    await apiClient.delete(`/users/${id}`);
     fetchStudents();
   };
 

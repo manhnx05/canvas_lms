@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Upload, Settings, CheckCircle, FileText, Settings2, Sparkles, Trash2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { LatexRenderer } from '../components/LatexRenderer';
+import apiClient from '../lib/apiClient';
 
 interface ExamConfig {
   title: string;
@@ -52,15 +53,10 @@ export const ExamGenerator: React.FC = () => {
 
     try {
       setLoading(true);
-      const res = await fetch('/api/exams/upload-file', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-        },
-        body: formData
+      const res = await apiClient.post('/exams/upload-file', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      if (!res.ok) throw new Error('Upload failed');
-      const data = await res.json();
+      const data = res.data;
       setUploadedFiles(prev => [...prev, { id: data.id, name: data.name }]);
     } catch (err: any) {
       setError('Lỗi tải lên file: ' + err.message);
@@ -72,7 +68,7 @@ export const ExamGenerator: React.FC = () => {
 
   const handleRemoveFile = async (id: string) => {
     try {
-      await fetch(`/api/exams/files/${id}`, { method: 'DELETE' });
+      await apiClient.delete(`/exams/files/${id}`);
       setUploadedFiles(prev => prev.filter(f => f.id !== id));
     } catch (err) {
       console.error(err);
@@ -87,25 +83,14 @@ export const ExamGenerator: React.FC = () => {
       const userStr = localStorage.getItem('canvas_user');
       const user = userStr ? JSON.parse(userStr) : null;
 
-      const res = await fetch('/api/exams/generate-ai-quick', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...config,
-          createdBy: user?.id,
-          // If we had files, pass customTopic or let backend know. We mapped fileIds to quick AI?
-          // Wait, generate-ai-quick doesn't take fileIds. We should use the real exam upload flow 
-          // or pass uploaded text. For simplicity, we'll pass customTopic for now if files aren't parsed here.
-          // In a real app, we'd create the draft Exam first, attach files, then call /api/exams/:id/generate-ai.
-        })
+      const res = await apiClient.post('/exams/generate-ai-quick', {
+        ...config,
+        createdBy: user?.id,
+      }).catch((err: any) => {
+        throw new Error(err.response?.data?.error || 'Lỗi tạo đề');
       });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Lỗi tạo đề');
-      }
       
-      const data = await res.json();
+      const data = res.data;
       setGeneratedQuestions(data.questions);
       setStep(3);
     } catch (err: any) {

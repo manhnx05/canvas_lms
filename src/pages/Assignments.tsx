@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PenTool, Star, Clock, CheckCircle, AlertCircle, Search, Filter, X } from 'lucide-react';
 import { Role, Assignment, Course } from '../types';
+import apiClient from '../lib/apiClient';
 
 export function Assignments({ role }: { role: Role }) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -21,11 +22,11 @@ export function Assignments({ role }: { role: Role }) {
   const fetchData = async () => {
     try {
       const [assnRes, coursesRes] = await Promise.all([
-        fetch('/api/assignments'),
-        fetch('/api/courses')
+        apiClient.get('/assignments'),
+        apiClient.get('/courses')
       ]);
-      const assnData = await assnRes.json();
-      const coursesData = await coursesRes.json();
+      const assnData = assnRes.data;
+      const coursesData = coursesRes.data;
       setAssignments(assnData);
       setCourses(coursesData);
       if (coursesData.length > 0) setCourseId(coursesData[0].id);
@@ -46,14 +47,10 @@ export function Assignments({ role }: { role: Role }) {
     if (!course) return;
 
     try {
-      const res = await fetch('/api/assignments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title, description, courseId, courseName: course.title, dueDate, starsReward, type
-        })
+      const res = await apiClient.post('/assignments', {
+        title, description, courseId, courseName: course.title, dueDate, starsReward, type
       });
-      if (res.ok) {
+      if (res.data) {
         setIsCreating(false);
         setTitle(''); setDescription(''); setDueDate(''); setStarsReward('5'); setType('quiz');
         fetchData();

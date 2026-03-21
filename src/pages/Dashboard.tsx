@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, CheckCircle, AlertCircle, Star, Trophy, Users, FileText, TrendingUp } from 'lucide-react';
 import { Role, Course, Assignment } from '../types';
+import apiClient from '../lib/apiClient';
 
 export function Dashboard({ role }: { role: Role }) {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -13,9 +14,9 @@ export function Dashboard({ role }: { role: Role }) {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/courses').then(res => res.json()),
-      fetch('/api/assignments').then(res => res.json()),
-      role === 'teacher' ? fetch('/api/teacher/stats').then(res => res.json()) : Promise.resolve(null)
+      apiClient.get('/courses').then(res => res.data),
+      apiClient.get('/assignments').then(res => res.data),
+      role === 'teacher' ? apiClient.get('/teacher/stats').then(res => res.data) : Promise.resolve(null)
     ]).then(([coursesData, assignmentsData, statsData]) => {
       setCourses(coursesData);
       setAssignments(assignmentsData);

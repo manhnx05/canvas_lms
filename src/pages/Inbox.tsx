@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { ConversationList, Conversation } from '../features/inbox/ConversationList';
 import { MessageThread } from '../features/inbox/MessageThread';
 import { ComposeModal } from '../features/inbox/ComposeModal';
+import apiClient from '../lib/apiClient';
 
 interface Attachment {
   name: string;
@@ -57,14 +58,14 @@ export function Inbox({ role }: { role: string }) {
     })));
 
   const refetchConversations = () =>
-    fetch(`/api/conversations?userId=${currentUser.id}`)
-      .then(r => r.json())
+    apiClient.get(`/conversations?userId=${currentUser.id}`)
+      .then(r => r.data)
       .then(data => { if (Array.isArray(data)) setConversations(data); })
       .catch(() => {});
 
   const fetchCourses = () => {
-    fetch(`/api/courses?userId=${currentUser.id}`)
-      .then(r => r.json())
+    apiClient.get(`/courses?userId=${currentUser.id}`)
+      .then(r => r.data)
       .then(data => setCourses(Array.isArray(data) ? data : []));
   };
 
@@ -122,8 +123,8 @@ export function Inbox({ role }: { role: string }) {
   // ── Fetch messages on active conversation change ──────
   useEffect(() => {
     if (!activeConv) return;
-    fetch(`/api/conversations/${activeConv.id}/messages`)
-      .then(r => r.json())
+    apiClient.get(`/conversations/${activeConv.id}/messages`)
+      .then(r => r.data)
       .then(data => {
         setMessages(Array.isArray(data) ? data : []);
         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -134,12 +135,12 @@ export function Inbox({ role }: { role: string }) {
   // ── Fetch course members on courseId change ───────────
   useEffect(() => {
     if (compose.courseId) {
-      fetch(`/api/courses/${compose.courseId}`)
-        .then(r => r.json())
+      apiClient.get(`/courses/${compose.courseId}`)
+        .then(r => r.data)
         .then(data => setCourseMembers((data.people || []).filter((p: any) => p.id !== currentUser.id)));
     } else {
-      fetch(`/api/users?excludeId=${currentUser.id}`)
-        .then(r => r.json())
+      apiClient.get(`/users?excludeId=${currentUser.id}`)
+        .then(r => r.data)
         .then(data => setCourseMembers(Array.isArray(data) ? data : []));
     }
   }, [compose.courseId]);
@@ -151,11 +152,8 @@ export function Inbox({ role }: { role: string }) {
     const atts = [...replyAttachments];
     setInput(''); setReplyAttachments([]);
     try {
-      const res = await fetch(`/api/conversations/${activeConv.id}/messages`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senderId: currentUser.id, content, attachments: atts.length > 0 ? atts : undefined })
-      });
-      const newMsg = await res.json();
+      const res = await apiClient.post(`/conversations/${activeConv.id}/messages`, { senderId: currentUser.id, content, attachments: atts.length > 0 ? atts : undefined });
+      const newMsg = res.data;
       setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       setConversations(prev => {
@@ -172,15 +170,12 @@ export function Inbox({ role }: { role: string }) {
     if (!compose.receiverId || !compose.subject || !compose.content) return;
     setComposeSending(true);
     try {
-      const res = await fetch('/api/conversations', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          senderId: currentUser.id, receiverId: compose.receiverId,
-          subject: compose.subject, courseId: compose.courseId || null,
-          content: compose.content, attachments: composeAttachments.length > 0 ? composeAttachments : undefined
-        })
+      const res = await apiClient.post('/conversations', {
+        senderId: currentUser.id, receiverId: compose.receiverId,
+        subject: compose.subject, courseId: compose.courseId || null,
+        content: compose.content, attachments: composeAttachments.length > 0 ? composeAttachments : undefined
       });
-      const newConv = await res.json();
+      const newConv = res.data;
       setConversations(prev =>
         prev.find(c => c.id === newConv.id) ? prev.map(c => c.id === newConv.id ? newConv : c) : [newConv, ...prev]
       );

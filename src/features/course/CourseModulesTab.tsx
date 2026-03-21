@@ -10,6 +10,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Role } from '../../types';
+import apiClient from '../../lib/apiClient';
 
 interface Props {
   courseId: string;
@@ -64,32 +65,26 @@ export function CourseModulesTab({ courseId, modules: initialModules, role, onRe
 
   const handleCreateModule = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch(`/api/courses/${courseId}/modules`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: modTitle })
-    });
+    await apiClient.post(`/courses/${courseId}/modules`, { title: modTitle });
     setModTitle(''); setShowModForm(false); onRefresh();
   };
 
   const handleDeleteModule = async (modId: string) => {
     if (!confirm('Xóa tuần học này sẽ xóa toàn bộ nội dung bên trong!')) return;
-    await fetch(`/api/courses/modules/${modId}`, { method: 'DELETE' });
+    await apiClient.delete(`/courses/modules/${modId}`);
     onRefresh();
   };
 
   const handleCreateItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!showItemForm) return;
-    await fetch(`/api/courses/modules/${showItemForm}/items`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: iTitle, type: iType, url: iUrl })
-    });
+    await apiClient.post(`/courses/modules/${showItemForm}/items`, { title: iTitle, type: iType, url: iUrl });
     setITitle(''); setIType('elearning'); setIUrl(''); setShowItemForm(null); onRefresh();
   };
 
   const handleDeleteItem = async (itemId: string) => {
     if (!confirm('Xóa bài giảng/file này?')) return;
-    await fetch(`/api/courses/modules/items/${itemId}`, { method: 'DELETE' });
+    await apiClient.delete(`/courses/modules/items/${itemId}`);
     onRefresh();
   };
 
@@ -106,10 +101,7 @@ export function CourseModulesTab({ courseId, modules: initialModules, role, onRe
         const newItems = arrayMove(mod.items, oldIdx, newIdx).map((item: any, idx: number) => ({ ...item, order: idx }));
         mod.items = newItems;
         newMods[modIdx] = mod;
-        fetch('/api/courses/modules/reorder', {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: newItems.map((i: any) => ({ id: i.id, order: i.order })) })
-        });
+        apiClient.put('/courses/modules/reorder', { items: newItems.map((i: any) => ({ id: i.id, order: i.order })) });
         return newMods;
       });
     }

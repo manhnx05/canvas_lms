@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Users, Star, X } from 'lucide-react';
 import { Role, Course } from '../types';
+import apiClient from '../lib/apiClient';
 
 export function Courses({ role }: { role: Role }) {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -15,8 +16,8 @@ export function Courses({ role }: { role: Role }) {
   const navigate = useNavigate();
 
   const fetchCourses = () => {
-    fetch('/api/courses')
-      .then(res => res.json())
+    apiClient.get('/courses')
+      .then(res => res.data)
       .then(data => { setCourses(data); setLoading(false); })
       .catch(err => { console.error("Failed to fetch courses", err); setLoading(false); });
   };
@@ -28,14 +29,10 @@ export function Courses({ role }: { role: Role }) {
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/courses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title, description, color, icon: 'BookOpen'
-        })
+      const res = await apiClient.post('/courses', {
+        title, description, color, icon: 'BookOpen'
       });
-      if (res.ok) {
+      if (res.data) {
         setIsCreating(false);
         setTitle(''); setDescription(''); setColor('bg-blue-500');
         fetchCourses();

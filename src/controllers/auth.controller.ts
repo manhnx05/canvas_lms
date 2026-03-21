@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import { Resend } from 'resend';
 import bcrypt from 'bcryptjs';
 import prisma from '../lib/prisma';
@@ -15,8 +16,11 @@ export const login = async (req: Request, res: Response) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ error: 'Mật khẩu không chính xác!' });
 
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET || 'canvas_secret_key', { expiresIn: '7d' });
+
     res.json({
       message: 'Đăng nhập thành công',
+      token,
       user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar }
     });
   } catch (error) {
@@ -77,8 +81,11 @@ export const registerConfirm = async (req: Request, res: Response) => {
       data: { password: hashedPassword, otp: null, name: name || user.name, role: role || user.role }
     });
 
+    const token = jwt.sign({ id: updated.id, role: updated.role }, process.env.JWT_SECRET || 'canvas_secret_key', { expiresIn: '7d' });
+
     res.json({ 
       message: 'Đăng ký thành công!', 
+      token,
       user: { id: updated.id, name: updated.name, email: updated.email, role: updated.role, avatar: updated.avatar }
     });
   } catch (error) {

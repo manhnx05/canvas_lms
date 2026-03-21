@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Star, Trophy, Target, Award, CheckCircle } from 'lucide-react';
 import { Role } from '../types';
+import apiClient from '../lib/apiClient';
 
 export function Rewards({ role }: { role: Role }) {
   const [rewards, setRewards] = useState<any[]>([]);
@@ -8,8 +9,8 @@ export function Rewards({ role }: { role: Role }) {
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
 
   useEffect(() => {
-    fetch('/api/rewards')
-      .then(res => res.json())
+    apiClient.get('/rewards')
+      .then(res => res.data)
       .then(data => { setRewards(data); setLoading(false); })
       .catch(err => { console.error(err); setLoading(false); });
   }, []);

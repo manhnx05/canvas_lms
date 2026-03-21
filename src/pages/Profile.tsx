@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Mail, Image, Save, Book } from 'lucide-react';
 import { Role } from '../types';
+import apiClient from '../lib/apiClient';
 
 export function Profile({ role }: { role: Role }) {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('canvas_user') || '{}'));
@@ -15,23 +16,14 @@ export function Profile({ role }: { role: Role }) {
     setLoading(true);
     setMessage('');
     try {
-      const res = await fetch('/api/auth/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email, name, avatar, className: role === 'student' ? className : undefined })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage('Cập nhật hồ sơ thành công!');
-        localStorage.setItem('canvas_user', JSON.stringify(data.user));
-        setUser(data.user);
-        // Force reload to update Layout if needed, or rely on state. In a real app we'd use Context
-        window.location.reload();
-      } else {
-        setMessage(data.error || 'Lỗi cập nhật');
-      }
-    } catch (error) {
-      setMessage('Lỗi kết nối máy chủ');
+      const res = await apiClient.put('/auth/profile', { email: user.email, name, avatar, className: role === 'student' ? className : undefined });
+      const data = res.data;
+      setMessage('Cập nhật hồ sơ thành công!');
+      localStorage.setItem('canvas_user', JSON.stringify(data.user));
+      setUser(data.user);
+      window.location.reload();
+    } catch (error: any) {
+      setMessage(error.response?.data?.error || 'Lỗi kết nối máy chủ');
     }
     setLoading(false);
   };

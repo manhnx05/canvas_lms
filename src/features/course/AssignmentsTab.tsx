@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, FileText, Clock, CheckCircle, Sparkles, Link } from 'lucide-react';
 import { Role } from '../../types';
+import apiClient from '../../lib/apiClient';
 
 interface Props {
   courseId: string;
@@ -25,11 +26,8 @@ export function AssignmentsTab({ courseId, courseTitle, assignments, role, onRef
     if (!topic) return alert('Vui lòng nhập chủ đề bài kiểm tra!');
     setGenerating(true);
     try {
-      const res = await fetch('/api/ai/generate-quiz', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic })
-      });
-      const data = await res.json();
+      const res = await apiClient.post('/ai/generate-quiz', { topic });
+      const data = res.data;
       if (data.questions) setQuestions(data.questions);
       else alert('Lỗi khi sinh đề: ' + data.error);
     } catch { alert('Gọi AI thất bại.'); }
@@ -38,10 +36,7 @@ export function AssignmentsTab({ courseId, courseTitle, assignments, role, onRef
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch('/api/assignments', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, courseId, courseName: courseTitle, dueDate: due, starsReward: stars, type, description: desc, questions: questions.length > 0 ? questions : null })
-    });
+    await apiClient.post('/assignments', { title, courseId, courseName: courseTitle, dueDate: due, starsReward: stars, type, description: desc, questions: questions.length > 0 ? questions : null });
     setTitle(''); setDue(''); setStars('10'); setDesc(''); setTopic(''); setQuestions([]); setShowForm(false);
     onRefresh();
   };

@@ -3,6 +3,7 @@ import {
   Brain, ChevronRight, RotateCcw, CheckCircle, XCircle,
   Clock, Star, TrendingUp, AlertCircle, Loader
 } from 'lucide-react';
+import apiClient from '../../lib/apiClient';
 
 interface QuizQuestion {
   id: string;
@@ -59,12 +60,8 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
     if (qs.length === 0 && topic) {
       setGeneratingAI(true);
       try {
-        const res = await fetch('/api/ai/generate-quiz', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ topic, numQuestions: 5, gradeLevel: 'Tiểu học' })
-        });
-        const data = await res.json();
+        const res = await apiClient.post('/ai/generate-quiz', { topic, numQuestions: 5, gradeLevel: 'Tiểu học' });
+        const data = res.data;
         qs = data.questions || [];
         setQuestions(qs);
       } catch (e) { console.error(e); }
@@ -102,23 +99,15 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
 
     let aiFeedback: string | undefined;
     try {
-      const res = await fetch('/api/ai/evaluate-submission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questions, answers, studentName: studentName || currentUser.name })
-      });
-      const data = await res.json();
+      const res = await apiClient.post('/ai/evaluate-submission', { questions, answers, studentName: studentName || currentUser.name });
+      const data = res.data;
       aiFeedback = data.feedback;
     } catch (e) { console.error(e); }
 
     // Save to DB if assignmentId given
     if (assignmentId && currentUser.id) {
       try {
-        await fetch(`/api/assignments/${assignmentId}/submit`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: currentUser.id, answers: { answers, aiFeedback, score: correct, total: questions.length } })
-        });
+        await apiClient.post(`/assignments/${assignmentId}/submit`, { userId: currentUser.id, answers: { answers, aiFeedback, score: correct, total: questions.length } });
       } catch (e) { console.error(e); }
     }
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, Trash2, Eye, Download } from 'lucide-react';
+import apiClient from '../lib/apiClient';
 
 export const ExamList: React.FC = () => {
   const [exams, setExams] = useState<any[]>([]);
@@ -13,8 +14,8 @@ export const ExamList: React.FC = () => {
 
   const fetchExams = async () => {
     try {
-      const res = await fetch('/api/exams');
-      const data = await res.json();
+      const res = await apiClient.get('/exams');
+      const data = res.data;
       setExams(data);
     } catch (err) {
       console.error(err);
@@ -26,7 +27,7 @@ export const ExamList: React.FC = () => {
   const deleteExam = async (id: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa đề thi này?')) return;
     try {
-      await fetch(`/api/exams/${id}`, { method: 'DELETE' });
+      await apiClient.delete(`/exams/${id}`);
       setExams(prev => prev.filter(e => e.id !== id));
     } catch (err) {
       console.error(err);
