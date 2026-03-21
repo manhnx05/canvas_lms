@@ -2,31 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, CheckCircle, AlertCircle, Star, Trophy, Users, FileText, TrendingUp } from 'lucide-react';
 import { Role, Course, Assignment } from '../types';
-import apiClient from '../lib/apiClient';
+import { useDashboardData } from '../hooks/useDashboardData';
 
 export function Dashboard({ role }: { role: Role }) {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<any>(null);
+  const { courses, assignments, stats, loading } = useDashboardData(role);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
-
-  useEffect(() => {
-    Promise.all([
-      apiClient.get('/courses').then(res => res.data),
-      apiClient.get('/assignments').then(res => res.data),
-      role === 'teacher' ? apiClient.get('/teacher/stats').then(res => res.data) : Promise.resolve(null)
-    ]).then(([coursesData, assignmentsData, statsData]) => {
-      setCourses(coursesData);
-      setAssignments(assignmentsData);
-      setStats(statsData);
-      setLoading(false);
-    }).catch(err => {
-      console.error("Failed to fetch data", err);
-      setLoading(false);
-    });
-  }, [role]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;

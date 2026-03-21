@@ -7,22 +7,12 @@ import { AnnouncementsTab } from '../features/course/AnnouncementsTab';
 import { AssignmentsTab } from '../features/course/AssignmentsTab';
 import { GradesTab } from '../features/course/GradesTab';
 
+import { useCourseDetail } from '../hooks/useCourseDetail';
+
 export function CourseDetail({ role }: { role: Role }) {
   const { id } = useParams();
-  const [course, setCourse] = useState<any>(null);
+  const { course, loading, fetchCourse } = useCourseDetail(id);
   const [activeTab, setActiveTab] = useState('home');
-  const [loading, setLoading] = useState(true);
-
-  const fetchCourse = () => {
-    fetch(`/api/courses/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        setCourse(data);
-        setLoading(false);
-      });
-  };
-
-  useEffect(() => { fetchCourse(); }, [id]);
 
   const tabs = [
     { id: 'home', icon: Book, label: 'Bài Giảng' },
