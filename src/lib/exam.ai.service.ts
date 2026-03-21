@@ -73,7 +73,7 @@ export async function extractTextFromFile(filePath: string): Promise<string> {
 }
 
 export async function generateExamWithAI(params: ExamGenerationParams): Promise<ExamQuestion[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   const subjectName = SUBJECT_MAP[params.subject] || params.subject;
   const totalQuestions = params.nbCount + params.thCount + params.vdCount + params.vdcCount;
