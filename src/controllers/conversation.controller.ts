@@ -23,6 +23,7 @@ export const getMessages = async (req: Request, res: Response, next: NextFunctio
 export const sendMessage = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const io = req.app.get('io');
+    console.log("sendMessage called, io exists:", !!io);
     const data = { ...req.body };
     if (!data.senderId && (req as any).user) {
       data.senderId = (req as any).user.id;
