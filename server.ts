@@ -13,6 +13,9 @@ async function startServer() {
 
   // Mount API routes
   app.use("/api", apiRoutes);
+  
+  // Serve uploads
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {

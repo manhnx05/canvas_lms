@@ -40,6 +40,7 @@ model Course {
   announcements Announcement[]
   enrollments   Enrollment[]
   conversations Conversation[]
+  exams         Exam[]
 }
 
 model CourseModule {
@@ -167,4 +168,35 @@ model Notification {
   isRead    Boolean  @default(false)
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Exam {
+  id          String     @id @default(uuid())
+  title       String
+  subject     String     // 'math' | 'physics' | 'chemistry' | 'biology' | 'literature' | 'history' | 'geography'
+  grade       String     // '6' | '7' | '8' | '9' | '10' | '11' | '12'
+  duration    Int        // phút
+  totalScore  Int        @default(10)
+  standard    String     @default("cv7991") // chuẩn Công văn 7991
+  difficulty  String     @default("medium")  // 'easy' | 'medium' | 'hard'
+  questions   Json       // mảng ExamQuestion[]
+  courseId    String?
+  createdBy   String     // userId giáo viên
+  createdAt   DateTime   @default(now())
+  status      String     @default("draft") // 'draft' | 'published'
+
+  course      Course?    @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  sourceFiles ExamFile[]
+}
+
+model ExamFile {
+  id         String   @id @default(uuid())
+  examId     String?
+  name       String
+  size       Int      @default(0)
+  type       String   // 'textbook' | 'reference'
+  url        String   // đường dẫn file trên server
+  uploadedAt DateTime @default(now())
+
+  exam       Exam?    @relation(fields: [examId], references: [id], onDelete: SetNull)
 }
