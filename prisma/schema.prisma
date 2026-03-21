@@ -174,7 +174,7 @@ model Exam {
   id          String     @id @default(uuid())
   title       String
   subject     String     // 'math' | 'physics' | 'chemistry' | 'biology' | 'literature' | 'history' | 'geography'
-  grade       String     // '6' | '7' | '8' | '9' | '10' | '11' | '12'
+  grade       String     // '1' | '2' | '3' | '4' | '5'
   duration    Int        // phút
   totalScore  Int        @default(10)
   standard    String     @default("cv7991") // chuẩn Công văn 7991

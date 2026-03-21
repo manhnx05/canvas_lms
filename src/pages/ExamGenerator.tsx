@@ -25,7 +25,7 @@ export const ExamGenerator: React.FC = () => {
   const [config, setConfig] = useState<ExamConfig>({
     title: 'Đề kiểm tra trắc nghiệm',
     subject: 'math',
-    grade: '10',
+    grade: '1',
     duration: 45,
     totalScore: 10,
     difficulty: 'medium',
@@ -176,7 +176,7 @@ export const ExamGenerator: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">Khối lớp</label>
               <select className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 value={config.grade} onChange={e => handleConfigChange('grade', e.target.value)}>
-                {['6','7','8','9','10','11','12'].map(g => (
+                {['1','2','3','4','5'].map(g => (
                   <option key={g} value={g}>Lớp {g}</option>
                 ))}
               </select>
