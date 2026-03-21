@@ -1,0 +1,271 @@
+{
+  "info": {
+    "name": "Canvas LMS API Tests",
+    "description": "Bộ Collection dùng để test toàn bộ các chức năng Backend API của hệ thống Canvas LMS",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "token",
+      "value": "ENTER_YOUR_JWT_TOKEN_HERE"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "User Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"teacher@example.com\",\n  \"password\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "Get All Courses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses"]
+            }
+          }
+        },
+        {
+          "name": "Get Course Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses/COURSE_ID_HERE",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "COURSE_ID_HERE"]
+            }
+          }
+        },
+        {
+          "name": "Create Announcement",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses/COURSE_ID_HERE/announcements",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "COURSE_ID_HERE", "announcements"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Thông báo nghỉ học\",\n  \"content\": \"Hôm nay cô có việc bận, các em nghỉ nha!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Module Item (Lesson)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses/COURSE_ID_HERE/modules/MODULE_ID_HERE/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "COURSE_ID_HERE", "modules", "MODULE_ID_HERE", "items"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Tài liệu học tập tuần 1", "type": "text" },
+                { "key": "type", "value": "file", "type": "text" },
+                { "key": "file", "type": "file", "src": "" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assignments",
+      "item": [
+        {
+          "name": "Get Assignments",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assignments?courseId=COURSE_ID_HERE",
+              "host": ["{{baseUrl}}"],
+              "path": ["assignments"]
+            },
+            "query": [
+              { "key": "courseId", "value": "COURSE_ID_HERE", "description": "Optional Filter" }
+            ]
+          }
+        },
+        {
+          "name": "Create Assignment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assignments",
+              "host": ["{{baseUrl}}"],
+              "path": ["assignments"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bài tập về nhà số 1\",\n  \"courseId\": \"COURSE_ID_HERE\",\n  \"dueDate\": \"2024-12-31T23:59:59\",\n  \"starsReward\": 5,\n  \"type\": \"writing\",\n  \"description\": \"Hãy viết 1 đoạn văn về kỳ nghỉ của em.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Submit Assignment File",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assignments/ASSIGNMENT_ID_HERE/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["assignments", "ASSIGNMENT_ID_HERE", "submit"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "answers", "value": "{}", "type": "text" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inbox (Conversations)",
+      "item": [
+        {
+          "name": "Get User Conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/conversations",
+              "host": ["{{baseUrl}}"],
+              "path": ["conversations"]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/conversations/CONV_ID_HERE/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["conversations", "CONV_ID_HERE", "messages"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Chào cô, cho em hỏi bài tập 2 làm như nào ạ?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/conversations",
+              "host": ["{{baseUrl}}"],
+              "path": ["conversations"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": \"RECEIVER_USER_ID_HERE\",\n  \"subject\": \"Hỏi đáp Khóa học Toán\",\n  \"content\": \"Xin chào! Lâu quá không gặp.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Evaluation",
+      "item": [
+        {
+          "name": "Evaluate Submission AI",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/evaluate-submission",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "evaluate-submission"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teacherPrompt\": \"Chấm điểm nội dung học sinh đã trình bày.\",\n  \"title\": \"Viết văn tả cảnh\",\n  \"description\": \"Tả cảnh trường em\",\n  \"studentAnswers\": {\n    \"essay\": \"Trường em vào mùa thu tuyệt đẹp...\"\n  }\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
