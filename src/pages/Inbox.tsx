@@ -74,11 +74,22 @@ export function Inbox({ role }: { role: string }) {
     refetchConversations().then(() => setLoading(false));
     fetchCourses();
 
-    socketRef.current = io();
-    socketRef.current.emit('join', currentUser.id);
+    socketRef.current = io({ transports: ['websocket', 'polling'] });
+    
+    const joinRoom = () => socketRef.current?.emit('join', currentUser.id);
 
-    // Polling fallback every 10s
-    const pollTimer = setInterval(refetchConversations, 10000);
+    if (socketRef.current.connected) {
+      joinRoom();
+    } else {
+      socketRef.current.on('connect', joinRoom);
+    }
+    socketRef.current.on('reconnect', joinRoom);
+    
+    socketRef.current.on('connect_error', (err) => console.error('Socket connect_error:', err.message));
+    socketRef.current.on('disconnect', () => console.log('Socket disconnected'));
+
+    // Polling fallback every 30s
+    const pollTimer = setInterval(refetchConversations, 30000);
 
     // Auto-open compose from Students page (?compose=1&to=...)
     const params = new URLSearchParams(window.location.search);
@@ -94,15 +105,20 @@ export function Inbox({ role }: { role: string }) {
   useEffect(() => {
     const handleNewMessage = (msg: any) => {
       if (activeConv && msg.conversationId === activeConv.id) {
-        setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
-        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+        setMessages(prev => {
+          if (prev.some(m => m.id === msg.id)) return prev;
+          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+          return [...prev, msg];
+        });
       }
       setConversations(prev => {
         const idx = prev.findIndex(c => c.id === msg.conversationId);
         if (idx > -1) {
           const copy = [...prev];
           const conv = { ...copy[idx], lastMessage: msg };
-          if (!activeConv || activeConv.id !== conv.id) conv.unreadCount = (conv.unreadCount || 0) + 1;
+          if (!activeConv || activeConv.id !== conv.id) {
+            conv.unreadCount = (conv.unreadCount || 0) + 1;
+          }
           copy.splice(idx, 1);
           return [conv, ...copy];
         } else {
