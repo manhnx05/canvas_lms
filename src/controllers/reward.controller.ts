@@ -1,11 +1,11 @@
-import { Request, Response } from 'express';
-import prisma from '../lib/prisma';
+import { Request, Response, NextFunction } from 'express';
+import { rewardService } from '../services/rewardService';
 
-export const getRewards = async (req: Request, res: Response) => {
+export const getRewards = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const rewards = await prisma.reward.findMany();
+    const rewards = await rewardService.getRewards();
     res.json(rewards);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi lấy phần thưởng' });
+    next(error);
   }
 };

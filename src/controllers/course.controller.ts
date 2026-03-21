@@ -1,208 +1,119 @@
-import { Request, Response } from 'express';
-import prisma from '../lib/prisma';
+import { Request, Response, NextFunction } from 'express';
+import { courseService } from '../services/courseService';
 
-// GET /api/courses?userId=xxx — returns courses for a user (enrolled or teaching)
-// GET /api/courses — returns all courses (admin/fallback)
-export const getCourses = async (req: Request, res: Response) => {
+export const getCourses = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { userId } = req.query;
-    if (userId) {
-      // Find courses user is enrolled in, or teaching (teacher field matches user name)
-      const enrollments = await prisma.enrollment.findMany({
-        where: { userId: String(userId) },
-        include: { course: true }
-      });
-      const courses = enrollments.map(e => e.course);
-      return res.json(courses);
-    }
-    const courses = await prisma.course.findMany({ orderBy: { title: 'asc' } });
+    const courses = await courseService.getCourses(req.query.userId as string);
     res.json(courses);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi lấy danh sách khóa học' });
+    next(error);
   }
 };
 
-export const getCourseById = async (req: Request, res: Response) => {
+export const getCourseById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const course = await prisma.course.findUnique({
-      where: { id: req.params.id },
-      include: { 
-        assignments: { orderBy: { id: 'desc' } },
-        announcements: { orderBy: { id: 'desc' } },
-        modules: {
-          orderBy: { order: 'asc' },
-          include: { items: { orderBy: { order: 'asc' } } }
-        },
-        enrollments: {
-          include: { user: { select: { id: true, name: true, email: true, role: true, avatar: true } } }
-        }
-      }
-    });
-    if (!course) return res.status(404).json({ error: "Không tìm thấy khóa học" });
-
-    const formattedCourse = {
-      ...course,
-      people: course.enrollments.map(e => e.user)
-    };
-
-    res.json(formattedCourse);
+    const course = await courseService.getCourseById(req.params.id);
+    res.json(course);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi lấy chi tiết khóa học' });
+    next(error);
   }
 };
 
-export const createCourse = async (req: Request, res: Response) => {
+export const createCourse = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, color, icon, description, teacher, teacherId } = req.body;
-    const course = await prisma.course.create({
-      data: {
-        title, color, icon, description,
-        teacher: teacher || 'Giáo viên',
-        studentsCount: 0,
-        progress: 0
-      }
-    });
-
-    // Auto-enroll the teacher if teacherId is given
-    if (teacherId) {
-      await prisma.enrollment.create({
-        data: { userId: teacherId, courseId: course.id }
-      }).catch(() => {}); // ignore duplicate
-    }
-
+    const course = await courseService.createCourse(req.body);
     res.status(201).json(course);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi tạo lớp học' });
+    next(error);
   }
 };
 
-export const enrollUser = async (req: Request, res: Response) => {
+export const enrollUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { userId } = req.body;
-    const courseId = req.params.id;
-    const enrollment = await prisma.enrollment.upsert({
-      where: { userId_courseId: { userId, courseId } },
-      update: {},
-      create: { userId, courseId }
-    });
-    // Update student count
-    const count = await prisma.enrollment.count({ where: { courseId } });
-    await prisma.course.update({ where: { id: courseId }, data: { studentsCount: count } });
+    const enrollment = await courseService.enrollUser(req.params.id, req.body.userId);
     res.json(enrollment);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi đăng ký vào lớp' });
+    next(error);
   }
 };
 
-export const unenrollUser = async (req: Request, res: Response) => {
+export const unenrollUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { userId } = req.params;
-    const courseId = req.params.id;
-    await prisma.enrollment.delete({
-      where: { userId_courseId: { userId, courseId } }
-    });
-    const count = await prisma.enrollment.count({ where: { courseId } });
-    await prisma.course.update({ where: { id: courseId }, data: { studentsCount: count } });
+    await courseService.unenrollUser(req.params.id, req.params.userId);
     res.json({ message: 'Đã xoá khỏi lớp' });
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi xoá khỏi lớp' });
+    next(error);
   }
 };
 
-export const postAnnouncement = async (req: Request, res: Response) => {
+export const postAnnouncement = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, content } = req.body;
-    const date = new Date().toLocaleDateString('vi-VN');
-    const announcement = await prisma.announcement.create({
-      data: { title, content, date, courseId: req.params.id }
-    });
+    const announcement = await courseService.postAnnouncement(req.params.id, req.body);
     res.status(201).json(announcement);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi gửi thông báo' });
+    next(error);
   }
 };
 
-export const updateAnnouncement = async (req: Request, res: Response) => {
+export const updateAnnouncement = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, content } = req.body;
-    const ann = await prisma.announcement.update({
-      where: { id: req.params.announcementId },
-      data: { title, content }
-    });
+    const ann = await courseService.updateAnnouncement(req.params.announcementId, req.body);
     res.json(ann);
-  } catch (error) { res.status(500).json({ error: 'Lỗi sửa thông báo' }); }
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const deleteAnnouncement = async (req: Request, res: Response) => {
+export const deleteAnnouncement = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await prisma.announcement.delete({ where: { id: req.params.announcementId } });
+    await courseService.deleteAnnouncement(req.params.announcementId);
     res.json({ message: 'Deleted' });
-  } catch (error) { res.status(500).json({ error: 'Lỗi xóa thông báo' }); }
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const createModule = async (req: Request, res: Response) => {
+export const createModule = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title } = req.body;
-    const maxMod = await prisma.courseModule.findFirst({
-      where: { courseId: req.params.id },
-      orderBy: { order: 'desc' }
-    });
-    const nextOrder = maxMod ? maxMod.order + 1 : 0;
-    const mod = await prisma.courseModule.create({
-      data: { title, order: nextOrder, courseId: req.params.id },
-      include: { items: true }
-    });
+    const mod = await courseService.createModule(req.params.id, req.body);
     res.status(201).json(mod);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi tạo module' });
+    next(error);
   }
 };
 
-export const createModuleItem = async (req: Request, res: Response) => {
+export const createModuleItem = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, type, url, content } = req.body;
-    const moduleId = req.params.moduleId;
-    const maxItem = await prisma.moduleItem.findFirst({
-      where: { moduleId },
-      orderBy: { order: 'desc' }
-    });
-    const nextOrder = maxItem ? maxItem.order + 1 : 0;
-    const item = await prisma.moduleItem.create({
-      data: { title, type, url, content, order: nextOrder, moduleId }
-    });
+    const item = await courseService.createModuleItem(req.params.moduleId, req.body);
     res.status(201).json(item);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi thêm nội dung' });
+    next(error);
   }
 };
 
-export const reorderModuleItems = async (req: Request, res: Response) => {
+export const reorderModuleItems = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { items } = req.body;
-    await prisma.$transaction(
-      items.map((item: any) =>
-        prisma.moduleItem.update({
-          where: { id: item.id },
-          data: { order: item.order }
-        })
-      )
-    );
+    await courseService.reorderModuleItems(req.body.items);
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi sắp xếp module items' });
+    next(error);
   }
 };
 
-export const deleteModule = async (req: Request, res: Response) => {
+export const deleteModule = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await prisma.courseModule.delete({ where: { id: req.params.moduleId } });
+    await courseService.deleteModule(req.params.moduleId);
     res.json({ message: 'Deleted' });
-  } catch (error) { res.status(500).json({ error: 'Lỗi xóa module' }); }
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const deleteModuleItem = async (req: Request, res: Response) => {
+export const deleteModuleItem = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await prisma.moduleItem.delete({ where: { id: req.params.itemId } });
+    await courseService.deleteModuleItem(req.params.itemId);
     res.json({ message: 'Deleted' });
-  } catch (error) { res.status(500).json({ error: 'Lỗi xóa nội dung' }); }
+  } catch (error) {
+    next(error);
+  }
 };

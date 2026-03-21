@@ -1,63 +1,20 @@
-import { Request, Response } from 'express';
-import prisma from '../lib/prisma';
+import { Request, Response, NextFunction } from 'express';
+import { teacherService } from '../services/teacherService';
 
-export const getStats = async (req: Request, res: Response) => {
+export const getStats = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { userId } = req.query;
-
-    if (userId) {
-      // Teacher-specific stats based on their courses
-      const enrollments = await prisma.enrollment.findMany({
-        where: { userId: String(userId), user: { role: 'teacher' } },
-        include: { course: true }
-      });
-      const courseIds = enrollments.map(e => e.courseId);
-
-      const totalStudents = await prisma.enrollment.count({
-        where: { courseId: { in: courseIds }, user: { role: 'student' } }
-      });
-      const pendingGrading = await prisma.submission.count({
-        where: { assignment: { courseId: { in: courseIds } }, status: 'submitted' }
-      });
-      const totalCourses = courseIds.length;
-      const totalAssignments = await prisma.assignment.count({
-        where: { courseId: { in: courseIds } }
-      });
-
-      return res.json({ totalStudents, pendingGrading, totalCourses, totalAssignments });
-    }
-
-    // Fallback global stats
-    const [totalStudents, pendingGrading, totalCourses, totalAssignments] = await Promise.all([
-      prisma.user.count({ where: { role: 'student' } }),
-      prisma.submission.count({ where: { status: 'submitted' } }),
-      prisma.course.count(),
-      prisma.assignment.count()
-    ]);
-
-    res.json({ totalStudents, pendingGrading, totalCourses, totalAssignments });
+    const stats = await teacherService.getStats(req.query.userId as string);
+    res.json(stats);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi lấy thống kê' });
+    next(error);
   }
 };
 
-// GET /api/teacher/submissions?courseId=xxx  – All submissions for teacher's course
-export const getCourseSubmissions = async (req: Request, res: Response) => {
+export const getCourseSubmissions = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { courseId } = req.query;
-    if (!courseId) return res.status(400).json({ error: 'Missing courseId' });
-
-    const submissions = await prisma.submission.findMany({
-      where: { assignment: { courseId: String(courseId) } },
-      include: {
-        user: { select: { id: true, name: true, email: true, avatar: true } },
-        assignment: { select: { id: true, title: true, type: true, starsReward: true } }
-      },
-      orderBy: { id: 'desc' }
-    });
-
+    const submissions = await teacherService.getCourseSubmissions(req.query.courseId as string);
     res.json(submissions);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi lấy danh sách nộp bài' });
+    next(error);
   }
 };

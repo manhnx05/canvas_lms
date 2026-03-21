@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import apiRoutes from "./src/routes";
+import { errorHandler } from "./src/middleware/errorHandler";
 
 async function startServer() {
   const app = express();
@@ -13,6 +14,9 @@ async function startServer() {
 
   // Mount API routes
   app.use("/api", apiRoutes);
+  
+  // Add API Error Handler
+  app.use(errorHandler);
   
   // Serve uploads
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));

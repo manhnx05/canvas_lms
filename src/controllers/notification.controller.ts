@@ -1,43 +1,29 @@
-import { Request, Response } from 'express';
-import prisma from '../lib/prisma';
+import { Request, Response, NextFunction } from 'express';
+import { notificationService } from '../services/notificationService';
 
-export const getNotifications = async (req: Request, res: Response) => {
+export const getNotifications = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { userId } = req.query;
-    if (!userId) return res.status(400).json({ error: 'Missing userId' });
-
-    const notifications = await prisma.notification.findMany({
-      where: { userId: String(userId) },
-      orderBy: { id: 'desc' } // Prisma doesn't sort by createdAt if we don't have it, but id usually loosely sorts if it's uuid or we can just sort in memory or rely on db order
-    });
-
+    const notifications = await notificationService.getNotifications(req.query.userId as string);
     res.json(notifications);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi lấy thông báo' });
+    next(error);
   }
 };
 
-export const markAsRead = async (req: Request, res: Response) => {
+export const markAsRead = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
-    await prisma.notification.update({
-      where: { id },
-      data: { isRead: true }
-    });
-    res.json({ message: 'Đã đánh dấu đọc' });
+    const result = await notificationService.markAsRead(req.params.id);
+    res.json({ message: 'Đã đánh dấu đọc', data: result });
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi cập nhật thông báo' });
+    next(error);
   }
 };
 
-export const createNotification = async (req: Request, res: Response) => {
+export const createNotification = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { userId, title, content, date } = req.body;
-    const notification = await prisma.notification.create({
-      data: { userId, title, content, date }
-    });
+    const notification = await notificationService.createNotification(req.body);
     res.json(notification);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi tạo thông báo' });
+    next(error);
   }
 };
