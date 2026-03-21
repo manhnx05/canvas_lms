@@ -3,8 +3,8 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { createServer as createViteServer } from "vite";
 import path from "path";
-import apiRoutes from "./src/routes";
-import { errorHandler } from "./src/middleware/errorHandler";
+import apiRoutes from "./src/server/routes/index";
+import { errorHandler } from "./src/server/middleware/errorHandler";
 
 async function startServer() {
   const app = express();
