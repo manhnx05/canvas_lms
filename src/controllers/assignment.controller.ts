@@ -24,7 +24,14 @@ export const getAssignmentById = async (req: Request, res: Response, next: NextF
 // POST /api/assignments/:id/submit   body: { userId, answers }
 export const submitAssignment = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const submission = await assignmentService.submitAssignment(req.params.id, req.body);
+    const data = { ...req.body };
+    if (!data.userId && (req as any).user) {
+      data.userId = (req as any).user.id;
+    }
+    if (req.file) {
+      data.fileUrl = `/uploads/${req.file.filename}`;
+    }
+    const submission = await assignmentService.submitAssignment(req.params.id, data);
     res.json(submission);
   } catch (error) {
     next(error);

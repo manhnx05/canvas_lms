@@ -46,7 +46,7 @@ export function CreateAssignmentModal({ courses, onSubmit, onClose }: CreateAssi
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Hạn nộp</label>
-              <input required value={dueDate} onChange={e=>setDueDate(e.target.value)} type="text" className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 outline-none focus:border-sky-500 font-medium" placeholder="Ngày mai" />
+              <input required value={dueDate} onChange={e=>setDueDate(e.target.value)} type="datetime-local" className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 outline-none focus:border-sky-500 font-medium" />
             </div>
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Phần thưởng (Sao)</label>

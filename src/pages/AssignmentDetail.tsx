@@ -15,6 +15,9 @@ export function AssignmentDetail({ role }: { role: Role }) {
   
   // Teacher grading state
   const [evaluatingSubId, setEvaluatingSubId] = useState<string|null>(null);
+  
+  // File submission state
+  const [file, setFile] = useState<File|null>(null);
 
   const loadData = () => {
     apiClient.get(`/assignments/${id}`)
@@ -36,8 +39,15 @@ export function AssignmentDetail({ role }: { role: Role }) {
 
   const handleManualSubmit = async () => {
     setLoading(true);
-    await apiClient.post(`/assignments/${id}/submit`, { answers: null });
-    setLoading(false); loadData();
+    const formData = new FormData();
+    if (file) formData.append('file', file);
+    formData.append('answers', JSON.stringify({})); // placeholder wrapper
+    
+    await apiClient.post(`/assignments/${id}/submit`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    setLoading(false);
+    loadData();
   };
 
   const handleAIGrade = async (sub: any) => {
@@ -132,11 +142,21 @@ export function AssignmentDetail({ role }: { role: Role }) {
                   ) : (
                     // CŨ: Tải File
                     <div className="space-y-4">
-                      <div className="border-2 border-dashed border-sky-300 bg-sky-50 rounded-2xl p-12 text-center cursor-pointer hover:bg-sky-100 transition-colors">
-                        <Upload className="w-12 h-12 text-sky-400 mx-auto mb-3" />
-                        <p className="font-bold text-sky-900">Tải tệp lên hoặc kéo thả vào đây</p>
-                      </div>
-                      <button onClick={handleManualSubmit} disabled={loading} className="w-full bg-amber-400 hover:bg-amber-500 disabled:opacity-50 text-white py-4 rounded-2xl font-extrabold text-lg transition-colors">
+                      <label htmlFor="upload-assignment" className="block border-2 border-dashed border-sky-300 bg-sky-50 rounded-2xl p-12 text-center cursor-pointer hover:bg-sky-100 transition-colors">
+                        <input id="upload-assignment" type="file" className="hidden" onChange={e => setFile(e.target.files?.[0] || null)} />
+                        {file ? (
+                          <>
+                            <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                            <p className="font-bold text-emerald-800">{file.name}</p>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-12 h-12 text-sky-400 mx-auto mb-3" />
+                            <p className="font-bold text-sky-900">Tải tệp lên đính kèm bài làm của Bé</p>
+                          </>
+                        )}
+                      </label>
+                      <button onClick={handleManualSubmit} disabled={loading || !file} className="w-full bg-amber-400 hover:bg-amber-500 disabled:opacity-50 text-white py-4 rounded-2xl font-extrabold text-lg transition-colors">
                         {loading ? "Đang nộp..." : "Xác Nhận Nộp Bài"}
                       </button>
                     </div>
@@ -147,6 +167,11 @@ export function AssignmentDetail({ role }: { role: Role }) {
                   <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
                   <h3 className="text-emerald-800 font-extrabold text-2xl">Tuyệt vời! Bé đã nộp bài thành công.</h3>
                   <p className="text-emerald-600 mt-2 font-medium text-lg">Hệ thống đang chờ Cô giáo chấm điểm nhé.</p>
+                  {mySub.answers?.fileUrl && (
+                    <a href={mySub.answers.fileUrl} target="_blank" rel="noreferrer" className="inline-block mt-4 bg-white px-4 py-2 rounded-xl text-emerald-700 font-bold border-2 border-emerald-200 hover:bg-emerald-100 transition-colors shadow-sm">
+                      Xem lại tệp đã nộp
+                    </a>
+                  )}
                 </div>
               ) : mySub.status === 'graded' ? (
                 <div className="space-y-6">
@@ -214,7 +239,12 @@ export function AssignmentDetail({ role }: { role: Role }) {
                              </div>
                            ) : (
                              <div className="text-slate-600 font-medium text-sm text-center">
-                               Bài luận (Tự luận / Tệp gửi đính kèm)
+                               Bài luận (Tự luận / Tệp đính kèm)
+                               {sub.answers?.fileUrl && (
+                                 <a href={sub.answers.fileUrl} target="_blank" rel="noreferrer" className="block mt-2 font-bold text-sky-500 hover:underline">
+                                   Tải xuống tệp bài làm
+                                 </a>
+                               )}
                              </div>
                            )}
                            

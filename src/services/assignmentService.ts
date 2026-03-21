@@ -40,16 +40,26 @@ export const assignmentService = {
   },
 
   submitAssignment: async (id: string, data: any) => {
-    const { userId, answers } = data;
+    const { userId, answers, fileUrl } = data;
     if (!userId) throw new HttpError(400, 'Thiếu thông tin người dùng (userId)');
+
+    let updatedAnswers = {};
+    if (answers) {
+      try {
+        updatedAnswers = typeof answers === 'string' ? JSON.parse(answers) : answers;
+      } catch(e) {}
+    }
+    if (fileUrl) {
+      updatedAnswers = { ...updatedAnswers, fileUrl };
+    }
 
     return prisma.submission.upsert({
       where: { assignmentId_userId: { assignmentId: id, userId } },
-      update: { answers, status: 'submitted', timestamp: new Date().toISOString() },
+      update: { answers: updatedAnswers, status: 'submitted', timestamp: new Date().toISOString() },
       create: {
         assignmentId: id,
         userId,
-        answers,
+        answers: updatedAnswers,
         status: 'submitted',
         timestamp: new Date().toISOString()
       }
