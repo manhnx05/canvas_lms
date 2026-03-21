@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Send, Edit, Trash2 } from 'lucide-react';
 import { Role } from '../../types';
+import apiClient from '../../lib/apiClient';
 
 interface Props {
   courseId: string;
@@ -19,24 +20,18 @@ export function AnnouncementsTab({ courseId, announcements, role, onRefresh }: P
 
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch(`/api/courses/${courseId}/announcements`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, content })
-    });
+    await apiClient.post(`/courses/${courseId}/announcements`, { title, content });
     setTitle(''); setContent(''); setShowForm(false); onRefresh();
   };
 
   const handleUpdate = async (annId: string) => {
-    await fetch(`/api/courses/${courseId}/announcements/${annId}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: editTitle, content: editContent })
-    });
+    await apiClient.put(`/courses/${courseId}/announcements/${annId}`, { title: editTitle, content: editContent });
     setEditId(null); onRefresh();
   };
 
   const handleDelete = async (annId: string) => {
     if (!confirm('Bạn có chắc muốn xóa thông báo này?')) return;
-    await fetch(`/api/courses/${courseId}/announcements/${annId}`, { method: 'DELETE' });
+    await apiClient.delete(`/courses/${courseId}/announcements/${annId}`);
     onRefresh();
   };
 
