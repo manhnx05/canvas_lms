@@ -23,6 +23,7 @@ model User {
   enrollments   Enrollment[]
   notifications Notification[]
   submissions   Submission[]
+  examAttempts  ExamAttempt[]
 }
 
 model Course {
@@ -187,6 +188,7 @@ model Exam {
 
   course      Course?    @relation(fields: [courseId], references: [id], onDelete: SetNull)
   sourceFiles ExamFile[]
+  attempts    ExamAttempt[]
 }
 
 model ExamFile {
@@ -199,4 +201,32 @@ model ExamFile {
   uploadedAt DateTime @default(now())
 
   exam       Exam?    @relation(fields: [examId], references: [id], onDelete: SetNull)
+}
+
+model ExamAttempt {
+  id        String   @id @default(uuid())
+  examId    String
+  userId    String
+  startTime DateTime @default(now())
+  endTime   DateTime?
+  score     Float?
+  status    String   @default("in_progress") // 'in_progress' | 'completed'
+
+  exam      Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers   ExamAnswer[]
+
+  @@unique([examId, userId]) // Một user chỉ được làm bài 1 lần (hoặc có thể bỏ nếu cho làm nhiều lần)
+}
+
+model ExamAnswer {
+  id         String      @id @default(uuid())
+  attemptId  String
+  questionId String      // Matches the ID from Exam.questions JSON
+  optionId   String?     // Bất kỳ 'A', 'B', 'C', 'D'
+  isCorrect  Boolean?
+  
+  attempt    ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
 }

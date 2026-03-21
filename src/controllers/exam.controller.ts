@@ -90,3 +90,42 @@ export const generateExamAIQuick = async (req: Request, res: Response, next: Nex
     next(error);
   }
 };
+
+export const startExamAttempt = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId' });
+    }
+    const attempt = await examService.startExamAttempt(req.params.id, userId as string);
+    res.json(attempt);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const submitExamAttempt = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { attemptId, userId, answers } = req.body;
+    if (!userId || !attemptId || !answers) {
+      return res.status(400).json({ error: 'Missing attemptId, userId, or answers' });
+    }
+    const attempt = await examService.submitExamAttempt(attemptId, userId as string, answers);
+    res.json(attempt);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getExamAttempt = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId parameter' });
+    }
+    const attempt = await examService.getExamAttempt(req.params.id, userId as string);
+    res.json(attempt);
+  } catch (error) {
+    next(error);
+  }
+};

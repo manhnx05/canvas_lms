@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Trash2, Eye, Download } from 'lucide-react';
+import { FileText, Plus, Trash2, Eye, Download, Play } from 'lucide-react';
 import apiClient from '../lib/apiClient';
 
-export const ExamList: React.FC = () => {
+interface ExamListProps {
+  role: 'student' | 'teacher';
+}
+
+export const ExamList: React.FC<ExamListProps> = ({ role }) => {
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -41,16 +45,18 @@ export const ExamList: React.FC = () => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <FileText className="text-indigo-600" size={32} /> Quản Lý Đề Thi
+            <FileText className="text-indigo-600" size={32} /> {role === 'teacher' ? 'Quản Lý Đề Thi' : 'Danh Sách Đề Thi'}
           </h1>
-          <p className="text-gray-500 mt-2">Danh sách các đề thi tự động tạo bởi AI và tải lên.</p>
+          <p className="text-gray-500 mt-2">{role === 'teacher' ? 'Danh sách các đề thi tự động tạo bởi AI và tải lên.' : 'Các bài thi sẵn có dành cho bạn.'}</p>
         </div>
-        <button
-          onClick={() => navigate('/exams/new')}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
-        >
-          <Plus size={20} /> Tạo đề thi mới
-        </button>
+        {role === 'teacher' && (
+          <button
+            onClick={() => navigate('/exams/new')}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+          >
+            <Plus size={20} /> Tạo đề thi mới
+          </button>
+        )}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -79,12 +85,20 @@ export const ExamList: React.FC = () => {
                   <td className="p-4 text-gray-600">Lớp {exam.grade}</td>
                   <td className="p-4 text-gray-600">{exam.duration} Phút</td>
                   <td className="p-4 flex justify-center gap-3">
-                    <button onClick={() => navigate(`/exams/${exam.id}`)} className="text-blue-500 hover:text-blue-700 focus:outline-none p-1 rounded hover:bg-blue-50" title="Xem & In">
-                      <Eye size={18} />
-                    </button>
-                    <button onClick={() => deleteExam(exam.id)} className="text-red-500 hover:text-red-700 focus:outline-none p-1 rounded hover:bg-red-50" title="Xóa">
-                      <Trash2 size={18} />
-                    </button>
+                    {role === 'student' ? (
+                       <button onClick={() => navigate(`/exams/${exam.id}/take`)} className="flex items-center gap-1 text-green-600 bg-green-50 hover:bg-green-100 font-medium px-3 py-1 rounded-md transition" title="Làm bài">
+                         <Play size={16} /> Làm bài
+                       </button>
+                    ) : (
+                      <>
+                        <button onClick={() => navigate(`/exams/${exam.id}`)} className="text-blue-500 hover:text-blue-700 focus:outline-none p-1 rounded hover:bg-blue-50" title="Xem & In">
+                          <Eye size={18} />
+                        </button>
+                        <button onClick={() => deleteExam(exam.id)} className="text-red-500 hover:text-red-700 focus:outline-none p-1 rounded hover:bg-red-50" title="Xóa">
+                          <Trash2 size={18} />
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))

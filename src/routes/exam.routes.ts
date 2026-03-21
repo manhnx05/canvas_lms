@@ -12,7 +12,10 @@ import {
   uploadExamFile,
   deleteExamFile,
   generateExamAI,
-  generateExamAIQuick
+  generateExamAIQuick,
+  startExamAttempt,
+  submitExamAttempt,
+  getExamAttempt
 } from '../controllers/exam.controller';
 
 const router = Router();
@@ -49,5 +52,10 @@ router.post('/generate-ai-quick', generateExamAIQuick);
 // Upload
 router.post('/upload-file', upload.single('file'), uploadExamFile);
 router.delete('/files/:fileId', deleteExamFile);
+
+// Exam taking
+router.post('/:id/start', startExamAttempt);
+router.post('/:id/submit', submitExamAttempt);
+router.get('/:id/attempt', getExamAttempt);
 
 export default router;

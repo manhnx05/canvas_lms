@@ -187,5 +187,81 @@ export const examService = {
     });
 
     return { exam, questions };
+  },
+
+  startExamAttempt: async (examId: string, userId: string) => {
+    const exam = await prisma.exam.findUnique({ where: { id: examId } });
+    if (!exam) throw new HttpError(404, 'Không tìm thấy đề thi');
+
+    let attempt = await prisma.examAttempt.findUnique({
+      where: { examId_userId: { examId, userId } },
+      include: { answers: true }
+    });
+
+    if (!attempt) {
+      attempt = await prisma.examAttempt.create({
+        data: { examId, userId },
+        include: { answers: true }
+      });
+    }
+
+    return attempt;
+  },
+
+  submitExamAttempt: async (attemptId: string, userId: string, answers: any[]) => {
+    const attempt = await prisma.examAttempt.findUnique({
+      where: { id: attemptId },
+      include: { exam: true }
+    });
+
+    if (!attempt) throw new HttpError(404, 'Không tìm thấy lượt làm bài');
+    if (attempt.userId !== userId) throw new HttpError(403, 'Không có quyền nộp bài này');
+    if (attempt.status === 'completed') throw new HttpError(400, 'Bài thi này đã được nộp');
+
+    const examQuestions = attempt.exam.questions as any[];
+    let correctCount = 0;
+    const answerRecords: any[] = [];
+
+    for (const ans of answers) {
+      const q = examQuestions.find((qx: any) => qx.id === ans.questionId);
+      const isCorrect = q ? q.correctOptionId === ans.optionId : false;
+      if (isCorrect) correctCount++;
+
+      answerRecords.push({
+        attemptId: attempt.id,
+        questionId: ans.questionId,
+        optionId: ans.optionId,
+        isCorrect
+      });
+    }
+
+    const totalQuestions = examQuestions.length || 1; // Prevent division by 0
+    const rawScore = (correctCount / totalQuestions) * attempt.exam.totalScore;
+    const score = Math.round(rawScore * 100) / 100; // Round to 2 decimals
+
+    await prisma.examAnswer.createMany({
+      data: answerRecords
+    });
+
+    const finishedAttempt = await prisma.examAttempt.update({
+      where: { id: attempt.id },
+      data: {
+        score,
+        status: 'completed',
+        endTime: new Date()
+      },
+      include: { answers: true }
+    });
+
+    return finishedAttempt;
+  },
+
+  getExamAttempt: async (examId: string, userId: string) => {
+    const attempt = await prisma.examAttempt.findUnique({
+      where: { examId_userId: { examId, userId } },
+      include: { answers: true, exam: true }
+    });
+    if (!attempt) throw new HttpError(404, 'Chưa có lượt làm bài');
+    return attempt;
   }
 };
