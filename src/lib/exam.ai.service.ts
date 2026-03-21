@@ -50,9 +50,9 @@ export async function extractTextFromFile(filePath: string): Promise<string> {
 
   if (ext === '.pdf') {
     try {
-      const pdfParse = (await import('pdf-parse')).default;
+      const pdfParse = (await import('pdf-parse')) as any;
       const dataBuffer = fs.readFileSync(filePath);
-      const data = await pdfParse(dataBuffer);
+      const data = await (pdfParse.default || pdfParse)(dataBuffer);
       return data.text;
     } catch {
       return '';

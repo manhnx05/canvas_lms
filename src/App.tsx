@@ -13,6 +13,9 @@ import { Profile } from './pages/Profile';
 import { Notifications } from './pages/Notifications';
 import { Students } from './pages/Students';
 import { EvaluationHub } from './pages/EvaluationHub';
+import { ExamList } from './pages/ExamList';
+import { ExamGenerator } from './pages/ExamGenerator';
+import { ExamViewer } from './pages/ExamViewer';
 import { Role } from './types';
 
 function App() {
@@ -54,6 +57,9 @@ function App() {
           <Route path="/notifications" element={<Notifications role={role} />} />
           <Route path="/students" element={<Students role={role} />} />
           <Route path="/evaluation" element={<EvaluationHub role={role} />} />
+          <Route path="/exams" element={<ExamList />} />
+          <Route path="/exams/new" element={<ExamGenerator />} />
+          <Route path="/exams/:id" element={<ExamViewer />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Layout>

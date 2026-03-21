@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain } from 'lucide-react';
+import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText } from 'lucide-react';
 import { Role } from '../types';
 
 export function Layout({ role, onLogout, children }: { role: Role, onLogout: () => void, children?: React.ReactNode }) {
@@ -22,6 +22,7 @@ export function Layout({ role, onLogout, children }: { role: Role, onLogout: () 
     { icon: Users, label: 'Quản lý Học Sinh', path: '/students' },
     { icon: PenTool, label: 'Chấm bài', path: '/assignments' },
     { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
+    { icon: FileText, label: 'Ra đề thi', path: '/exams' },
     { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
   ];
 
