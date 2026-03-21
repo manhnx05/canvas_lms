@@ -5,6 +5,18 @@ import {
   createModule, createModuleItem, reorderModuleItems, deleteModule, deleteModuleItem,
   enrollUser, unenrollUser
 } from '../controllers/course.controller';
+import multer from 'multer';
+import path from 'path';
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+const upload = multer({ storage });
 
 const router = Router();
 
@@ -26,7 +38,7 @@ router.post('/:id/modules', createModule);
 router.delete('/modules/:moduleId', deleteModule);
 
 // Module Items
-router.post('/modules/:moduleId/items', createModuleItem);
+router.post('/modules/:moduleId/items', upload.single('file'), createModuleItem);
 router.delete('/modules/items/:itemId', deleteModuleItem);
 router.put('/modules/reorder', reorderModuleItems);
 

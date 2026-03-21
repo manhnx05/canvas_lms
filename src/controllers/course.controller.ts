@@ -84,7 +84,11 @@ export const createModule = async (req: Request, res: Response, next: NextFuncti
 
 export const createModuleItem = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const item = await courseService.createModuleItem(req.params.moduleId, req.body);
+    const data = { ...req.body };
+    if (req.file) {
+      data.url = `/uploads/${req.file.filename}`;
+    }
+    const item = await courseService.createModuleItem(req.params.moduleId, data);
     res.status(201).json(item);
   } catch (error) {
     next(error);

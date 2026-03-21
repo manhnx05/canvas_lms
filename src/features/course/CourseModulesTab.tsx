@@ -54,6 +54,7 @@ export function CourseModulesTab({ courseId, modules: initialModules, role, onRe
   const [iTitle, setITitle] = useState('');
   const [iType, setIType] = useState('elearning');
   const [iUrl, setIUrl] = useState('');
+  const [iFile, setIFile] = useState<File | null>(null);
 
   // Sync when parent refreshes
   React.useEffect(() => { setModules(initialModules); }, [initialModules]);
@@ -78,8 +79,21 @@ export function CourseModulesTab({ courseId, modules: initialModules, role, onRe
   const handleCreateItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!showItemForm) return;
-    await apiClient.post(`/courses/modules/${showItemForm}/items`, { title: iTitle, type: iType, url: iUrl });
-    setITitle(''); setIType('elearning'); setIUrl(''); setShowItemForm(null); onRefresh();
+
+    if (iType === 'file' || iType === 'elearning') {
+      const formData = new FormData();
+      formData.append('title', iTitle);
+      formData.append('type', iType);
+      if (iFile) formData.append('file', iFile);
+      
+      await apiClient.post(`/courses/modules/${showItemForm}/items`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } else {
+      await apiClient.post(`/courses/modules/${showItemForm}/items`, { title: iTitle, type: iType, url: iUrl });
+    }
+    
+    setITitle(''); setIType('elearning'); setIUrl(''); setIFile(null); setShowItemForm(null); onRefresh();
   };
 
   const handleDeleteItem = async (itemId: string) => {
@@ -159,7 +173,11 @@ export function CourseModulesTab({ courseId, modules: initialModules, role, onRe
                       <option value="link">Trang Web / Link ngoài</option>
                     </select>
                   </div>
-                  <input required value={iUrl} onChange={e => setIUrl(e.target.value)} type="text" placeholder="Link (URL) của file hoặc Bài giảng..." className="w-full px-4 py-2 rounded-lg border focus:border-sky-500 outline-none mb-4" />
+                  {iType !== 'link' ? (
+                    <input type="file" onChange={e => setIFile(e.target.files?.[0] || null)} className="w-full px-4 py-2 rounded-lg border focus:border-sky-500 outline-none mb-4 bg-white" />
+                  ) : (
+                    <input required value={iUrl} onChange={e => setIUrl(e.target.value)} type="text" placeholder="Link (URL) của bài giảng..." className="w-full px-4 py-2 rounded-lg border focus:border-sky-500 outline-none mb-4" />
+                  )}
                   <div className="flex justify-end gap-2">
                     <button type="button" onClick={() => setShowItemForm(null)} className="px-4 py-2 text-slate-500 font-bold hover:bg-slate-100 rounded-lg">Hủy</button>
                     <button type="submit" className="px-4 py-2 bg-sky-500 text-white font-bold rounded-lg shadow-sm">Thêm Mới</button>
