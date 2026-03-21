@@ -81,7 +81,7 @@ export const chat = async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Hệ thống chưa cấu hình GEMINI_API_KEY' });
     }
 
-    const model = getGeminiModel(); // uses gemini-1.5-flash
+    const model = getGeminiModel(); // now uses gemini-pro
     const systemContext = context
       ? `Context học tập của học sinh: ${JSON.stringify(context)}\n`
       : '';
