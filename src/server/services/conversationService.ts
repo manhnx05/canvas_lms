@@ -68,11 +68,25 @@ export const conversationService = {
       include: { sender: true }
     });
 
-    const conversation = await prisma.conversation.update({
+    // Lấy conversation với participants
+    const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
-      data: { unreadCount: { increment: 1 } },
       include: { participants: { include: { user: true } }, course: true }
     });
+
+    if (!conversation) throw new Error('Conversation not found');
+
+    // Chỉ tăng unreadCount cho người nhận (không phải sender)
+    const receiverParticipants = conversation.participants.filter(
+      (p: any) => String(p.userId) !== String(senderId)
+    );
+
+    if (receiverParticipants.length > 0) {
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { unreadCount: { increment: 1 } }
+      });
+    }
 
     const formattedMessage = {
       id: message.id,
@@ -87,17 +101,18 @@ export const conversationService = {
       conversationId: conversationId
     };
 
+    // Emit cho tất cả participants (cả sender để confirm ngay lập tức)
     if (io) {
       conversation.participants.forEach((p: any) => {
-        io.to(p.userId).emit('newMessage', formattedMessage);
+        io.to(String(p.userId)).emit('newMessage', formattedMessage);
       });
     }
 
-    const receivers = conversation.participants.filter((p: any) => p.userId !== senderId);
-    if (receivers.length > 0 && process.env.RESEND_API_KEY) {
+    // Gửi email thông báo cho receivers
+    if (receiverParticipants.length > 0 && process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
-        await Promise.all(receivers.map((r: any) =>
+        await Promise.all(receiverParticipants.map((r: any) =>
           resend.emails.send({
             from: 'Canvas LMS <onboarding@resend.dev>',
             to: r.user.email,
@@ -122,6 +137,7 @@ export const conversationService = {
 
     return formattedMessage;
   },
+
 
   createConversation: async (data: any, io: any) => {
     const { senderId, receiverId, subject, courseId, content, attachments } = data;
@@ -200,8 +216,8 @@ export const conversationService = {
 
       if (io) {
         conversation.participants.forEach((p: any) => {
-          io.to(p.userId).emit('newMessage', formattedMessage);
-          io.to(p.userId).emit('newConversation', { conversationId: conversation.id });
+          io.to(String(p.userId)).emit('newMessage', formattedMessage);
+          io.to(String(p.userId)).emit('newConversation', { conversationId: conversation!.id });
         });
       }
 
