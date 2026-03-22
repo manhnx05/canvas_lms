@@ -29,6 +29,7 @@ export function Inbox({ role }: { role: string }) {
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<Conversation | null>(null);
+  const activeConvRef = useRef<Conversation | null>(null); // Mirror để tránh stale closure trong socket
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -74,19 +75,23 @@ export function Inbox({ role }: { role: string }) {
     refetchConversations().then(() => setLoading(false));
     fetchCourses();
 
-    socketRef.current = io({ transports: ['websocket', 'polling'] });
-    
-    const joinRoom = () => socketRef.current?.emit('join', currentUser.id);
+    const socket = io({ transports: ['websocket', 'polling'] });
+    socketRef.current = socket;
 
-    if (socketRef.current.connected) {
-      joinRoom();
-    } else {
-      socketRef.current.on('connect', joinRoom);
-    }
-    socketRef.current.on('reconnect', joinRoom);
-    
-    socketRef.current.on('connect_error', (err) => console.error('Socket connect_error:', err.message));
-    socketRef.current.on('disconnect', () => console.log('Socket disconnected'));
+    const joinRoom = () => {
+      if (currentUser.id) {
+        socket.emit('join', currentUser.id);
+        console.log(`[Socket] Joining room: ${currentUser.id}`);
+      }
+    };
+
+    socket.on('connect', joinRoom);
+    socket.on('reconnect', joinRoom);
+    socket.on('connect_error', (err) => console.error('[Socket] connect_error:', err.message));
+    socket.on('disconnect', () => console.log('[Socket] disconnected'));
+
+    // Nếu socket đã connected trước khi listener được gắn (race condition)
+    if (socket.connected) joinRoom();
 
     // Polling fallback every 30s
     const pollTimer = setInterval(refetchConversations, 30000);
@@ -98,25 +103,38 @@ export function Inbox({ role }: { role: string }) {
       setShowCompose(true);
     }
 
-    return () => { socketRef.current?.disconnect(); clearInterval(pollTimer); };
+    return () => {
+      socket.disconnect();
+      clearInterval(pollTimer);
+    };
   }, []);
 
-  // ── Socket: incoming messages ─────────────────────────
+
+  // ── Sync activeConvRef khi activeConv thay đổi ────────
+  useEffect(() => {
+    activeConvRef.current = activeConv;
+  }, [activeConv]);
+
+  // ── Socket: incoming messages (mount once, dùng ref để tránh stale closure) ──
   useEffect(() => {
     const handleNewMessage = (msg: any) => {
-      if (activeConv && msg.conversationId === activeConv.id) {
+      const currentConv = activeConvRef.current;
+      // Nếu message thuộc conversation đang mở → thêm vào messages list
+      if (currentConv && msg.conversationId === currentConv.id) {
         setMessages(prev => {
-          if (prev.some(m => m.id === msg.id)) return prev;
+          if (prev.some(m => m.id === msg.id)) return prev; // dedup
           setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
           return [...prev, msg];
         });
       }
+      // Cập nhật conversations sidebar (lastMessage + unreadCount)
       setConversations(prev => {
         const idx = prev.findIndex(c => c.id === msg.conversationId);
         if (idx > -1) {
           const copy = [...prev];
           const conv = { ...copy[idx], lastMessage: msg };
-          if (!activeConv || activeConv.id !== conv.id) {
+          // Chỉ tăng unread nếu conversation này không đang được xem
+          if (!currentConv || currentConv.id !== conv.id) {
             conv.unreadCount = (conv.unreadCount || 0) + 1;
           }
           copy.splice(idx, 1);
@@ -127,14 +145,19 @@ export function Inbox({ role }: { role: string }) {
         }
       });
     };
+
     const handleNewConversation = () => refetchConversations();
+
     socketRef.current?.on('newMessage', handleNewMessage);
     socketRef.current?.on('newConversation', handleNewConversation);
+
     return () => {
       socketRef.current?.off('newMessage', handleNewMessage);
       socketRef.current?.off('newConversation', handleNewConversation);
     };
-  }, [activeConv]);
+  }, []); // mount once – đọc activeConv qua ref
+
+
 
   // ── Fetch messages on active conversation change ──────
   useEffect(() => {
@@ -168,19 +191,16 @@ export function Inbox({ role }: { role: string }) {
     const atts = [...replyAttachments];
     setInput(''); setReplyAttachments([]);
     try {
-      const res = await apiClient.post(`/conversations/${activeConv.id}/messages`, { senderId: currentUser.id, content, attachments: atts.length > 0 ? atts : undefined });
-      const newMsg = res.data;
-      setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-      setConversations(prev => {
-        const idx = prev.findIndex(c => c.id === activeConv.id);
-        if (idx === -1) return prev;
-        const copy = [...prev];
-        copy.splice(idx, 1);
-        return [{ ...prev[idx], lastMessage: newMsg }, ...copy];
+      // Gửi lên server – server sẽ emit 'newMessage' về cho tất cả participants
+      // (kể cả sender), socket handler sẽ cập nhật state đồng bộ cho cả 2 phía
+      await apiClient.post(`/conversations/${activeConv.id}/messages`, {
+        senderId: currentUser.id,
+        content,
+        attachments: atts.length > 0 ? atts : undefined
       });
     } catch (e) { console.error(e); }
   };
+
 
   const handleComposeSend = async () => {
     if (!compose.receiverId || !compose.subject || !compose.content) return;
