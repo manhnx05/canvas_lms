@@ -48,3 +48,25 @@ export const createConversation = async (req: Request, res: Response, next: Next
     next(error);
   }
 };
+
+export const updateMessage = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const io = req.app.get('io');
+    const senderId = (req as any).user?.id || req.body.senderId;
+    const formatted = await conversationService.updateMessage(req.params.messageId, senderId, req.body.content, io);
+    res.json(formatted);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteMessage = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const io = req.app.get('io');
+    const senderId = (req as any).user?.id || req.body.senderId;
+    const formatted = await conversationService.deleteMessage(req.params.messageId, senderId, io);
+    res.json(formatted);
+  } catch (error) {
+    next(error);
+  }
+};

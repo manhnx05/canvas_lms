@@ -50,7 +50,9 @@ export const conversationService = {
       content: m.content,
       attachments: m.attachments,
       timestamp: m.timestamp,
-      isRead: m.isRead
+      isRead: m.isRead,
+      isEdited: m.isEdited,
+      isDeleted: m.isDeleted
     }));
   },
 
@@ -254,5 +256,92 @@ export const conversationService = {
       participants: conversation.participants.filter((p: any) => p.userId !== senderId).map((p: any) => p.user),
       lastMessage: conversation.messages[0] || null
     };
+  },
+
+  updateMessage: async (messageId: string, senderId: string, content: string, io: any) => {
+    const existingMessage = await prisma.message.findUnique({
+      where: { id: messageId }
+    });
+    if (!existingMessage) throw new HttpError(404, 'Message not found');
+    if (existingMessage.senderId !== senderId) throw new HttpError(403, 'Cannot edit this message');
+    if (existingMessage.isDeleted) throw new HttpError(400, 'Cannot edit deleted message');
+
+    const updatedMessage = await prisma.message.update({
+      where: { id: messageId },
+      data: { content, isEdited: true },
+      include: { sender: true }
+    });
+
+    const formattedMessage = {
+      id: updatedMessage.id,
+      senderId: updatedMessage.senderId,
+      senderName: updatedMessage.sender.name,
+      senderRole: updatedMessage.sender.role,
+      senderAvatar: updatedMessage.sender.avatar,
+      content: updatedMessage.content,
+      attachments: updatedMessage.attachments,
+      timestamp: updatedMessage.timestamp,
+      isRead: updatedMessage.isRead,
+      isEdited: updatedMessage.isEdited,
+      isDeleted: updatedMessage.isDeleted,
+      conversationId: updatedMessage.conversationId
+    };
+
+    if (io) {
+      const conversation = await prisma.conversation.findUnique({
+        where: { id: updatedMessage.conversationId },
+        include: { participants: true }
+      });
+      if (conversation) {
+        conversation.participants.forEach((p: any) => {
+          io.to(String(p.userId)).emit('messageUpdated', formattedMessage);
+        });
+      }
+    }
+
+    return formattedMessage;
+  },
+
+  deleteMessage: async (messageId: string, senderId: string, io: any) => {
+    const existingMessage = await prisma.message.findUnique({
+      where: { id: messageId }
+    });
+    if (!existingMessage) throw new HttpError(404, 'Message not found');
+    if (existingMessage.senderId !== senderId) throw new HttpError(403, 'Cannot delete this message');
+
+    const deletedMessage = await prisma.message.update({
+      where: { id: messageId },
+      data: { content: 'Tin nhắn đã bị thu hồi', attachments: null, isDeleted: true },
+      include: { sender: true }
+    });
+
+    const formattedMessage = {
+      id: deletedMessage.id,
+      senderId: deletedMessage.senderId,
+      senderName: deletedMessage.sender.name,
+      senderRole: deletedMessage.sender.role,
+      senderAvatar: deletedMessage.sender.avatar,
+      content: deletedMessage.content,
+      attachments: deletedMessage.attachments,
+      timestamp: deletedMessage.timestamp,
+      isRead: deletedMessage.isRead,
+      isEdited: deletedMessage.isEdited,
+      isDeleted: deletedMessage.isDeleted,
+      conversationId: deletedMessage.conversationId
+    };
+
+    if (io) {
+      const conversation = await prisma.conversation.findUnique({
+        where: { id: deletedMessage.conversationId },
+        include: { participants: true }
+      });
+      if (conversation) {
+        conversation.participants.forEach((p: any) => {
+          io.to(String(p.userId)).emit('messageDeleted', formattedMessage);
+        });
+      }
+    }
+
+    return formattedMessage;
   }
 };

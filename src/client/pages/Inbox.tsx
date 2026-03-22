@@ -51,12 +51,24 @@ export function Inbox({ role }: { role: string }) {
   const [showDetail, setShowDetail] = useState(false);
 
   // ── Helpers ──────────────────────────────────────────
-  const readFiles = (files: FileList): Promise<Attachment[]> =>
-    Promise.all(Array.from(files).map(file => new Promise<Attachment>((resolve) => {
-      const reader = new FileReader();
-      reader.onload = e => resolve({ name: file.name, type: file.type, size: file.size, data: e.target?.result as string });
-      reader.readAsDataURL(file);
-    })));
+  const uploadFiles = async (files: FileList): Promise<Attachment[]> => {
+    const formData = new FormData();
+    Array.from(files).forEach((file) => formData.append('files', file));
+    try {
+      const res = await apiClient.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data?.success && Array.isArray(res.data.attachments)) {
+        return res.data.attachments.map((a: any) => ({
+          name: a.name, type: a.type, size: a.size, data: a.url
+        }));
+      }
+      return [];
+    } catch (e) {
+      console.error('Lỗi upload file:', e);
+      return [];
+    }
+  };
 
   const refetchConversations = () =>
     apiClient.get(`/conversations?userId=${currentUser.id}`)
@@ -146,14 +158,36 @@ export function Inbox({ role }: { role: string }) {
       });
     };
 
+    const handleMessageUpdated = (msg: any) => {
+      setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, ...msg } : m));
+      setConversations(prev => prev.map(c => 
+        c.id === msg.conversationId && c.lastMessage?.id === msg.id 
+          ? { ...c, lastMessage: { ...c.lastMessage, ...msg } } 
+          : c
+      ));
+    };
+
+    const handleMessageDeleted = (msg: any) => {
+      setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, ...msg } : m));
+      setConversations(prev => prev.map(c => 
+        c.id === msg.conversationId && c.lastMessage?.id === msg.id 
+          ? { ...c, lastMessage: { ...c.lastMessage, ...msg } } 
+          : c
+      ));
+    };
+
     const handleNewConversation = () => refetchConversations();
 
     socketRef.current?.on('newMessage', handleNewMessage);
     socketRef.current?.on('newConversation', handleNewConversation);
+    socketRef.current?.on('messageUpdated', handleMessageUpdated);
+    socketRef.current?.on('messageDeleted', handleMessageDeleted);
 
     return () => {
       socketRef.current?.off('newMessage', handleNewMessage);
       socketRef.current?.off('newConversation', handleNewConversation);
+      socketRef.current?.off('messageUpdated', handleMessageUpdated);
+      socketRef.current?.off('messageDeleted', handleMessageDeleted);
     };
   }, []); // mount once – đọc activeConv qua ref
 
@@ -222,6 +256,24 @@ export function Inbox({ role }: { role: string }) {
     setComposeSending(false);
   };
 
+  const handleUpdateMessage = async (msgId: string, newContent: string) => {
+    try {
+      await apiClient.put(`/conversations/messages/${msgId}`, { content: newContent });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteMessage = async (msgId: string) => {
+    try {
+      if (window.confirm('Bạn có chắc chắn muốn thu hồi tin nhắn này?')) {
+        await apiClient.delete(`/conversations/messages/${msgId}`);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // ── Render ────────────────────────────────────────────
   if (loading) return (
     <div className="flex justify-center items-center h-64">
@@ -253,10 +305,12 @@ export function Inbox({ role }: { role: string }) {
           messagesEndRef={messagesEndRef}
           onInputChange={setInput}
           onSend={handleSend}
-          onAttach={async files => { const atts = await readFiles(files); setReplyAttachments(p => [...p, ...atts]); }}
+          onAttach={async files => { const atts = await uploadFiles(files); setReplyAttachments(p => [...p, ...atts]); }}
           onRemoveAttachment={i => setReplyAttachments(p => p.filter((_, j) => j !== i))}
           onBack={() => setShowDetail(false)}
           onCompose={() => { setShowCompose(true); fetchCourses(); }}
+          onUpdateMessage={handleUpdateMessage}
+          onDeleteMessage={handleDeleteMessage}
         />
       </div>
 
@@ -269,7 +323,7 @@ export function Inbox({ role }: { role: string }) {
           attachments={composeAttachments}
           sending={composeSending}
           onComposeChange={patch => setCompose(prev => ({ ...prev, ...patch }))}
-          onAttach={async files => { const atts = await readFiles(files); setComposeAttachments(p => [...p, ...atts]); }}
+          onAttach={async files => { const atts = await uploadFiles(files); setComposeAttachments(p => [...p, ...atts]); }}
           onRemoveAttachment={i => setComposeAttachments(p => p.filter((_, j) => j !== i))}
           onSend={handleComposeSend}
           onClose={() => setShowCompose(false)}

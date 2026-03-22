@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { ArrowLeft, BookOpen, Paperclip, Send, X, Plus, Inbox as InboxIcon } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { ArrowLeft, BookOpen, Paperclip, Send, X, Plus, Inbox as InboxIcon, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 
 interface Attachment {
   name: string;
@@ -16,6 +16,8 @@ interface Message {
   content: string;
   attachments?: Attachment[];
   timestamp: string;
+  isEdited?: boolean;
+  isDeleted?: boolean;
 }
 
 interface Conversation {
@@ -38,6 +40,8 @@ interface Props {
   onRemoveAttachment: (i: number) => void;
   onBack: () => void;
   onCompose: () => void;
+  onUpdateMessage: (msgId: string, content: string) => void;
+  onDeleteMessage: (msgId: string) => void;
 }
 
 const formatFileSize = (bytes: number) => {
@@ -50,9 +54,39 @@ const isImage = (type: string) => type.startsWith('image/');
 
 export function MessageThread({
   conversation, messages, currentUserId, input, replyAttachments,
-  messagesEndRef, onInputChange, onSend, onAttach, onRemoveAttachment, onBack, onCompose
+  messagesEndRef, onInputChange, onSend, onAttach, onRemoveAttachment, onBack, onCompose,
+  onUpdateMessage, onDeleteMessage
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [editingMsgId, setEditingMsgId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleClick = () => setActiveMenu(null);
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
+
+  const handleEditStart = (msg: Message) => {
+    if (msg.isDeleted) return;
+    setEditingMsgId(msg.id);
+    setEditContent(msg.content);
+    setActiveMenu(null);
+  };
+
+  const handleEditSave = () => {
+    if (editingMsgId && editContent.trim()) {
+      onUpdateMessage(editingMsgId, editContent.trim());
+      setEditingMsgId(null);
+      setEditContent('');
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditingMsgId(null);
+    setEditContent('');
+  };
 
   if (!conversation) {
     return (
@@ -105,14 +139,60 @@ export function MessageThread({
                   ? <img src={msg.senderAvatar} alt="" className="w-full h-full rounded-full object-cover" />
                   : msg.senderName?.charAt(0)}
               </div>
-              <div className={`max-w-[70%] space-y-1.5 ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
+              <div className={`max-w-[70%] space-y-1.5 ${isMe ? 'items-end' : 'items-start'} flex flex-col relative group`}>
                 <div className="flex items-baseline gap-2">
                   {!isMe && <p className="text-xs font-bold text-slate-600">{msg.senderName}</p>}
                   <p className="text-[10px] text-slate-400">{msg.timestamp}</p>
                 </div>
-                {msg.content && (
-                  <div className={`p-4 rounded-2xl text-sm leading-relaxed ${isMe ? 'bg-sky-500 text-white rounded-tr-sm' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm'}`}>
-                    {msg.content}
+                
+                {msg.isDeleted ? (
+                  <div className={`p-4 rounded-2xl text-sm italic opacity-60 ${isMe ? 'bg-sky-500/20 text-sky-900 rounded-tr-sm' : 'bg-slate-100 text-slate-600 border border-slate-200 rounded-tl-sm'}`}>
+                    Tin nhắn đã bị thu hồi
+                  </div>
+                ) : editingMsgId === msg.id ? (
+                  <div className={`p-4 rounded-2xl text-sm leading-relaxed w-full min-w-[300px] ${isMe ? 'bg-sky-50 text-sky-900 rounded-tr-sm border border-sky-200' : 'bg-white border border-slate-200'}`}>
+                    <textarea 
+                      className="w-full bg-transparent outline-none resize-none mb-2" 
+                      rows={3} 
+                      value={editContent} 
+                      onChange={e => setEditContent(e.target.value)} 
+                    />
+                    <div className="flex justify-end gap-2 mt-2 border-t border-sky-200/50 pt-2">
+                      <button onClick={handleEditCancel} className="text-xs font-semibold text-slate-500 hover:text-slate-700">Hủy</button>
+                      <button onClick={handleEditSave} className="text-xs font-bold bg-sky-500 text-white px-3 py-1.5 rounded-lg hover:bg-sky-600 transition-colors">Lưu</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={`relative flex items-center gap-2 group-hover:opacity-100 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                    {/* The Message Bubble */}
+                    {msg.content && (
+                      <div className={`p-4 rounded-2xl text-sm leading-relaxed ${isMe ? 'bg-sky-500 text-white rounded-tr-sm' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm'}`}>
+                        {msg.content}
+                        {msg.isEdited && <span className={`text-[10px] ml-2 ${isMe ? 'text-sky-200' : 'text-slate-400'}`}>(đã chỉnh sửa)</span>}
+                      </div>
+                    )}
+                    
+                    {/* The Context Menu */}
+                    {isMe && (
+                      <div className="relative opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === msg.id ? null : msg.id); }} 
+                          className="p-1 text-slate-400 hover:bg-slate-200 rounded-full transition-colors"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                        {activeMenu === msg.id && (
+                          <div className="absolute top-full right-0 mt-1 w-36 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden z-10 py-1">
+                            <button onClick={() => handleEditStart(msg)} className="w-full text-left px-4 py-2 text-sm text-slate-700 flex items-center gap-2 hover:bg-slate-50 transition-colors">
+                              <Edit2 className="w-3.5 h-3.5" /> Chỉnh sửa
+                            </button>
+                            <button onClick={() => { onDeleteMessage(msg.id); setActiveMenu(null); }} className="w-full text-left px-4 py-2 text-sm text-red-600 flex items-center gap-2 hover:bg-red-50 transition-colors">
+                              <Trash2 className="w-3.5 h-3.5" /> Thu hồi
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
                 {atts.length > 0 && (

@@ -9,6 +9,7 @@ import notificationRoutes from './notification.routes';
 import userRoutes from './user.routes';
 import aiRoutes from './ai.routes';
 import examRoutes from './exam.routes';
+import uploadRoutes from './upload.routes';
 import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
@@ -27,5 +28,6 @@ router.use('/teacher', authMiddleware, teacherRoutes);
 router.use('/notifications', authMiddleware, notificationRoutes);
 router.use('/users', authMiddleware, userRoutes);
 router.use('/exams', authMiddleware, examRoutes);
+router.use('/upload', authMiddleware, uploadRoutes);
 
 export default router;
