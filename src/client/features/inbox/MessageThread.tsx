@@ -96,11 +96,11 @@ export function MessageThread({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50">
         {messages.map((msg) => {
-          const isMe = msg.senderId === currentUserId;
+          const isMe = String(msg.senderId) === String(currentUserId);
           const atts: Attachment[] = Array.isArray(msg.attachments) ? msg.attachments : [];
           return (
             <div key={msg.id} className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} gap-3`}>
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center text-white font-bold shrink-0 text-sm">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold shrink-0 text-sm ${isMe ? 'bg-gradient-to-br from-sky-400 to-indigo-500' : 'bg-gradient-to-br from-emerald-400 to-teal-500'}`}>
                 {msg.senderAvatar
                   ? <img src={msg.senderAvatar} alt="" className="w-full h-full rounded-full object-cover" />
                   : msg.senderName?.charAt(0)}
