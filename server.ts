@@ -45,8 +45,9 @@ async function startServer() {
 
   io.on("connection", (socket) => {
     socket.on("join", (userId) => {
-      socket.join(userId);
-      console.log(`User ${userId} joined their room`);
+      const roomId = String(userId);
+      socket.join(roomId);
+      console.log(`User ${roomId} joined their room`);
     });
   });
 
