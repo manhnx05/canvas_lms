@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { courseService } from '@/src/server/services/courseService';
+import { courseService } from '@/src/services/courseService';
 
 export async function DELETE(req: Request, { params }: { params: { itemId: string } }) {
   try {

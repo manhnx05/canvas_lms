@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { notificationService } from '@/src/server/services/notificationService';
+import { notificationService } from '@/src/services/notificationService';
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {

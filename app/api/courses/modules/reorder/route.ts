@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { courseService } from '@/src/server/services/courseService';
+import { courseService } from '@/src/services/courseService';
 
 // PUT /api/courses/modules/reorder
 export async function PUT(req: Request) {

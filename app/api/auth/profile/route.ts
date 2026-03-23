@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import prisma from '@/src/shared/lib/prisma';
+import prisma from '@/src/lib/prisma';
 
 // Define a helper to verify JWT and extract user ID
 const verifyToken = (req: Request) => {

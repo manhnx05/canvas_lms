@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { assignmentService } from '@/src/server/services/assignmentService';
+import { assignmentService } from '@/src/services/assignmentService';
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {

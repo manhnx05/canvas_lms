@@ -3,7 +3,7 @@ import { getAssignments, createAssignment } from '@/src/server/controllers/assig
 import { createMockRes, createMockReq } from '../_utils/mockExpressAdapter';
 
 // Since our service uses Express req/res, we use our own service directly instead.
-import prisma from '@/src/shared/lib/prisma';
+import prisma from '@/src/lib/prisma';
 
 export async function GET(req: Request) {
   try {

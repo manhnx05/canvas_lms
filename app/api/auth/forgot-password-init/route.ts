@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import prisma from '@/src/shared/lib/prisma';
+import prisma from '@/src/lib/prisma';
 
 export async function POST(req: Request) {
   try {

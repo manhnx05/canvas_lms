@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { conversationService } from '@/src/server/services/conversationService';
+import { conversationService } from '@/src/services/conversationService';
 
 export async function PUT(req: Request, { params }: { params: { messageId: string } }) {
   try {

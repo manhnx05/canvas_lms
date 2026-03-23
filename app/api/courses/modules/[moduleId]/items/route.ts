@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { courseService } from '@/src/server/services/courseService';
+import { courseService } from '@/src/services/courseService';
 
 // POST /api/courses/modules/[moduleId]/items
 export async function POST(req: Request, { params }: { params: { moduleId: string } }) {
