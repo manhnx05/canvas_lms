@@ -135,15 +135,15 @@ export const forgotPasswordConfirm = async (req: Request, res: Response) => {
   }
 };
 
-// 6. Update Profile
+// 6. Update Profile (Protected – uses JWT user identity)
 export const updateProfile = async (req: Request, res: Response) => {
   try {
-    const { email, name, avatar, className } = req.body;
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(404).json({ error: 'Không tìm thấy người dùng' });
+    const userId = (req as any).user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
+    const { name, avatar, className } = req.body;
     const updated = await prisma.user.update({
-      where: { email },
+      where: { id: userId },
       data: { name, avatar, className }
     });
 

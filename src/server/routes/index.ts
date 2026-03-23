@@ -11,6 +11,7 @@ import aiRoutes from './ai.routes';
 import examRoutes from './exam.routes';
 import uploadRoutes from './upload.routes';
 import { authMiddleware } from '../middleware/auth';
+import { updateProfile } from '../controllers/auth.controller';
 
 const router = Router();
 
@@ -18,7 +19,8 @@ const router = Router();
 router.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 router.use('/auth', authRoutes);
 
-// Protected routes (authMiddleware is a passthrough scaffold – add JWT later)
+// Protected routes
+router.put('/auth/profile', authMiddleware, updateProfile);
 router.use('/ai', authMiddleware, aiRoutes);
 router.use('/courses', authMiddleware, courseRoutes);
 router.use('/assignments', authMiddleware, assignmentRoutes);
