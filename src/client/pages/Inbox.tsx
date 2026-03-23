@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { ConversationList, Conversation } from '../features/inbox/ConversationList';
 import { MessageThread } from '../features/inbox/MessageThread';
 import { ComposeModal } from '../features/inbox/ComposeModal';
@@ -22,6 +21,8 @@ interface Message {
   timestamp: string;
   isRead: boolean;
   conversationId?: string;
+  isEdited?: boolean;
+  isDeleted?: boolean;
 }
 
 export function Inbox({ role }: { role: string }) {
@@ -29,7 +30,6 @@ export function Inbox({ role }: { role: string }) {
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<Conversation | null>(null);
-  const activeConvRef = useRef<Conversation | null>(null); // Mirror để tránh stale closure trong socket
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +37,6 @@ export function Inbox({ role }: { role: string }) {
   const [input, setInput] = useState('');
   const [replyAttachments, setReplyAttachments] = useState<Attachment[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<Socket | null>(null);
 
   // Compose state
   const [showCompose, setShowCompose] = useState(false);
@@ -82,31 +81,10 @@ export function Inbox({ role }: { role: string }) {
       .then(data => setCourses(Array.isArray(data) ? data : []));
   };
 
-  // ── Setup ────────────────────────────────────────────
+  // ── Setup: initial load + polling every 15s ──────────
   useEffect(() => {
     refetchConversations().then(() => setLoading(false));
     fetchCourses();
-
-    const socket = io({ transports: ['websocket', 'polling'] });
-    socketRef.current = socket;
-
-    const joinRoom = () => {
-      if (currentUser.id) {
-        socket.emit('join', currentUser.id);
-        console.log(`[Socket] Joining room: ${currentUser.id}`);
-      }
-    };
-
-    socket.on('connect', joinRoom);
-    socket.on('reconnect', joinRoom);
-    socket.on('connect_error', (err) => console.error('[Socket] connect_error:', err.message));
-    socket.on('disconnect', () => console.log('[Socket] disconnected'));
-
-    // Nếu socket đã connected trước khi listener được gắn (race condition)
-    if (socket.connected) joinRoom();
-
-    // Polling fallback every 30s
-    const pollTimer = setInterval(refetchConversations, 30000);
 
     // Auto-open compose from Students page (?compose=1&to=...)
     const params = new URLSearchParams(window.location.search);
@@ -115,95 +93,35 @@ export function Inbox({ role }: { role: string }) {
       setShowCompose(true);
     }
 
+    // Poll conversations every 15 seconds to show new messages
+    const pollTimer = setInterval(refetchConversations, 15000);
+
     return () => {
-      socket.disconnect();
       clearInterval(pollTimer);
     };
   }, []);
 
-
-  // ── Sync activeConvRef khi activeConv thay đổi ────────
-  useEffect(() => {
-    activeConvRef.current = activeConv;
-  }, [activeConv]);
-
-  // ── Socket: incoming messages (mount once, dùng ref để tránh stale closure) ──
-  useEffect(() => {
-    const handleNewMessage = (msg: any) => {
-      const currentConv = activeConvRef.current;
-      // Nếu message thuộc conversation đang mở → thêm vào messages list
-      if (currentConv && msg.conversationId === currentConv.id) {
-        setMessages(prev => {
-          if (prev.some(m => m.id === msg.id)) return prev; // dedup
-          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-          return [...prev, msg];
-        });
-      }
-      // Cập nhật conversations sidebar (lastMessage + unreadCount)
-      setConversations(prev => {
-        const idx = prev.findIndex(c => c.id === msg.conversationId);
-        if (idx > -1) {
-          const copy = [...prev];
-          const conv = { ...copy[idx], lastMessage: msg };
-          // Chỉ tăng unread nếu conversation này không đang được xem
-          if (!currentConv || currentConv.id !== conv.id) {
-            conv.unreadCount = (conv.unreadCount || 0) + 1;
-          }
-          copy.splice(idx, 1);
-          return [conv, ...copy];
-        } else {
-          refetchConversations();
-          return prev;
-        }
-      });
-    };
-
-    const handleMessageUpdated = (msg: any) => {
-      setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, ...msg } : m));
-      setConversations(prev => prev.map(c => 
-        c.id === msg.conversationId && c.lastMessage?.id === msg.id 
-          ? { ...c, lastMessage: { ...c.lastMessage, ...msg } } 
-          : c
-      ));
-    };
-
-    const handleMessageDeleted = (msg: any) => {
-      setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, ...msg } : m));
-      setConversations(prev => prev.map(c => 
-        c.id === msg.conversationId && c.lastMessage?.id === msg.id 
-          ? { ...c, lastMessage: { ...c.lastMessage, ...msg } } 
-          : c
-      ));
-    };
-
-    const handleNewConversation = () => refetchConversations();
-
-    socketRef.current?.on('newMessage', handleNewMessage);
-    socketRef.current?.on('newConversation', handleNewConversation);
-    socketRef.current?.on('messageUpdated', handleMessageUpdated);
-    socketRef.current?.on('messageDeleted', handleMessageDeleted);
-
-    return () => {
-      socketRef.current?.off('newMessage', handleNewMessage);
-      socketRef.current?.off('newConversation', handleNewConversation);
-      socketRef.current?.off('messageUpdated', handleMessageUpdated);
-      socketRef.current?.off('messageDeleted', handleMessageDeleted);
-    };
-  }, []); // mount once – đọc activeConv qua ref
-
-
-
-  // ── Fetch messages on active conversation change ──────
+  // ── Poll active conversation messages every 10s ──────
   useEffect(() => {
     if (!activeConv) return;
-    apiClient.get(`/conversations/${activeConv.id}/messages`)
-      .then(r => r.data)
-      .then(data => {
-        setMessages(Array.isArray(data) ? data : []);
-        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-        setConversations(prev => prev.map(c => c.id === activeConv.id ? { ...c, unreadCount: 0 } : c));
-      });
-  }, [activeConv]);
+
+    const fetchMessages = () =>
+      apiClient.get(`/conversations/${activeConv.id}/messages`)
+        .then(r => r.data)
+        .then(data => {
+          if (Array.isArray(data)) {
+            setMessages(data);
+            setConversations(prev => prev.map(c => c.id === activeConv.id ? { ...c, unreadCount: 0 } : c));
+          }
+        });
+
+    fetchMessages().then(() => {
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    });
+
+    const msgPollTimer = setInterval(fetchMessages, 10000);
+    return () => clearInterval(msgPollTimer);
+  }, [activeConv?.id]);
 
   // ── Fetch course members on courseId change ───────────
   useEffect(() => {
@@ -224,17 +142,24 @@ export function Inbox({ role }: { role: string }) {
     const content = input;
     const atts = [...replyAttachments];
     setInput(''); setReplyAttachments([]);
+
     try {
-      // Gửi lên server – server sẽ emit 'newMessage' về cho tất cả participants
-      // (kể cả sender), socket handler sẽ cập nhật state đồng bộ cho cả 2 phía
-      await apiClient.post(`/conversations/${activeConv.id}/messages`, {
+      const res = await apiClient.post(`/conversations/${activeConv.id}/messages`, {
         senderId: currentUser.id,
         content,
         attachments: atts.length > 0 ? atts : undefined
       });
+      // Optimistically add the sent message
+      const newMsg = res.data;
+      setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+
+      // Update sidebar lastMessage
+      setConversations(prev => prev.map(c =>
+        c.id === activeConv.id ? { ...c, lastMessage: newMsg } : c
+      ));
     } catch (e) { console.error(e); }
   };
-
 
   const handleComposeSend = async () => {
     if (!compose.receiverId || !compose.subject || !compose.content) return;
@@ -258,7 +183,9 @@ export function Inbox({ role }: { role: string }) {
 
   const handleUpdateMessage = async (msgId: string, newContent: string) => {
     try {
-      await apiClient.put(`/conversations/messages/${msgId}`, { content: newContent });
+      const res = await apiClient.put(`/conversations/messages/${msgId}`, { content: newContent });
+      const updated = res.data;
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, ...updated } : m));
     } catch (e) {
       console.error(e);
     }
@@ -267,7 +194,9 @@ export function Inbox({ role }: { role: string }) {
   const handleDeleteMessage = async (msgId: string) => {
     try {
       if (window.confirm('Bạn có chắc chắn muốn thu hồi tin nhắn này?')) {
-        await apiClient.delete(`/conversations/messages/${msgId}`);
+        const res = await apiClient.delete(`/conversations/messages/${msgId}`);
+        const deleted = res.data;
+        setMessages(prev => prev.map(m => m.id === msgId ? { ...m, ...deleted } : m));
       }
     } catch (e) {
       console.error(e);

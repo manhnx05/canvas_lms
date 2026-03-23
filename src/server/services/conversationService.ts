@@ -56,7 +56,7 @@ export const conversationService = {
     }));
   },
 
-  sendMessage: async (conversationId: string, data: any, io: any) => {
+  sendMessage: async (conversationId: string, data: any) => {
     const { senderId, content, attachments } = data;
 
     const message = await prisma.message.create({
@@ -70,7 +70,6 @@ export const conversationService = {
       include: { sender: true }
     });
 
-    // Lấy conversation với participants
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
       include: { participants: { include: { user: true } }, course: true }
@@ -78,7 +77,6 @@ export const conversationService = {
 
     if (!conversation) throw new Error('Conversation not found');
 
-    // Chỉ tăng unreadCount cho người nhận (không phải sender)
     const receiverParticipants = conversation.participants.filter(
       (p: any) => String(p.userId) !== String(senderId)
     );
@@ -103,22 +101,16 @@ export const conversationService = {
       conversationId: conversationId
     };
 
-    // Emit cho tất cả participants (cả sender để confirm ngay lập tức)
-    if (io) {
-      conversation.participants.forEach((p: any) => {
-        io.to(String(p.userId)).emit('newMessage', formattedMessage);
-      });
-    }
-
-    // Gửi email thông báo cho receivers
+    // Send email notification to receivers
     if (receiverParticipants.length > 0 && process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
+        const appUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         await Promise.all(receiverParticipants.map((r: any) =>
           resend.emails.send({
             from: 'Canvas LMS <onboarding@resend.dev>',
             to: r.user.email,
-            subject: `[Canvas LMS] Thông báo tin nhắn mới: ${conversation.subject || 'Không có tiêu đề'}`,
+            subject: `[Canvas LMS] Tin nhắn mới: ${conversation.subject || 'Không có tiêu đề'}`,
             html: `<div style="font-family: sans-serif; color: #333;">
                     <h2>Bạn có tin nhắn mới trên hệ thống Canvas</h2>
                     <p><strong>Khóa học:</strong> ${conversation.course?.title || 'Chung'}</p>
@@ -128,7 +120,7 @@ export const conversationService = {
                     <p>${message.content}</p>
                     ${message.attachments ? '<p><em>(Tin nhắn có đính kèm tệp)</em></p>' : ''}
                     <br/>
-                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/inbox" style="background:#0ea5e9; color:#fff; padding: 10px 20px; text-decoration:none; border-radius:5px;">Xem tin nhắn</a>
+                    <a href="${appUrl}/inbox" style="background:#0ea5e9; color:#fff; padding: 10px 20px; text-decoration:none; border-radius:5px;">Xem tin nhắn</a>
                    </div>`
           })
         ));
@@ -140,8 +132,7 @@ export const conversationService = {
     return formattedMessage;
   },
 
-
-  createConversation: async (data: any, io: any) => {
+  createConversation: async (data: any) => {
     const { senderId, receiverId, subject, courseId, content, attachments } = data;
     if (!senderId || !receiverId) throw new HttpError(400, 'Missing users');
 
@@ -203,34 +194,16 @@ export const conversationService = {
         }
       });
 
-      const formattedMessage = {
-        id: message.id,
-        senderId: message.senderId,
-        senderName: message.sender.name,
-        senderRole: message.sender.role,
-        senderAvatar: message.sender.avatar,
-        content: message.content,
-        attachments: message.attachments,
-        timestamp: message.timestamp,
-        isRead: message.isRead,
-        conversationId: conversation.id
-      };
-
-      if (io) {
-        conversation.participants.forEach((p: any) => {
-          io.to(String(p.userId)).emit('newMessage', formattedMessage);
-          io.to(String(p.userId)).emit('newConversation', { conversationId: conversation!.id });
-        });
-      }
-
+      // Send email notification to receiver
       const receiverP = conversation.participants.find((p: any) => p.userId === receiverId);
       if (receiverP && process.env.RESEND_API_KEY) {
         try {
           const resend = new Resend(process.env.RESEND_API_KEY);
+          const appUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
           await resend.emails.send({
             from: 'Canvas LMS <onboarding@resend.dev>',
             to: receiverP.user.email,
-            subject: `[Canvas LMS] Thông báo tin nhắn mới: ${conversation.subject || 'Không có tiêu đề'}`,
+            subject: `[Canvas LMS] Tin nhắn mới: ${conversation.subject || 'Không có tiêu đề'}`,
             html: `<div style="font-family: sans-serif; color: #333;">
                     <h2>Bạn có tin nhắn mới trên hệ thống Canvas</h2>
                     <p><strong>Khóa học:</strong> ${conversation.course?.title || 'Chung'}</p>
@@ -240,10 +213,12 @@ export const conversationService = {
                     <p>${message.content}</p>
                     ${message.attachments ? '<p><em>(Tin nhắn có đính kèm tệp)</em></p>' : ''}
                     <br/>
-                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/inbox" style="background:#0ea5e9; color:#fff; padding: 10px 20px; text-decoration:none; border-radius:5px;">Xem tin nhắn</a>
+                    <a href="${appUrl}/inbox" style="background:#0ea5e9; color:#fff; padding: 10px 20px; text-decoration:none; border-radius:5px;">Xem tin nhắn</a>
                    </div>`
           });
-        } catch (emailError) { }
+        } catch (emailError) {
+          console.error("Lỗi gửi email:", emailError);
+        }
       }
     }
 
@@ -258,7 +233,7 @@ export const conversationService = {
     };
   },
 
-  updateMessage: async (messageId: string, senderId: string, content: string, io: any) => {
+  updateMessage: async (messageId: string, senderId: string, content: string) => {
     const existingMessage = await prisma.message.findUnique({
       where: { id: messageId }
     });
@@ -272,7 +247,7 @@ export const conversationService = {
       include: { sender: true }
     });
 
-    const formattedMessage = {
+    return {
       id: updatedMessage.id,
       senderId: updatedMessage.senderId,
       senderName: updatedMessage.sender.name,
@@ -286,23 +261,9 @@ export const conversationService = {
       isDeleted: updatedMessage.isDeleted,
       conversationId: updatedMessage.conversationId
     };
-
-    if (io) {
-      const conversation = await prisma.conversation.findUnique({
-        where: { id: updatedMessage.conversationId },
-        include: { participants: true }
-      });
-      if (conversation) {
-        conversation.participants.forEach((p: any) => {
-          io.to(String(p.userId)).emit('messageUpdated', formattedMessage);
-        });
-      }
-    }
-
-    return formattedMessage;
   },
 
-  deleteMessage: async (messageId: string, senderId: string, io: any) => {
+  deleteMessage: async (messageId: string, senderId: string) => {
     const existingMessage = await prisma.message.findUnique({
       where: { id: messageId }
     });
@@ -315,7 +276,7 @@ export const conversationService = {
       include: { sender: true }
     });
 
-    const formattedMessage = {
+    return {
       id: deletedMessage.id,
       senderId: deletedMessage.senderId,
       senderName: deletedMessage.sender.name,
@@ -329,19 +290,5 @@ export const conversationService = {
       isDeleted: deletedMessage.isDeleted,
       conversationId: deletedMessage.conversationId
     };
-
-    if (io) {
-      const conversation = await prisma.conversation.findUnique({
-        where: { id: deletedMessage.conversationId },
-        include: { participants: true }
-      });
-      if (conversation) {
-        conversation.participants.forEach((p: any) => {
-          io.to(String(p.userId)).emit('messageDeleted', formattedMessage);
-        });
-      }
-    }
-
-    return formattedMessage;
   }
 };

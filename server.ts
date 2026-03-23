@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import express from "express";
 import { createServer } from "http";
-import { Server } from "socket.io";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import apiRoutes from "./src/server/routes/index";
@@ -15,10 +14,10 @@ async function startServer() {
 
   // Mount API routes
   app.use("/api", apiRoutes);
-  
+
   // Add API Error Handler
   app.use(errorHandler);
-  
+
   // Serve uploads
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
@@ -38,19 +37,6 @@ async function startServer() {
   }
 
   const httpServer = createServer(app);
-  const io = new Server(httpServer, {
-    cors: { origin: "*" }
-  });
-
-  app.set("io", io);
-
-  io.on("connection", (socket) => {
-    socket.on("join", (userId) => {
-      const roomId = String(userId);
-      socket.join(roomId);
-      console.log(`User ${roomId} joined their room`);
-    });
-  });
 
   httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);

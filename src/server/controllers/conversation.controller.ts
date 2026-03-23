@@ -22,13 +22,11 @@ export const getMessages = async (req: Request, res: Response, next: NextFunctio
 
 export const sendMessage = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const io = req.app.get('io');
-    console.log("sendMessage called, io exists:", !!io);
     const data = { ...req.body };
     if (!data.senderId && (req as any).user) {
       data.senderId = (req as any).user.id;
     }
-    const formattedMessage = await conversationService.sendMessage(req.params.id, data, io);
+    const formattedMessage = await conversationService.sendMessage(req.params.id, data);
     res.json(formattedMessage);
   } catch (error) {
     next(error);
@@ -37,12 +35,11 @@ export const sendMessage = async (req: Request, res: Response, next: NextFunctio
 
 export const createConversation = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const io = req.app.get('io');
     const data = { ...req.body };
     if (!data.senderId && (req as any).user) {
       data.senderId = (req as any).user.id;
     }
-    const formatted = await conversationService.createConversation(data, io);
+    const formatted = await conversationService.createConversation(data);
     res.json(formatted);
   } catch (error) {
     next(error);
@@ -51,9 +48,8 @@ export const createConversation = async (req: Request, res: Response, next: Next
 
 export const updateMessage = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const io = req.app.get('io');
     const senderId = (req as any).user?.id || req.body.senderId;
-    const formatted = await conversationService.updateMessage(req.params.messageId, senderId, req.body.content, io);
+    const formatted = await conversationService.updateMessage(req.params.messageId, senderId, req.body.content);
     res.json(formatted);
   } catch (error) {
     next(error);
@@ -62,9 +58,8 @@ export const updateMessage = async (req: Request, res: Response, next: NextFunct
 
 export const deleteMessage = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const io = req.app.get('io');
     const senderId = (req as any).user?.id || req.body.senderId;
-    const formatted = await conversationService.deleteMessage(req.params.messageId, senderId, io);
+    const formatted = await conversationService.deleteMessage(req.params.messageId, senderId);
     res.json(formatted);
   } catch (error) {
     next(error);

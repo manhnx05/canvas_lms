@@ -1,22 +1,9 @@
-import { useEffect, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
-
 /**
- * useSocket – manages a singleton socket.io connection for a given userId.
- * Automatically joins the user's room and disconnects on unmount.
+ * useSocket – Socket.IO has been removed.
+ * Real-time messaging is handled via email notifications (Resend)
+ * and 30-second polling on the frontend.
+ * This file is kept as an empty stub to avoid import errors.
  */
-export function useSocket(userId: string) {
-  const socketRef = useRef<Socket | null>(null);
-
-  useEffect(() => {
-    if (!userId) return;
-    socketRef.current = io();
-    socketRef.current.emit('join', userId);
-
-    return () => {
-      socketRef.current?.disconnect();
-    };
-  }, [userId]);
-
-  return socketRef;
+export function useSocket(_userId: string) {
+  return { current: null };
 }
