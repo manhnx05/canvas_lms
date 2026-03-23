@@ -128,7 +128,7 @@ export const conversationService = {
                     <p>${message.content}</p>
                     ${message.attachments ? '<p><em>(Tin nhắn có đính kèm tệp)</em></p>' : ''}
                     <br/>
-                    <a href="http://localhost:3000/inbox" style="background:#0ea5e9; color:#fff; padding: 10px 20px; text-decoration:none; border-radius:5px;">Xem tin nhắn</a>
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/inbox" style="background:#0ea5e9; color:#fff; padding: 10px 20px; text-decoration:none; border-radius:5px;">Xem tin nhắn</a>
                    </div>`
           })
         ));
@@ -240,7 +240,7 @@ export const conversationService = {
                     <p>${message.content}</p>
                     ${message.attachments ? '<p><em>(Tin nhắn có đính kèm tệp)</em></p>' : ''}
                     <br/>
-                    <a href="http://localhost:3000/inbox" style="background:#0ea5e9; color:#fff; padding: 10px 20px; text-decoration:none; border-radius:5px;">Xem tin nhắn</a>
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/inbox" style="background:#0ea5e9; color:#fff; padding: 10px 20px; text-decoration:none; border-radius:5px;">Xem tin nhắn</a>
                    </div>`
           });
         } catch (emailError) { }

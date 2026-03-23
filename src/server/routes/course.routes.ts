@@ -37,9 +37,9 @@ router.delete('/:id/announcements/:announcementId', deleteAnnouncement);
 router.post('/:id/modules', createModule);
 router.delete('/modules/:moduleId', deleteModule);
 
-// Module Items
+// Module Items – static routes BEFORE dynamic (:moduleId) to prevent param shadowing
+router.put('/modules/reorder', reorderModuleItems);
 router.post('/modules/:moduleId/items', upload.single('file'), createModuleItem);
 router.delete('/modules/items/:itemId', deleteModuleItem);
-router.put('/modules/reorder', reorderModuleItems);
 
 export default router;
