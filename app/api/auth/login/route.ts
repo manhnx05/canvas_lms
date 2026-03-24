@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import prisma from '@/src/lib/prisma';
 import { loginSchema, validateRequestBody } from '@/src/lib/validations';
 import { withErrorHandler, AuthenticationError } from '@/src/utils/errorHandler';
+import { generateToken } from '@/src/middleware/auth';
+import { authRateLimit, addRateLimitHeaders } from '@/src/middleware/rateLimit';
 
 export const POST = withErrorHandler(async (req: Request) => {
+  // Apply rate limiting
+  const rateLimitResult = await authRateLimit(req as any);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
   const body = await req.json();
   const { email, password } = validateRequestBody(loginSchema, body);
 
@@ -19,13 +26,12 @@ export const POST = withErrorHandler(async (req: Request) => {
     throw new AuthenticationError('Mật khẩu không chính xác!');
   }
 
-  const token = jwt.sign(
-    { id: user.id, role: user.role }, 
-    process.env.JWT_SECRET || 'canvas_secret_key', 
-    { expiresIn: '7d' }
-  );
+  const token = generateToken({
+    id: user.id,
+    role: user.role as any
+  });
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     message: 'Đăng nhập thành công',
     token,
     user: { 
@@ -33,7 +39,12 @@ export const POST = withErrorHandler(async (req: Request) => {
       name: user.name, 
       email: user.email, 
       role: user.role, 
-      avatar: user.avatar 
+      avatar: user.avatar,
+      stars: user.stars,
+      className: user.className
     }
   });
+
+  // Add rate limit headers
+  return addRateLimitHeaders(response, req as any);
 });
