@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { aiService } from '@/src/services/aiService';
+import { requireAuth } from '@/src/middleware/auth';
+import { generateQuizSchema, validateRequestBody } from '@/src/lib/validations';
+import { withErrorHandler } from '@/src/utils/errorHandler';
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const questions = await aiService.generateQuiz(body);
-    return NextResponse.json({ questions });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+export const POST = withErrorHandler(async (req: Request) => {
+  const user = await requireAuth(req, ['teacher']);
+  
+  const body = await req.json();
+  const validatedData = validateRequestBody(generateQuizSchema, body);
+  
+  const questions = await aiService.generateQuiz(validatedData);
+  return NextResponse.json({ questions });
+});
