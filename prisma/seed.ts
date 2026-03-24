@@ -78,16 +78,61 @@ async function main() {
     });
   }
 
-  // Create Announcements
-  await prisma.announcement.create({ data: { title: "Chào mừng các con đến với môn Toán!", content: "Hôm nay chúng ta sẽ bắt đầu học chuyên đề mới nhé. Mọi người chú ý làm bài đầy đủ.", date: "15/03/2026", courseId: "c1" }});
-  await prisma.announcement.create({ data: { title: "Nhắc nhở nộp bài tuần 4", content: "Thứ sáu lớp mình sẽ chốt sổ kiểm tra nhanh 15 phút. Bạn nào chưa nộp thì nhớ nộp nha.", date: "16/03/2026", courseId: "c1" }});
+  // Create Announcements (removed 'date' field, using createdAt instead)
+  await prisma.announcement.create({ 
+    data: { 
+      title: "Chào mừng các con đến với môn Toán!", 
+      content: "Hôm nay chúng ta sẽ bắt đầu học chuyên đề mới nhé. Mọi người chú ý làm bài đầy đủ.", 
+      courseId: "c1" 
+    }
+  });
+  await prisma.announcement.create({ 
+    data: { 
+      title: "Nhắc nhở nộp bài tuần 4", 
+      content: "Thứ sáu lớp mình sẽ chốt sổ kiểm tra nhanh 15 phút. Bạn nào chưa nộp thì nhớ nộp nha.", 
+      courseId: "c1" 
+    }
+  });
 
   // Create Assignments
-  await prisma.assignment.create({ data: { id: "a1", title: "Bảng cửu chương 5", courseId: "c1", courseName: "Toán học", dueDate: "Hôm nay, 20:00", starsReward: 5, status: "pending", type: "quiz", description: "Bé hãy ôn tập và làm bài kiểm tra nhanh về bảng của chương 5 nhé." } });
-  await prisma.assignment.create({ data: { id: "a2", title: "Tập chép: Cháu nghe", courseId: "c2", courseName: "Tiếng Việt", dueDate: "Ngày mai", starsReward: 10, status: "pending", type: "writing", description: "Luyện chữ đẹp." } });
+  await prisma.assignment.create({ 
+    data: { 
+      id: "a1", 
+      title: "Bảng cửu chương 5", 
+      courseId: "c1", 
+      courseName: "Toán học", 
+      dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+      starsReward: 5, 
+      status: "pending", 
+      type: "quiz", 
+      description: "Bé hãy ôn tập và làm bài kiểm tra nhanh về bảng của chương 5 nhé." 
+    } 
+  });
+  await prisma.assignment.create({ 
+    data: { 
+      id: "a2", 
+      title: "Tập chép: Cháu nghe", 
+      courseId: "c2", 
+      courseName: "Tiếng Việt", 
+      dueDate: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(), // Day after tomorrow
+      starsReward: 10, 
+      status: "pending", 
+      type: "writing", 
+      description: "Luyện chữ đẹp." 
+    } 
+  });
 
   // Create Rewards
-  await prisma.reward.create({ data: { id: "r1", title: "Chăm chỉ", description: "Hoàn thành 5 bài tập liên tiếp", icon: "Star", color: "text-amber-500 bg-amber-100", dateEarned: "15/03/2026" } });
+  await prisma.reward.create({ 
+    data: { 
+      id: "r1", 
+      title: "Chăm chỉ", 
+      description: "Hoàn thành 5 bài tập liên tiếp", 
+      icon: "Star", 
+      color: "text-amber-500 bg-amber-100", 
+      dateEarned: "15/03/2026" 
+    } 
+  });
 
   // Create Conversations
   const conv1 = await prisma.conversation.create({ data: { id: "conv1", unreadCount: 1 } });
@@ -97,8 +142,24 @@ async function main() {
       { conversationId: "conv1", userId: teacherDiep.id },
     ]
   });
-  await prisma.message.create({ data: { id: "m0", conversationId: "conv1", senderId: studentAn.id, content: "Cô ơi em nộp bài trễ xíu nhé, nha bị mất điện ạ.", timestamp: "10:00", isRead: true } });
-  await prisma.message.create({ data: { id: "m1", conversationId: "conv1", senderId: teacherDiep.id, content: "Được em nhé.", timestamp: "10:30", isRead: false } });
+  await prisma.message.create({ 
+    data: { 
+      id: "m0", 
+      conversationId: "conv1", 
+      senderId: studentAn.id, 
+      content: "Cô ơi em nộp bài trễ xíu nhé, nha bị mất điện ạ.", 
+      isRead: true 
+    } 
+  });
+  await prisma.message.create({ 
+    data: { 
+      id: "m1", 
+      conversationId: "conv1", 
+      senderId: teacherDiep.id, 
+      content: "Được em nhé.", 
+      isRead: false 
+    } 
+  });
 
   console.log("Database seeded successfully!");
 }
