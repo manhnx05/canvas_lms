@@ -46,6 +46,3 @@ export const GET = withErrorHandler(async (req: Request) => {
 
   return NextResponse.json({ user: userData });
 });
-    return NextResponse.json({ error: 'Lỗi cập nhật hồ sơ' }, { status: 500 });
-  }
-}

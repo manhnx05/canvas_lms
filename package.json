@@ -1,13 +1,22 @@
 {
-  "name": "react-example",
+  "name": "canvas-lms",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "AI-Powered Learning Management System inspired by Canvas",
   "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
