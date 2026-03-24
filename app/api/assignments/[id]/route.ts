@@ -1,23 +1,26 @@
 import { NextResponse } from 'next/server';
 import { assignmentService } from '@/src/services/assignmentService';
+import { requireAuth } from '@/src/middleware/auth';
+import { validateUUID } from '@/src/lib/validations';
+import { withErrorHandler } from '@/src/utils/errorHandler';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId') || undefined;
-    const assignment = await assignmentService.getAssignmentById(params.id, userId);
-    if (!assignment) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json(assignment);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+export const GET = withErrorHandler(async (req: Request, { params }: { params: { id: string } }) => {
+  const user = await requireAuth(req);
+  
+  validateUUID(params.id, 'Assignment ID');
+  
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('userId') || user.id;
+  
+  const assignment = await assignmentService.getAssignmentById(params.id, userId);
+  return NextResponse.json(assignment);
+});
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  try {
-    await assignmentService.deleteAssignment(params.id);
-    return NextResponse.json({ message: 'Xóa bài tập thành công' });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+export const DELETE = withErrorHandler(async (req: Request, { params }: { params: { id: string } }) => {
+  const user = await requireAuth(req, ['teacher']);
+  
+  validateUUID(params.id, 'Assignment ID');
+  
+  await assignmentService.deleteAssignment(params.id);
+  return NextResponse.json({ message: 'Xóa bài tập thành công' });
+});

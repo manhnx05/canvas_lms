@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { aiService } from '@/src/services/aiService';
+import { requireAuth } from '@/src/middleware/auth';
+import { aiChatSchema, validateRequestBody } from '@/src/lib/validations';
+import { withErrorHandler } from '@/src/utils/errorHandler';
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const reply = await aiService.chat(body);
-    return NextResponse.json({ reply });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+export const POST = withErrorHandler(async (req: Request) => {
+  const user = await requireAuth(req);
+  
+  const body = await req.json();
+  const validatedData = validateRequestBody(aiChatSchema, body);
+  
+  const reply = await aiService.chat(validatedData);
+  return NextResponse.json({ reply });
+});

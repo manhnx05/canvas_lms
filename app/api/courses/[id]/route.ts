@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { courseService } from '@/src/services/courseService';
+import { requireAuth } from '@/src/middleware/auth';
+import { validateUUID } from '@/src/lib/validations';
+import { withErrorHandler } from '@/src/utils/errorHandler';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  try {
-    const course = await courseService.getCourseById(params.id);
-    if (!course) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json(course);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Error fetching course details' }, { status: 500 });
-  }
-}
+export const GET = withErrorHandler(async (req: Request, { params }: { params: { id: string } }) => {
+  const user = await requireAuth(req);
+  
+  validateUUID(params.id, 'Course ID');
+  
+  const course = await courseService.getCourseById(params.id);
+  return NextResponse.json(course);
+});
