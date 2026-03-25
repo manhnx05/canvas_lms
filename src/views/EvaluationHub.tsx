@@ -159,9 +159,9 @@ export function EvaluationHub({ role }: EvaluationHubProps) {
           {/* Quiz Component */}
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
             <QuizSystem
-              questions={questions.length > 0 ? questions : undefined}
-              topic={topic || undefined}
-              studentName={currentUser.name ?? undefined}
+              {...(questions.length > 0 && { questions })}
+              {...(topic && { topic })}
+              {...(currentUser.name && { studentName: currentUser.name })}
               onComplete={(result) => {
                 console.log('Quiz complete:', result);
               }}

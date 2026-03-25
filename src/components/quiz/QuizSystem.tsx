@@ -112,7 +112,7 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
       total: questions.length, 
       percentage, 
       answers, 
-      aiFeedback: aiFeedback ?? undefined, 
+      aiFeedback: aiFeedback || "", 
       timeTaken 
     };
     setResult(r);

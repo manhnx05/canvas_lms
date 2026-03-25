@@ -1,0 +1,22 @@
+﻿app/api/ai/evaluate-submission/route.ts(10,14): error TS2554: Expected 2-3 arguments, but got 1.
+src/components/ErrorBoundary.tsx(35,38): error TS2322: Type 'null' is not assignable to type 'Error | undefined'.
+src/components/ErrorBoundary.tsx(35,51): error TS2322: Type 'null' is not assignable to type 'ErrorInfo | undefined'.
+src/components/quiz/QuizSystem.tsx(110,11): error TS2375: Type '{ score: number; total: number; percentage: number; answers: Record<string, string>; aiFeedback: string | undefined; timeTaken: number; }' is not assignable to type 'QuizResult' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'aiFeedback' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/components/shared/CourseDetailModal.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/services/examService.ts(131,11): error TS2375: Type '{ subject: string; grade: string; duration: number; totalScore: number; difficulty: string; nbCount: number; thCount: number; vdCount: number; vdcCount: number; fileContents: string | undefined; customTopic: any; }' is not assignable to type 'ExamGenerationParams' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'fileContents' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/views/Dashboard.tsx(1,1): error TS6192: All imports in import declaration are unused.
+src/views/EvaluationHub.tsx(161,14): error TS2375: Type '{ questions: any[] | undefined; topic: string | undefined; studentName: any; onComplete: (result: QuizResult) => void; }' is not assignable to type 'QuizSystemProps' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'questions' are incompatible.
+    Type 'any[] | undefined' is not assignable to type 'QuizQuestion[]'.
+      Type 'undefined' is not assignable to type 'QuizQuestion[]'.
+src/views/ExamTaking.tsx(24,13): error TS7030: Not all code paths return a value.
+src/views/Inbox.tsx(219,10): error TS2375: Type '{ conversations: Conversation[]; activeConvId: string | undefined; onSelect: (conv: Conversation) => void; onCompose: () => void; }' is not assignable to type 'Props' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'activeConvId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.

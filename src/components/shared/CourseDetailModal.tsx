@@ -1,4 +1,3 @@
-import React from 'react';
 import { X, BookOpen, Users, TrendingUp, Clock, Star } from 'lucide-react';
 
 interface CourseDetailModalProps {

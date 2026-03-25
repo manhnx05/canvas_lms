@@ -28,6 +28,7 @@ export const ExamTaking = () => {
     } else if (timeLeft === 0 && attempt && attempt.status !== 'completed' && !loading) {
       void autoSubmit();
     }
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, attempt, loading]);
 

@@ -137,8 +137,8 @@ export const examService = {
       nbCount: parseInt(nbCount),
       thCount: parseInt(thCount),
       vdCount: parseInt(vdCount),
-      vdcCount: parseInt(vdcCount),
-      fileContents: fileContents || undefined,
+      vdcCount: Number(vdcCount),
+      fileContents: fileContents || "",
       customTopic: customTopic ?? undefined,
     };
 
