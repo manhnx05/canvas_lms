@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/src/lib/prisma';
+import { userService } from '@/src/services/userService';
 import { requireAuth } from '@/src/middleware/auth';
 import { updateProfileSchema, validateRequestBody } from '@/src/lib/validations';
 import { withErrorHandler } from '@/src/utils/errorHandler';
@@ -10,13 +10,10 @@ export const PUT = withErrorHandler(async (req: Request) => {
   const body = await req.json();
   const { name, avatar, className } = validateRequestBody(updateProfileSchema, body);
 
-  const updated = await prisma.user.update({
-    where: { id: user.id },
-    data: { 
+  const updated = await userService.updateUser(user.id, { 
       ...(name !== undefined && { name }),
       ...(avatar !== undefined && { avatar }),
       ...(className !== undefined && { className })
-    }
   });
 
   return NextResponse.json({
@@ -35,18 +32,7 @@ export const PUT = withErrorHandler(async (req: Request) => {
 export const GET = withErrorHandler(async (req: Request) => {
   const user = await requireAuth(req);
   
-  const userData = await prisma.user.findUnique({
-    where: { id: user.id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      avatar: true,
-      className: true,
-      stars: true
-    }
-  });
+  const userData = await userService.getUserProfile(user.id);
 
   return NextResponse.json({ user: userData });
 });

@@ -3,6 +3,21 @@ import prisma from '@/src/lib/prisma';
 import { HttpError } from '@/src/utils/errorHandler';
 
 export const userService = {
+  getUserProfile: async (id: string) => {
+    return prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        avatar: true,
+        className: true,
+        stars: true
+      }
+    });
+  },
+
   getUsers: async (query: any) => {
     const { role, excludeId } = query;
     const whereClause: any = {};
