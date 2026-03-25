@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { ConversationList, Conversation } from '../features/inbox/ConversationList';
+import { useEffect, useState, useRef } from 'react';
+import type { Conversation } from '../features/inbox/ConversationList';
+import { ConversationList } from '../features/inbox/ConversationList';
 import { MessageThread } from '../features/inbox/MessageThread';
 import { ComposeModal } from '../features/inbox/ComposeModal';
 import apiClient from '@/src/lib/apiClient';

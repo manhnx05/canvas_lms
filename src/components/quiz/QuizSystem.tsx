@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Brain, ChevronRight, RotateCcw, CheckCircle, XCircle,
   Clock, Star, TrendingUp, AlertCircle, Loader

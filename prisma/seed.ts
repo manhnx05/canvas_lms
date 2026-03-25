@@ -135,7 +135,7 @@ async function main() {
   });
 
   // Create Conversations
-  const conv1 = await prisma.conversation.create({ data: { id: "conv1", unreadCount: 1 } });
+  await prisma.conversation.create({ data: { id: "conv1", unreadCount: 1 } });
   await prisma.participant.createMany({
     data: [
       { conversationId: "conv1", userId: studentAn.id },

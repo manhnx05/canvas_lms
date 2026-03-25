@@ -5,7 +5,7 @@ import { aiChatSchema, validateRequestBody } from '@/src/lib/validations';
 import { withErrorHandler } from '@/src/utils/errorHandler';
 
 export const POST = withErrorHandler(async (req: Request) => {
-  const user = await requireAuth(req);
+  await requireAuth(req);
   
   const body = await req.json();
   const validatedData = validateRequestBody(aiChatSchema, body);

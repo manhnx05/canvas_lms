@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Brain, TrendingUp, BarChart2, MessageCircle, Filter, Upload, Plus, Settings, Zap } from 'lucide-react';
 import { QuizSystem } from '../components/quiz/QuizSystem';
-import { QuizFilterModal, QuizFilters } from '../components/quiz/QuizFilterModal';
+import type { QuizFilters } from '../components/quiz/QuizFilterModal';
+import { QuizFilterModal } from '../components/quiz/QuizFilterModal';
 import { QuizUploadModal } from '../components/quiz/QuizUploadModal';
 import { ProgressDashboard } from '../components/stats/ProgressDashboard';
 import { ScoringStatistics } from '../components/stats/ScoringStatistics';

@@ -1,5 +1,6 @@
 import prisma from '@/src/lib/prisma';
-import { generateExamWithAI, extractTextFromFile, ExamGenerationParams } from '@/src/lib/exam.ai.service';
+import type { ExamGenerationParams } from '@/src/lib/exam.ai.service';
+import { generateExamWithAI, extractTextFromFile } from '@/src/lib/exam.ai.service';
 import * as path from 'path';
 import * as fs from 'fs';
 import { HttpError } from '@/src/utils/errorHandler';

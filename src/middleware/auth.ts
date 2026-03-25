@@ -98,12 +98,14 @@ export function createAuthMiddleware(requiredRoles?: Role[]) {
   };
 }
 
-export async function requireAuth(req: NextRequest, requiredRoles?: Role[]) {
-  const authResult = await createAuthMiddleware(requiredRoles)(req);
+export async function requireAuth(req: Request | NextRequest, requiredRoles?: Role[]) {
+  // Convert Request to NextRequest if needed
+  const nextReq = req as NextRequest;
+  const authResult = await createAuthMiddleware(requiredRoles)(nextReq);
   if (authResult) {
     throw authResult; // This will be caught by the route handler
   }
-  return (req as AuthenticatedRequest).user!;
+  return (nextReq as AuthenticatedRequest).user!;
 }
 
 // Generate JWT token

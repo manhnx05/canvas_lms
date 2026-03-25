@@ -4,20 +4,22 @@ import { examService } from '@/src/services/examService';
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
+    const query: any = {};
+    
     const courseId = searchParams.get('courseId');
-    const moduleId = searchParams.get('moduleId');
+    const subject = searchParams.get('subject');
+    const grade = searchParams.get('grade');
+    const createdBy = searchParams.get('createdBy');
+    const status = searchParams.get('status');
     
-    if (moduleId) {
-      const exams = await examService.getExamsByModule(moduleId);
-      return NextResponse.json(exams);
-    }
-    if (courseId) {
-      const exams = await examService.getExamsByCourse(courseId);
-      return NextResponse.json(exams);
-    }
+    if (courseId) query.courseId = courseId;
+    if (subject) query.subject = subject;
+    if (grade) query.grade = grade;
+    if (createdBy) query.createdBy = createdBy;
+    if (status) query.status = status;
     
-    // Logic cho học sinh (chờ làm)
-    return NextResponse.json([]);
+    const exams = await examService.getExams(query);
+    return NextResponse.json(exams);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

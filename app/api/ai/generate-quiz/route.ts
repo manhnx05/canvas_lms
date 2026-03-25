@@ -5,7 +5,7 @@ import { generateQuizSchema, validateRequestBody } from '@/src/lib/validations';
 import { withErrorHandler } from '@/src/utils/errorHandler';
 
 export const POST = withErrorHandler(async (req: Request) => {
-  const user = await requireAuth(req, ['teacher']);
+  await requireAuth(req, ['teacher']);
   
   const body = await req.json();
   const validatedData = validateRequestBody(generateQuizSchema, body);

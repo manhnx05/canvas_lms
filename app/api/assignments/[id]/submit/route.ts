@@ -4,10 +4,11 @@ import { requireAuth } from '@/src/middleware/auth';
 import { submitAssignmentSchema, validateRequestBody, validateUUID } from '@/src/lib/validations';
 import { withErrorHandler } from '@/src/utils/errorHandler';
 
-export const POST = withErrorHandler(async (req: Request, { params }: { params: { id: string } }) => {
+export const POST = withErrorHandler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireAuth(req, ['student']);
+  const { id } = await params;
   
-  validateUUID(params.id, 'Assignment ID');
+  validateUUID(id, 'Assignment ID');
   
   const body = await req.json();
   const validatedData = validateRequestBody(submitAssignmentSchema.omit({ assignmentId: true }), body);
@@ -16,9 +17,9 @@ export const POST = withErrorHandler(async (req: Request, { params }: { params: 
   const submissionData = {
     ...validatedData,
     userId: user.id,
-    assignmentId: params.id
+    assignmentId: id
   };
   
-  const submission = await assignmentService.submitAssignment(params.id, submissionData);
+  const submission = await assignmentService.submitAssignment(id, submissionData);
   return NextResponse.json(submission);
 });

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { ArrowLeft, BookOpen, Paperclip, Send, X, Plus, Inbox as InboxIcon, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 
 interface Attachment {

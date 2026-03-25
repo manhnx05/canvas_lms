@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Star, Trophy, Target, Award, CheckCircle } from 'lucide-react';
-import { Role } from '@/src/types';
 import apiClient from '@/src/lib/apiClient';
 
-export function Rewards({ role }: { role: Role }) {
+export function Rewards() {
   const [rewards, setRewards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');

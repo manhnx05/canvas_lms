@@ -12,7 +12,11 @@ export const PUT = withErrorHandler(async (req: Request) => {
 
   const updated = await prisma.user.update({
     where: { id: user.id },
-    data: { name, avatar, className }
+    data: { 
+      ...(name !== undefined && { name }),
+      ...(avatar !== undefined && { avatar }),
+      ...(className !== undefined && { className })
+    }
   });
 
   return NextResponse.json({
