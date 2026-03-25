@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PenTool, Star, Clock, CheckCircle, AlertCircle, Search, Filter } from 'lucide-react';
+import { PenTool, Star, Clock, CheckCircle, Search, Filter } from 'lucide-react';
 import { Role } from '@/src/types';
 import { useAssignments } from '../hooks/useAssignments';
 import { CreateAssignmentModal } from '../features/assignments/CreateAssignmentModal';
@@ -53,10 +53,10 @@ export function Assignments({ role }: { role: Role }) {
             <div key={assignment.id} onClick={() => navigate(`/assignments/${assignment.id}`)} className="cursor-pointer p-6 flex flex-col md:flex-row md:items-center gap-6 hover:bg-sky-50/50 transition-colors group">
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${
                 assignment.status === 'pending' ? 'bg-amber-100 text-amber-500' : 
-                assignment.status === 'submitted' ? 'bg-sky-100 text-sky-500' : 'bg-emerald-100 text-emerald-500'
+                assignment.mySubmission?.status === 'submitted' ? 'bg-sky-100 text-sky-500' : 'bg-emerald-100 text-emerald-500'
               }`}>
                 {assignment.status === 'pending' ? <Clock className="w-8 h-8" /> : 
-                 assignment.status === 'submitted' ? <PenTool className="w-8 h-8" /> : <CheckCircle className="w-8 h-8" />}
+                 assignment.mySubmission?.status === 'submitted' ? <PenTool className="w-8 h-8" /> : <CheckCircle className="w-8 h-8" />}
               </div>
               
               <div className="flex-1 min-w-0">
@@ -82,7 +82,7 @@ export function Assignments({ role }: { role: Role }) {
                     <div className="w-full md:w-auto bg-amber-400 hover:bg-amber-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-sm shadow-amber-200 text-center">
                       Làm bài ngay
                     </div>
-                  ) : assignment.status === 'submitted' ? (
+                  ) : assignment.mySubmission?.status === 'submitted' ? (
                     <span className="px-6 py-3 bg-sky-100 text-sky-600 rounded-xl font-bold border-2 border-sky-200 text-center">
                       Đang chờ chấm
                     </span>
@@ -92,7 +92,7 @@ export function Assignments({ role }: { role: Role }) {
                     </span>
                   )
                 ) : (
-                  assignment.status === 'submitted' ? (
+                  assignment.mySubmission?.status === 'submitted' ? (
                     <div className="w-full md:w-auto bg-rose-500 hover:bg-rose-600 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-sm shadow-rose-200 text-center">
                       Chấm bài
                     </div>

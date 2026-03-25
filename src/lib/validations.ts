@@ -15,8 +15,8 @@ export const registerSchema = z.object({
   name: z.string().min(2, 'Tên phải có ít nhất 2 ký tự').max(100, 'Tên không được quá 100 ký tự'),
   email: emailSchema,
   password: passwordSchema,
-  role: z.enum(['student', 'teacher'], { 
-    errorMap: () => ({ message: 'Vai trò phải là student hoặc teacher' })
+  role: z.enum(['student', 'teacher']).refine((val) => ['student', 'teacher'].includes(val), {
+    message: 'Vai trò phải là student hoặc teacher'
   })
 });
 
@@ -55,15 +55,15 @@ export const createAssignmentSchema = z.object({
   courseName: z.string().min(1, 'Tên khóa học không được để trống'),
   dueDate: z.string().datetime('Ngày hết hạn không hợp lệ'),
   starsReward: z.number().int().min(0, 'Điểm thưởng phải >= 0').max(100, 'Điểm thưởng phải <= 100'),
-  type: z.enum(['quiz', 'drawing', 'reading', 'writing'], {
-    errorMap: () => ({ message: 'Loại bài tập không hợp lệ' })
+  type: z.enum(['quiz', 'drawing', 'reading', 'writing']).refine((val) => ['quiz', 'drawing', 'reading', 'writing'].includes(val), {
+    message: 'Loại bài tập không hợp lệ'
   }),
   questions: z.array(z.any()).optional() // Will be validated separately for quiz type
 });
 
 export const submitAssignmentSchema = z.object({
   assignmentId: uuidSchema,
-  answers: z.record(z.string()).optional(),
+  answers: z.record(z.string(), z.string()).optional(),
   timestamp: z.string().datetime().optional()
 });
 
@@ -103,16 +103,16 @@ export const sendMessageSchema = z.object({
 // Exam validations
 export const createExamSchema = z.object({
   title: z.string().min(1, 'Tiêu đề không được để trống').max(200, 'Tiêu đề không được quá 200 ký tự'),
-  subject: z.enum(['math', 'physics', 'chemistry', 'biology', 'literature', 'history', 'geography'], {
-    errorMap: () => ({ message: 'Môn học không hợp lệ' })
+  subject: z.enum(['math', 'physics', 'chemistry', 'biology', 'literature', 'history', 'geography']).refine((val) => ['math', 'physics', 'chemistry', 'biology', 'literature', 'history', 'geography'].includes(val), {
+    message: 'Môn học không hợp lệ'
   }),
-  grade: z.enum(['1', '2', '3', '4', '5'], {
-    errorMap: () => ({ message: 'Lớp không hợp lệ' })
+  grade: z.enum(['1', '2', '3', '4', '5']).refine((val) => ['1', '2', '3', '4', '5'].includes(val), {
+    message: 'Lớp không hợp lệ'
   }),
   duration: z.number().int().min(5, 'Thời gian thi phải >= 5 phút').max(300, 'Thời gian thi phải <= 300 phút'),
   totalScore: z.number().int().min(1, 'Tổng điểm phải >= 1').max(100, 'Tổng điểm phải <= 100'),
-  difficulty: z.enum(['easy', 'medium', 'hard'], {
-    errorMap: () => ({ message: 'Độ khó không hợp lệ' })
+  difficulty: z.enum(['easy', 'medium', 'hard']).refine((val) => ['easy', 'medium', 'hard'].includes(val), {
+    message: 'Độ khó không hợp lệ'
   }),
   questions: z.array(z.object({
     id: z.string(),
@@ -147,7 +147,7 @@ export const createUserSchema = z.object({
 export function validateRequestBody<T>(schema: z.ZodSchema<T>, data: unknown): T {
   const result = schema.safeParse(data);
   if (!result.success) {
-    const errors = result.error.errors.map(err => `${err.path.join('.')}: ${err.message}`);
+    const errors = result.error.issues.map(err => `${err.path.join('.')}: ${err.message}`);
     throw new Error(`Validation failed: ${errors.join(', ')}`);
   }
   return result.data;

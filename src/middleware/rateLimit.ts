@@ -38,11 +38,9 @@ export function createRateLimit(options: RateLimitOptions = {}) {
     keyGenerator = (req: NextRequest) => {
       // Use IP address as default key
       const forwarded = req.headers.get('x-forwarded-for');
-      const ip = forwarded ? forwarded.split(',')[0] : req.ip || 'unknown';
+      const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
       return ip;
     },
-    skipSuccessfulRequests = false,
-    skipFailedRequests = false,
   } = options;
 
   return async (req: NextRequest): Promise<NextResponse | null> => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Clock, Star, Upload, CheckCircle, Sparkles, BrainCircuit, Users } from 'lucide-react';
 import { Role } from '@/src/types';

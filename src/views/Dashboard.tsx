@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, CheckCircle, AlertCircle, Star, Trophy, Users, FileText, TrendingUp } from 'lucide-react';
-import { Role, Course, Assignment } from '@/src/types';
+import { Role } from '@/src/types';
 import { useDashboardData } from '../hooks/useDashboardData';
 
 export function Dashboard({ role }: { role: Role }) {
@@ -59,7 +59,7 @@ export function Dashboard({ role }: { role: Role }) {
             <div>
               <p className="text-sm font-bold text-sky-500 uppercase tracking-wider">Hoàn Thành</p>
               <p className="text-3xl font-extrabold text-sky-900">
-                {assignments.length > 0 ? Math.round((assignments.filter(a => a.status === 'graded').length / assignments.length) * 100) : 0}
+                {assignments.length > 0 ? Math.round((assignments.filter(a => a.mySubmission?.status === 'graded').length / assignments.length) * 100) : 0}
                 <span className="text-lg text-sky-400 font-semibold">%</span>
               </p>
             </div>
@@ -148,7 +148,7 @@ export function Dashboard({ role }: { role: Role }) {
         <div className="space-y-6">
           <h2 className="text-2xl font-extrabold text-sky-900">{role === 'student' ? 'Nhiệm Vụ Cần Làm' : 'Cần Chấm Điểm'}</h2>
           <div className="bg-white rounded-3xl border-2 border-sky-100 shadow-sm p-2">
-            {assignments.filter(a => role === 'student' ? a.status === 'pending' : a.status === 'submitted').map((task) => (
+            {assignments.filter(a => role === 'student' ? a.status === 'published' : a.mySubmission?.status === 'submitted').map((task) => (
               <div key={task.id} onClick={() => navigate(`/assignments/${task.id}`)} className="flex gap-4 items-center p-4 hover:bg-sky-50 rounded-2xl transition-colors cursor-pointer group">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
                   task.dueDate.includes('Hôm nay') ? 'bg-rose-100 text-rose-500' : 'bg-amber-100 text-amber-500'
@@ -167,7 +167,7 @@ export function Dashboard({ role }: { role: Role }) {
                 )}
               </div>
             ))}
-            {assignments.filter(a => role === 'student' ? a.status === 'pending' : a.status === 'submitted').length === 0 && (
+            {assignments.filter(a => role === 'student' ? a.status === 'published' : a.mySubmission?.status === 'submitted').length === 0 && (
               <div className="p-8 text-center text-sky-500 font-medium">
                 Tuyệt vời! Không có nhiệm vụ nào tồn đọng.
               </div>

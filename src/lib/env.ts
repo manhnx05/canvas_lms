@@ -20,9 +20,9 @@ const envSchema = z.object({
   
   // Optional configurations
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
-  DATABASE_POOL_SIZE: z.string().transform(Number).pipe(z.number().min(1).max(100)).default('10'),
-  RATE_LIMIT_MAX: z.string().transform(Number).pipe(z.number().min(1).max(10000)).default('100'),
-  RATE_LIMIT_WINDOW: z.string().transform(Number).pipe(z.number().min(1).max(3600)).default('900'), // 15 minutes
+  DATABASE_POOL_SIZE: z.string().transform(Number).pipe(z.number().min(1).max(100)).default(10),
+  RATE_LIMIT_MAX: z.string().transform(Number).pipe(z.number().min(1).max(10000)).default(100),
+  RATE_LIMIT_WINDOW: z.string().transform(Number).pipe(z.number().min(1).max(3600)).default(900), // 15 minutes
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -54,7 +54,7 @@ export function validateEnv(): Env {
     console.error('❌ Environment validation failed:');
     
     if (error instanceof z.ZodError) {
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         console.error(`  - ${err.path.join('.')}: ${err.message}`);
       });
     } else {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getEnv, isProduction } from '@/src/lib/env';
+import { isProduction } from '@/src/lib/env';
 
 export interface SecurityOptions {
   contentSecurityPolicy?: boolean;
@@ -34,7 +34,7 @@ export function createSecurityHeaders(options: SecurityOptions = {}) {
     xXssProtection = true,
   } = options;
 
-  return (req: NextRequest, response: NextResponse): NextResponse => {
+  return (response: NextResponse): NextResponse => {
     const headers = new Headers(response.headers);
 
     // Content Security Policy
