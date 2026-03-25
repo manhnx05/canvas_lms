@@ -26,7 +26,7 @@ interface Message {
   isDeleted?: boolean;
 }
 
-export function Inbox({ role }: { role: string }) {
+export function Inbox() {
   const currentUser = JSON.parse(localStorage.getItem('canvas_user') || '{}');
 
   const [conversations, setConversations] = useState<Conversation[]>([]);

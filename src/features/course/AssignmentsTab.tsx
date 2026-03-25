@@ -16,7 +16,7 @@ export function AssignmentsTab({ courseId, courseTitle, assignments, role, onRef
   const [title, setTitle] = useState('');
   const [due, setDue] = useState('');
   const [stars, setStars] = useState('10');
-  const [type, setType] = useState('quiz');
+  const [type] = useState('quiz'); // Default type, can be extended with UI selector
   const [desc, setDesc] = useState('');
   const [topic, setTopic] = useState('');
   const [questions, setQuestions] = useState<any[]>([]);

@@ -1,15 +1,6 @@
 import { useEffect, useState } from 'react';
 import { TrendingUp, BookOpen, Target, Clock, Award, CheckCircle, AlertCircle } from 'lucide-react';
 
-interface CourseProgress {
-  courseId: string;
-  courseName: string;
-  color: string;
-  completed: number;
-  total: number;
-  lastActivity?: string;
-}
-
 interface ProgressDashboardProps {
   userId: string;
   role: string;

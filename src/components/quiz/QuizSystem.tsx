@@ -42,7 +42,6 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
   const [generatingAI, setGeneratingAI] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
   const [timeElapsed, setTimeElapsed] = useState(0);
-  const [selectedThisQ, setSelectedThisQ] = useState<string | null>(null);
   const currentUser = JSON.parse(localStorage.getItem('canvas_user') || '{}');
 
   useEffect(() => {
@@ -70,7 +69,6 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
     if (qs.length === 0) return;
     setCurrentIdx(0);
     setAnswers({});
-    setSelectedThisQ(null);
     setStartTime(Date.now());
     setTimeElapsed(0);
     setPhase('quiz');
@@ -78,14 +76,12 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
 
   const selectAnswer = (optionId: string) => {
     if (answers[questions[currentIdx].id]) return; // already answered
-    setSelectedThisQ(optionId);
     setAnswers(prev => ({ ...prev, [questions[currentIdx].id]: optionId }));
   };
 
   const nextQuestion = () => {
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(i => i + 1);
-      setSelectedThisQ(answers[questions[currentIdx + 1]?.id] || null);
     } else {
       submitQuiz();
     }
