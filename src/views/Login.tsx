@@ -15,7 +15,13 @@ export function Login({ onLogin }: { onLogin: (user: any, token: string) => void
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const handleError = (err: any) => setError(err.message || 'Có lỗi xảy ra');
+  const handleError = (err: any) => {
+    console.error("Login Error Handler:", err);
+    if (typeof err === 'string') setError(err);
+    else if (err?.message) setError(err.message);
+    else if (err?.error) setError(err.error);
+    else setError('Có lỗi xảy ra');
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
