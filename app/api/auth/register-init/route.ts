@@ -28,13 +28,22 @@ export async function POST(req: Request) {
     });
 
     if (process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: 'Canvas LMS <onboarding@resend.dev>',
-        to: [email],
-        subject: 'Mã xác nhận Đăng ký Canvas LMS',
-        html: `<p>Mã OTP đăng ký tài khoản của bạn là: <strong style="font-size: 24px;">${otp}</strong></p>`
-      });
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const { data, error } = await resend.emails.send({
+          from: 'Canvas LMS <onboarding@resend.dev>',
+          to: [email],
+          subject: 'Mã xác nhận Đăng ký Canvas LMS',
+          html: `<p>Mã OTP đăng ký tài khoản của bạn là: <strong style="font-size: 24px;">${otp}</strong></p>`
+        });
+        if (error) {
+          console.error('[Register] Lỗi từ Resend API:', JSON.stringify(error));
+        } else {
+          console.log('[Register] Đã gửi OTP thành công qua Resend:', data);
+        }
+      } catch (mailError) {
+        console.error('[Register] Lỗi kết nối Resend API:', mailError);
+      }
     }
 
     return NextResponse.json({ message: 'Mã OTP đã được gửi đến email.' });

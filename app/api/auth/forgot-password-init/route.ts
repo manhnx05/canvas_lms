@@ -12,13 +12,22 @@ export async function POST(req: Request) {
     await prisma.user.update({ where: { email }, data: { otp } });
 
     if (process.env.RESEND_API_KEY) {
+      try {
         const resend = new Resend(process.env.RESEND_API_KEY);
-        await resend.emails.send({
+        const { data, error } = await resend.emails.send({
             from: 'Canvas LMS <onboarding@resend.dev>',
             to: [email],
             subject: 'Mã khôi phục mật khẩu Canvas LMS',
             html: `<p>Mã OTP khôi phục mật khẩu của bạn là: <strong style="font-size: 24px;">${otp}</strong></p>`
         });
+        if (error) {
+          console.error('[Forgot Password] Lỗi từ Resend API:', JSON.stringify(error));
+        } else {
+          console.log('[Forgot Password] Đã gửi OTP thành công qua Resend:', data);
+        }
+      } catch (mailError) {
+        console.error('[Forgot Password] Lỗi kết nối Resend API:', mailError);
+      }
     }
 
     return NextResponse.json({ message: 'Mã khôi phục đã được gửi.' });
