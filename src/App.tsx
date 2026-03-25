@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -19,43 +18,12 @@ import { ExamList } from './views/ExamList';
 import { ExamGenerator } from './views/ExamGenerator';
 import { ExamViewer } from './views/ExamViewer';
 import { ExamTaking } from './views/ExamTaking';
-import { Role, User } from '@/src/types';
+import { Role } from '@/src/types';
+import { AuthProvider, useAuthContext } from './context/AuthContext';
 
-function App() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+function AppContent() {
+  const { currentUser, isLoading, login, logout } = useAuthContext();
 
-  useEffect(() => {
-    // Check for saved user on app start
-    try {
-      const saved = localStorage.getItem('canvas_user');
-      const token = localStorage.getItem('canvas_token');
-      
-      if (saved && token) {
-        const user = JSON.parse(saved);
-        setCurrentUser(user);
-      }
-    } catch (error) {
-      console.error('Error loading saved user:', error);
-      // Clear corrupted data
-      localStorage.removeItem('canvas_user');
-      localStorage.removeItem('canvas_token');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const handleLogin = (user: User, token: string) => {
-    setCurrentUser(user);
-    localStorage.setItem('canvas_user', JSON.stringify(user));
-    localStorage.setItem('canvas_token', token);
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('canvas_user');
-    localStorage.removeItem('canvas_token');
-  };
 
   // Show loading screen while checking authentication
   if (isLoading) {
@@ -66,7 +34,7 @@ function App() {
   if (!currentUser) {
     return (
       <ErrorBoundary>
-        <Login onLogin={handleLogin} />
+        <Login onLogin={login} />
       </ErrorBoundary>
     );
   }
@@ -76,7 +44,7 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <Layout role={role} onLogout={handleLogout}>
+        <Layout role={role} onLogout={logout}>
           <ErrorBoundary>
             <Routes>
               <Route path="/" element={<Dashboard role={role} />} />
@@ -100,6 +68,14 @@ function App() {
         </Layout>
       </Router>
     </ErrorBoundary>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

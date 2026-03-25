@@ -1,11 +1,10 @@
+import { useAuthContext } from '../context/AuthContext';
+import { User } from '@/src/types';
+
 /**
- * useAuth – centralized access to the current logged-in user.
- * Reads from localStorage so the key is kept in one place.
+ * useAuth – centralized access to the current logged-in user via AuthContext.
  */
-export function useAuth() {
-  try {
-    return JSON.parse(localStorage.getItem('canvas_user') || '{}');
-  } catch {
-    return {};
-  }
+export function useAuth(): Partial<User> {
+  const { currentUser } = useAuthContext();
+  return currentUser || {};
 }
