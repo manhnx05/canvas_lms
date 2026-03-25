@@ -42,8 +42,10 @@ export function AiChatSection({ studentName, context }: AiChatSectionProps) {
       const res = await apiClient.post('/ai/chat', { message: text, studentName, context });
       const data = res.data;
       setMessages(prev => [...prev, { role: 'assistant', text: data.reply || 'Cô chưa hiểu câu hỏi, bé hỏi lại nhé! 😊' }]);
-    } catch {
-      setMessages(prev => [...prev, { role: 'assistant', text: '😢 Có lỗi kết nối, bé thử lại sau nhé!' }]);
+    } catch (error: any) {
+      console.error('AI Chat Error:', error);
+      const msg = error.response?.data?.message || error.message || 'Lỗi hệ thống';
+      setMessages(prev => [...prev, { role: 'assistant', text: `😢 Lỗi AI: ${msg}` }]);
     }
     setLoading(false);
   };
