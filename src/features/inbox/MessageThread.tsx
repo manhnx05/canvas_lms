@@ -127,92 +127,102 @@ export function MessageThread({
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50">
+      {/* Email Thread */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-[#fafafa]">
         {messages.map((msg) => {
           const isMe = String(msg.senderId) === String(currentUserId);
           const atts: Attachment[] = Array.isArray(msg.attachments) ? msg.attachments : [];
           return (
-            <div key={msg.id} className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} gap-3`}>
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold shrink-0 text-sm ${isMe ? 'bg-gradient-to-br from-sky-400 to-indigo-500' : 'bg-gradient-to-br from-emerald-400 to-teal-500'}`}>
-                {msg.senderAvatar
-                  ? <img src={msg.senderAvatar} alt="" className="w-full h-full rounded-full object-cover" />
-                  : msg.senderName?.charAt(0)}
-              </div>
-              <div className={`max-w-[70%] space-y-1.5 ${isMe ? 'items-end' : 'items-start'} flex flex-col relative group`}>
-                <div className="flex items-baseline gap-2">
-                  {!isMe && <p className="text-xs font-bold text-slate-600">{msg.senderName}</p>}
-                  <p className="text-[10px] text-slate-400">{msg.timestamp}</p>
+            <div key={msg.id} className="flex flex-col bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+              {/* Email Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0 text-sm shadow-sm ${isMe ? 'bg-gradient-to-br from-indigo-500 to-sky-500' : 'bg-slate-300 text-slate-700'}`}>
+                    {msg.senderAvatar
+                      ? <img src={msg.senderAvatar} alt="" className="w-full h-full rounded-full object-cover" />
+                      : msg.senderName?.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-sm">{msg.senderName} {isMe && <span className="text-slate-400 font-normal ml-1">(Tôi)</span>}</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Tới: {conversation.participants.map(p => p.name).join(', ')}</p>
+                  </div>
                 </div>
-                
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-400">{msg.timestamp}</span>
+                  {isMe && !msg.isDeleted && (
+                    <div className="relative group">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === msg.id ? null : msg.id); }} 
+                        className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      {activeMenu === msg.id && (
+                        <div className="absolute top-full right-0 mt-1 w-36 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden z-10 py-1">
+                          <button onClick={() => handleEditStart(msg)} className="w-full text-left px-4 py-2 text-sm text-slate-700 flex items-center gap-2 hover:bg-slate-50 transition-colors">
+                            <Edit2 className="w-3.5 h-3.5" /> Chỉnh sửa
+                          </button>
+                          <button onClick={() => { onDeleteMessage(msg.id); setActiveMenu(null); }} className="w-full text-left px-4 py-2 text-sm text-red-600 flex items-center gap-2 hover:bg-red-50 transition-colors">
+                            <Trash2 className="w-3.5 h-3.5" /> Thu hồi
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Email Body */}
+              <div className="pt-3 pl-14">
                 {msg.isDeleted ? (
-                  <div className={`p-4 rounded-2xl text-sm italic opacity-60 ${isMe ? 'bg-sky-500/20 text-sky-900 rounded-tr-sm' : 'bg-slate-100 text-slate-600 border border-slate-200 rounded-tl-sm'}`}>
+                  <div className="text-sm italic text-slate-400 p-3 bg-slate-50 rounded-xl border border-slate-100">
                     Tin nhắn đã bị thu hồi
                   </div>
                 ) : editingMsgId === msg.id ? (
-                  <div className={`p-4 rounded-2xl text-sm leading-relaxed w-full min-w-[300px] ${isMe ? 'bg-sky-50 text-sky-900 rounded-tr-sm border border-sky-200' : 'bg-white border border-slate-200'}`}>
+                  <div className="mt-2 border border-sky-200 rounded-xl overflow-hidden shadow-sm">
                     <textarea 
-                      className="w-full bg-transparent outline-none resize-none mb-2" 
+                      className="w-full p-3 bg-sky-50 outline-none resize-none text-sm text-slate-700" 
                       rows={3} 
                       value={editContent} 
                       onChange={e => setEditContent(e.target.value)} 
                     />
-                    <div className="flex justify-end gap-2 mt-2 border-t border-sky-200/50 pt-2">
-                      <button onClick={handleEditCancel} className="text-xs font-semibold text-slate-500 hover:text-slate-700">Hủy</button>
-                      <button onClick={handleEditSave} className="text-xs font-bold bg-sky-500 text-white px-3 py-1.5 rounded-lg hover:bg-sky-600 transition-colors">Lưu</button>
+                    <div className="flex justify-end gap-2 p-2 bg-white border-t border-sky-100">
+                      <button onClick={handleEditCancel} className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors">Hủy</button>
+                      <button onClick={handleEditSave} className="text-xs font-bold bg-sky-500 text-white px-4 py-1.5 rounded-lg hover:bg-sky-600 transition-colors shadow-sm shadow-sky-200">Lưu thay đổi</button>
                     </div>
                   </div>
                 ) : (
-                  <div className={`relative flex items-center gap-2 group-hover:opacity-100 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                    {/* The Message Bubble */}
-                    {msg.content && (
-                      <div className={`p-4 rounded-2xl text-sm leading-relaxed ${isMe ? 'bg-sky-500 text-white rounded-tr-sm' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm'}`}>
-                        {msg.content}
-                        {msg.isEdited && <span className={`text-[10px] ml-2 ${isMe ? 'text-sky-200' : 'text-slate-400'}`}>(đã chỉnh sửa)</span>}
-                      </div>
-                    )}
+                  <>
+                    <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {msg.content}
+                      {msg.isEdited && <span className="text-xs text-slate-400 italic ml-2">(đã chỉnh sửa)</span>}
+                    </div>
                     
-                    {/* The Context Menu */}
-                    {isMe && (
-                      <div className="relative opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === msg.id ? null : msg.id); }} 
-                          className="p-1 text-slate-400 hover:bg-slate-200 rounded-full transition-colors"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                        {activeMenu === msg.id && (
-                          <div className="absolute top-full right-0 mt-1 w-36 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden z-10 py-1">
-                            <button onClick={() => handleEditStart(msg)} className="w-full text-left px-4 py-2 text-sm text-slate-700 flex items-center gap-2 hover:bg-slate-50 transition-colors">
-                              <Edit2 className="w-3.5 h-3.5" /> Chỉnh sửa
-                            </button>
-                            <button onClick={() => { onDeleteMessage(msg.id); setActiveMenu(null); }} className="w-full text-left px-4 py-2 text-sm text-red-600 flex items-center gap-2 hover:bg-red-50 transition-colors">
-                              <Trash2 className="w-3.5 h-3.5" /> Thu hồi
-                            </button>
-                          </div>
-                        )}
+                    {/* Attachments */}
+                    {atts.length > 0 && (
+                      <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-slate-100">
+                        {atts.map((att, i) => (
+                          isImage(att.type) ? (
+                            <div key={i} className="group relative w-32 h-32 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 cursor-pointer">
+                              <a href={att.data} download={att.name} target="_blank" rel="noreferrer" className="block w-full h-full">
+                                <img src={att.data} alt={att.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                              </a>
+                            </div>
+                          ) : (
+                            <a key={i} href={att.data} download={att.name} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 transition-colors group">
+                              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 group-hover:border-sky-200 group-hover:bg-sky-100 transition-colors">
+                                <Paperclip className="w-4 h-4 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                              </div>
+                              <div className="flex flex-col min-w-0 pr-2">
+                                <span className="text-xs font-semibold text-slate-700 group-hover:text-sky-700 truncate max-w-[140px] transition-colors">{att.name}</span>
+                                <span className="text-[10px] text-slate-400 font-medium">{formatFileSize(att.size)}</span>
+                              </div>
+                            </a>
+                          )
+                        ))}
                       </div>
                     )}
-                  </div>
-                )}
-                {atts.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {atts.map((att, i) => (
-                      isImage(att.type) ? (
-                        <a key={i} href={att.data} download={att.name} target="_blank" rel="noreferrer">
-                          <img src={att.data} alt={att.name} className="max-w-[200px] max-h-[160px] rounded-xl object-cover border border-slate-200 hover:opacity-90 transition-opacity" />
-                        </a>
-                      ) : (
-                        <a key={i} href={att.data} download={att.name}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border transition-colors ${isMe ? 'bg-sky-400/40 border-sky-300 text-white hover:bg-sky-400/60' : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'}`}
-                        >
-                          <Paperclip className="w-3.5 h-3.5" />
-                          <span className="truncate max-w-[120px]">{att.name}</span>
-                          <span className="opacity-60">{formatFileSize(att.size)}</span>
-                        </a>
-                      )
-                    ))}
-                  </div>
+                  </>
                 )}
               </div>
             </div>
