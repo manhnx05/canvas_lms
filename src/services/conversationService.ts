@@ -45,11 +45,11 @@ export const conversationService = {
       id: m.id,
       senderId: m.senderId,
       senderName: m.sender.name,
-      senderRole: m.sender.role,
-      senderAvatar: m.sender.avatar,
+      senderRole: m.sender.role as any,
+      senderAvatar: m.sender.avatar || undefined,
       content: m.content,
       attachments: m.attachments,
-      timestamp: m.timestamp,
+      timestamp: m.createdAt.toISOString(),
       isRead: m.isRead,
       isEdited: m.isEdited,
       isDeleted: m.isDeleted
@@ -64,8 +64,7 @@ export const conversationService = {
         content: content || '',
         attachments: attachments || null,
         senderId,
-        conversationId,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        conversationId
       },
       include: { sender: true }
     });
@@ -92,11 +91,11 @@ export const conversationService = {
       id: message.id,
       senderId: message.senderId,
       senderName: message.sender.name,
-      senderRole: message.sender.role,
-      senderAvatar: message.sender.avatar,
+      senderRole: message.sender.role as any,
+      senderAvatar: message.sender.avatar || undefined,
       content: message.content,
       attachments: message.attachments,
-      timestamp: message.timestamp,
+      timestamp: message.createdAt.toISOString(),
       isRead: message.isRead,
       conversationId: conversationId
     };
@@ -178,8 +177,7 @@ export const conversationService = {
           content: content || '',
           attachments: attachments || null,
           senderId,
-          conversationId: conversation.id,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          conversationId: conversation.id
         },
         include: { sender: true }
       });
@@ -251,11 +249,11 @@ export const conversationService = {
       id: updatedMessage.id,
       senderId: updatedMessage.senderId,
       senderName: updatedMessage.sender.name,
-      senderRole: updatedMessage.sender.role,
-      senderAvatar: updatedMessage.sender.avatar,
+      senderRole: updatedMessage.sender.role as any,
+      senderAvatar: updatedMessage.sender.avatar || undefined,
       content: updatedMessage.content,
       attachments: updatedMessage.attachments,
-      timestamp: updatedMessage.timestamp,
+      timestamp: updatedMessage.createdAt.toISOString(),
       isRead: updatedMessage.isRead,
       isEdited: updatedMessage.isEdited,
       isDeleted: updatedMessage.isDeleted,
@@ -272,7 +270,7 @@ export const conversationService = {
 
     const deletedMessage = await prisma.message.update({
       where: { id: messageId },
-      data: { content: 'Tin nhắn đã bị thu hồi', attachments: null, isDeleted: true },
+      data: { content: 'Tin nhắn đã bị thu hồi', attachments: { set: null }, isDeleted: true },
       include: { sender: true }
     });
 
@@ -280,11 +278,11 @@ export const conversationService = {
       id: deletedMessage.id,
       senderId: deletedMessage.senderId,
       senderName: deletedMessage.sender.name,
-      senderRole: deletedMessage.sender.role,
-      senderAvatar: deletedMessage.sender.avatar,
+      senderRole: deletedMessage.sender.role as any,
+      senderAvatar: deletedMessage.sender.avatar || undefined,
       content: deletedMessage.content,
       attachments: deletedMessage.attachments,
-      timestamp: deletedMessage.timestamp,
+      timestamp: deletedMessage.createdAt.toISOString(),
       isRead: deletedMessage.isRead,
       isEdited: deletedMessage.isEdited,
       isDeleted: deletedMessage.isDeleted,

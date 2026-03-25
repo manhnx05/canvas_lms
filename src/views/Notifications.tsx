@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bell, Check, Clock, AlertCircle } from 'lucide-react';
 import { Role, Notification } from '@/src/types';
 
-export function Notifications({ role }: { role: Role }) {
+export function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
@@ -84,7 +84,7 @@ export function Notifications({ role }: { role: Role }) {
                   </div>
                   <p className={`whitespace-pre-wrap ${notif.isRead ? 'text-slate-500' : 'text-sky-700 font-medium'}`}>{notif.content}</p>
                   <p className="text-xs flex items-center gap-1 mt-3 font-semibold text-slate-400">
-                    <Clock className="w-3.5 h-3.5" /> {notif.date}
+                    <Clock className="w-3.5 h-3.5" /> {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString('vi-VN') : ''}
                   </p>
                 </div>
               </div>

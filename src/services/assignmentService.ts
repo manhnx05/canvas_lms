@@ -55,13 +55,12 @@ export const assignmentService = {
 
     return prisma.submission.upsert({
       where: { assignmentId_userId: { assignmentId: id, userId } },
-      update: { answers: updatedAnswers, status: 'submitted', timestamp: new Date().toISOString() },
+      update: { answers: updatedAnswers, status: 'submitted' },
       create: {
         assignmentId: id,
         userId,
         answers: updatedAnswers,
-        status: 'submitted',
-        timestamp: new Date().toISOString()
+        status: 'submitted'
       }
     });
   },

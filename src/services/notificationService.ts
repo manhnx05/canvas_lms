@@ -19,9 +19,9 @@ export const notificationService = {
   },
 
   createNotification: async (data: any) => {
-    const { userId, title, content, date } = data;
+    const { userId, title, content } = data;
     return prisma.notification.create({
-      data: { userId, title, content, date }
+      data: { userId, title, content }
     });
   }
 };

@@ -77,9 +77,8 @@ export const courseService = {
 
   postAnnouncement: async (courseId: string, data: any) => {
     const { title, content } = data;
-    const date = new Date().toLocaleDateString('vi-VN');
     return prisma.announcement.create({
-      data: { title, content, date, courseId }
+      data: { title, content, courseId }
     });
   },
 
