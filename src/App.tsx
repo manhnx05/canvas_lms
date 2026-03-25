@@ -76,7 +76,7 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <Layout role={role} user={currentUser} onLogout={handleLogout}>
+        <Layout role={role} onLogout={handleLogout}>
           <ErrorBoundary>
             <Routes>
               <Route path="/" element={<Dashboard role={role} />} />
@@ -84,10 +84,10 @@ function App() {
               <Route path="/courses/:id" element={<CourseDetail role={role} />} />
               <Route path="/assignments" element={<Assignments role={role} />} />
               <Route path="/assignments/:id" element={<AssignmentDetail role={role} />} />
-              <Route path="/inbox" element={<Inbox role={role} />} />
-              <Route path="/rewards" element={<Rewards role={role} />} />
-              <Route path="/profile" element={<Profile role={role} user={currentUser} />} />
-              <Route path="/notifications" element={<Notifications role={role} />} />
+              <Route path="/inbox" element={<Inbox />} />
+              <Route path="/rewards" element={<Rewards />} />
+              <Route path="/profile" element={<Profile role={role} />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/students" element={<Students role={role} />} />
               <Route path="/evaluation" element={<EvaluationHub role={role} />} />
               <Route path="/exams" element={<ExamList role={role} />} />
