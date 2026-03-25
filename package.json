@@ -3,7 +3,6 @@
   "private": true,
   "version": "1.0.0",
   "description": "AI-Powered Learning Management System inspired by Canvas",
-  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
