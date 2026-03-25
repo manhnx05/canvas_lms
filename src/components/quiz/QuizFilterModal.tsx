@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X, Filter, ChevronDown } from 'lucide-react';
 
 interface QuizFilterModalProps {

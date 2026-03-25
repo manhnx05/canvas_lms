@@ -1,4 +1,3 @@
-import React from 'react';
 import { Check, X, Zap } from 'lucide-react';
 
 interface CompareItem {

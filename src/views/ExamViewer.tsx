@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FileText, Download, Printer, ArrowLeft, DownloadCloud } from 'lucide-react';
+import { Download, Printer, ArrowLeft, DownloadCloud } from 'lucide-react';
 import { LatexRenderer } from '../components/LatexRenderer';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';

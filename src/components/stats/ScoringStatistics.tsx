@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { BarChart2, TrendingUp, Trophy, Calendar, Star, Filter } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { BarChart2, TrendingUp, Trophy, Calendar, Star } from 'lucide-react';
 
 interface ScoreEntry {
   id: string;

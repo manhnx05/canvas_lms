@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, FileText, Clock, CheckCircle, Sparkles, Link } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, FileText, Clock, CheckCircle, Sparkles } from 'lucide-react';
 import { Role } from '@/src/types';
 import apiClient from '@/src/lib/apiClient';
 

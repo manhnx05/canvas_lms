@@ -1,4 +1,3 @@
-import React from 'react';
 import { Search, Plus, Inbox as InboxIcon } from 'lucide-react';
 
 export interface Conversation {

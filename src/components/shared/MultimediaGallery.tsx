@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X, Play, Image as ImageIcon, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 
 interface MediaItem {

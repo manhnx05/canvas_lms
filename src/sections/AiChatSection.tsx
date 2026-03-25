@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, User, Loader, Trash2, BookOpen } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Bot, Send, User, Loader, Trash2 } from 'lucide-react';
 import apiClient from '@/src/lib/apiClient';
 
 interface ChatMessage {

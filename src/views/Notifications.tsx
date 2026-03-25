@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Bell, Check, Clock, AlertCircle } from 'lucide-react';
-import { Role, Notification } from '@/src/types';
+import { Notification } from '@/src/types';
 
 export function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, BookOpen, Users, Calendar, TrendingUp, Clock, Star } from 'lucide-react';
+import { X, BookOpen, Users, TrendingUp, Clock, Star } from 'lucide-react';
 
 interface CourseDetailModalProps {
   isOpen: boolean;

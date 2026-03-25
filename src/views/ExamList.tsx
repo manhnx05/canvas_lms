@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Trash2, Eye, Download, Play } from 'lucide-react';
+import { FileText, Plus, Trash2, Eye, Play } from 'lucide-react';
 import apiClient from '@/src/lib/apiClient';
 
 interface ExamListProps {

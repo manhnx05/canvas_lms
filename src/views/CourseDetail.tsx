@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Book, Megaphone, CheckSquare, BarChart, Users } from 'lucide-react';
 import { Role } from '@/src/types';

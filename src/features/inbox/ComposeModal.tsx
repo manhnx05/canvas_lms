@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { Plus, X, BookOpen, ChevronDown, Paperclip, Send, Trash2 } from 'lucide-react';
 
 interface Attachment {
