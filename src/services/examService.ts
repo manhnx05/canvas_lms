@@ -139,7 +139,7 @@ export const examService = {
       vdCount: parseInt(vdCount),
       vdcCount: parseInt(vdcCount),
       fileContents: fileContents || undefined,
-      customTopic: customTopic || undefined,
+      customTopic: customTopic ?? undefined,
     };
 
     const questions = await generateExamWithAI(params);
@@ -168,7 +168,7 @@ export const examService = {
       thCount: parseInt(thCount),
       vdCount: parseInt(vdCount),
       vdcCount: parseInt(vdcCount),
-      customTopic,
+      customTopic: customTopic ?? undefined,
     };
 
     const questions = await generateExamWithAI(params);

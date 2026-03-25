@@ -65,7 +65,7 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
       error: error.name,
       message: error.message,
       timestamp,
-      path
+      ...(path && { path })
     }, { status: error.status });
   }
 
@@ -74,7 +74,7 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
       error: 'ValidationError',
       message: error.message,
       timestamp,
-      path
+      ...(path && { path })
     }, { status: 400 });
   }
 
@@ -83,7 +83,7 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
       error: 'AuthenticationError',
       message: error.message,
       timestamp,
-      path
+      ...(path && { path })
     }, { status: 401 });
   }
 
@@ -92,7 +92,7 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
       error: 'AuthorizationError',
       message: error.message,
       timestamp,
-      path
+      ...(path && { path })
     }, { status: 403 });
   }
 
@@ -101,7 +101,7 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
       error: 'NotFoundError',
       message: error.message,
       timestamp,
-      path
+      ...(path && { path })
     }, { status: 404 });
   }
 
@@ -115,7 +115,7 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
           error: 'ConflictError',
           message: 'Dữ liệu đã tồn tại',
           timestamp,
-          path
+          ...(path && { path })
         }, { status: 409 });
       
       case 'P2025':
@@ -123,7 +123,7 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
           error: 'NotFoundError',
           message: 'Không tìm thấy dữ liệu',
           timestamp,
-          path
+          ...(path && { path })
         }, { status: 404 });
       
       case 'P2003':
@@ -131,7 +131,7 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
           error: 'BadRequestError',
           message: 'Dữ liệu tham chiếu không hợp lệ',
           timestamp,
-          path
+          ...(path && { path })
         }, { status: 400 });
     }
   }
@@ -147,7 +147,7 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
       error: 'ValidationError',
       message: `Validation failed: ${messages.join(', ')}`,
       timestamp,
-      path
+      ...(path && { path })
     }, { status: 400 });
   }
 
@@ -159,7 +159,7 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
         ? 'Đã xảy ra lỗi hệ thống' 
         : error.message,
       timestamp,
-      path
+      ...(path && { path })
     }, { status: 500 });
   }
 
@@ -168,7 +168,7 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
     error: 'InternalServerError',
     message: 'Đã xảy ra lỗi không xác định',
     timestamp,
-    path
+    ...(path && { path })
   }, { status: 500 });
 }
 

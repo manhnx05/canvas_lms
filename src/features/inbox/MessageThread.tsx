@@ -33,7 +33,7 @@ interface Props {
   currentUserId: string;
   input: string;
   replyAttachments: Attachment[];
-  messagesEndRef: React.RefObject<HTMLDivElement>;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
   onInputChange: (val: string) => void;
   onSend: () => void;
   onAttach: (files: FileList) => void;

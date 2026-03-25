@@ -161,7 +161,7 @@ export function EvaluationHub({ role }: EvaluationHubProps) {
             <QuizSystem
               questions={questions.length > 0 ? questions : undefined}
               topic={topic || undefined}
-              studentName={currentUser.name}
+              studentName={currentUser.name ?? undefined}
               onComplete={(result) => {
                 console.log('Quiz complete:', result);
               }}

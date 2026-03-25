@@ -107,7 +107,14 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
       } catch (e) { console.error(e); }
     }
 
-    const r: QuizResult = { score: correct, total: questions.length, percentage, answers, aiFeedback, timeTaken };
+    const r: QuizResult = { 
+      score: correct, 
+      total: questions.length, 
+      percentage, 
+      answers, 
+      aiFeedback: aiFeedback ?? undefined, 
+      timeTaken 
+    };
     setResult(r);
     setPhase('result');
     onComplete?.(r);

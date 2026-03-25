@@ -17,7 +17,8 @@ export const ExamTaking = () => {
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
 
   useEffect(() => {
-    startExam();
+    void startExam();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {

@@ -218,7 +218,7 @@ export function Inbox() {
       <div className={`${showDetail ? 'hidden md:flex' : 'flex'} flex-col`}>
         <ConversationList
           conversations={conversations}
-          activeConvId={activeConv?.id}
+          activeConvId={activeConv?.id ?? undefined}
           onSelect={conv => { setActiveConv(conv); setShowDetail(true); }}
           onCompose={() => { setShowCompose(true); fetchCourses(); }}
         />
