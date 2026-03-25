@@ -34,7 +34,7 @@ export const resetPasswordSchema = z.object({
 export const createCourseSchema = z.object({
   title: z.string().min(1, 'Tiêu đề không được để trống').max(200, 'Tiêu đề không được quá 200 ký tự'),
   description: z.string().max(1000, 'Mô tả không được quá 1000 ký tự').optional(),
-  color: z.string().regex(/^#[0-9A-F]{6}$/i, 'Màu sắc không hợp lệ'),
+  color: z.string().min(1, 'Màu sắc không được để trống'),
   icon: z.string().min(1, 'Icon không được để trống'),
   teacher: z.string().min(1, 'Tên giáo viên không được để trống').optional(),
   teacherId: uuidSchema.optional()
