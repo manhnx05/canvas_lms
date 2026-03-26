@@ -11,8 +11,8 @@ export const GET = withErrorHandler(async (req: Request) => {
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get('userId') || user.id;
   
-  // Validate userId if provided
-  if (userId) {
+  // Only validate userId if it's provided as a query parameter (not from auth)
+  if (searchParams.get('userId')) {
     validateUUID(userId, 'User ID');
   }
   

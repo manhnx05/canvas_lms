@@ -11,7 +11,10 @@ export const GET = withErrorHandler(async (req: Request) => {
   const role = searchParams.get('role') || user.role;
   const teacherId = searchParams.get('teacherId') || user.id;
   
-  validateUUID(teacherId, 'Teacher ID');
+  // Only validate teacherId if it's provided as a query parameter (not from auth)
+  if (searchParams.get('teacherId')) {
+    validateUUID(teacherId, 'Teacher ID');
+  }
   
   if (role === 'student') {
     const stats = await teacherService.getStudentStats(teacherId);
