@@ -95,8 +95,9 @@ JWT_SECRET="your_super_secret_jwt_key_at_least_32_characters_long"
 # AI Services
 GEMINI_API_KEY="your_gemini_api_key"
 
-# Email Services  
+# Email Services (Resend)
 RESEND_API_KEY="your_resend_api_key"
+RESEND_FROM_EMAIL="onboarding@resend.dev"
 
 # App Configuration
 NODE_ENV="development"
@@ -527,6 +528,98 @@ If you encounter any issues:
 3. Ensure all prerequisites are installed
 4. Check the console for detailed error messages
 5. Verify database connection and migrations
+
+## 📧 Resend Email Service Setup
+
+### Quick Setup (Development)
+
+1. **Create Resend Account:**
+   - Visit: https://resend.com/
+   - Sign up for free (100 emails/day, 3,000 emails/month)
+   - Verify your email
+
+2. **Get API Key:**
+   - Go to: https://resend.com/api-keys
+   - Click "Create API Key"
+   - Name it (e.g., "Canvas LMS Development")
+   - Select "Sending access"
+   - Copy the API key (starts with `re_`)
+
+3. **Configure .env:**
+   ```env
+   RESEND_API_KEY="re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   RESEND_FROM_EMAIL="onboarding@resend.dev"
+   ```
+
+4. **Test Email Sending:**
+   ```bash
+   # Start the server
+   npm run dev
+   
+   # Run test script (replace with your Resend registered email)
+   node test-resend.js your@email.com
+   
+   # Or visit: http://localhost:3000/test-email.html
+   ```
+
+### Important Notes
+
+⚠️ **Free Tier Limitation:** With a free Resend account, you can only send emails to the email address you used to register. To send to any email address, you need to verify a domain (see Production Setup below).
+
+**Example:** If you registered Resend with `user@gmail.com`, only that email will receive OTP emails during testing.
+
+### Production Setup
+
+To send emails to any recipient:
+
+1. **Verify Your Domain:**
+   - Go to Resend Dashboard > Domains
+   - Click "Add Domain"
+   - Enter your domain (e.g., `yourdomain.com`)
+   - Add DNS records:
+     - SPF record
+     - DKIM record
+     - DMARC record (optional)
+   - Wait for verification (may take a few minutes to hours)
+
+2. **Update .env:**
+   ```env
+   RESEND_API_KEY="re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   RESEND_FROM_EMAIL="noreply@yourdomain.com"
+   ```
+
+### Troubleshooting
+
+**Email not sending:**
+- Check if `RESEND_API_KEY` is set in `.env`
+- Verify API key starts with `re_`
+- With free tier, ensure recipient is your registered email
+- Check server logs for detailed error messages
+- Visit Resend Dashboard > Logs: https://resend.com/emails
+
+**Rate limit exceeded:**
+- Free tier: 100 emails/day, 3,000 emails/month
+- Upgrade to Pro plan if needed ($20/month - 50,000 emails/month)
+
+**Email in spam folder:**
+- For production, verify your domain
+- Add proper SPF, DKIM, and DMARC records
+- Use a professional "from" address
+
+### Testing Tools
+
+The project includes testing tools:
+
+1. **Test Script:** `node test-resend.js your@email.com`
+2. **Test Page:** Visit `http://localhost:3000/test-email.html`
+3. **API Endpoint:** `POST /api/test-email` with `{"email": "your@email.com"}`
+
+### Resources
+
+- [Resend Documentation](https://resend.com/docs)
+- [API Reference](https://resend.com/docs/api-reference)
+- [Domain Verification Guide](https://resend.com/docs/dashboard/domains/introduction)
+- [Node.js SDK](https://resend.com/docs/send-with-nodejs)
 
 ## 🎯 Roadmap
 
