@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import prisma from '@/src/lib/prisma';
 import { Resend } from 'resend';
 
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
 export async function POST(req: Request) {
   try {
     const { email } = await req.json();
@@ -31,7 +33,7 @@ export async function POST(req: Request) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const { data, error } = await resend.emails.send({
-          from: 'Canvas LMS <onboarding@resend.dev>',
+          from: `Canvas LMS <${FROM_EMAIL}>`,
           to: [email],
           subject: 'Mã xác nhận Đăng ký Canvas LMS',
           html: `<p>Mã OTP đăng ký tài khoản của bạn là: <strong style="font-size: 24px;">${otp}</strong></p>`

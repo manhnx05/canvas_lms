@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import prisma from '@/src/lib/prisma';
 
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
 export async function POST(req: Request) {
   try {
     const { email } = await req.json();
@@ -15,7 +17,7 @@ export async function POST(req: Request) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const { data, error } = await resend.emails.send({
-            from: 'Canvas LMS <onboarding@resend.dev>',
+            from: `Canvas LMS <${FROM_EMAIL}>`,
             to: [email],
             subject: 'Mã khôi phục mật khẩu Canvas LMS',
             html: `<p>Mã OTP khôi phục mật khẩu của bạn là: <strong style="font-size: 24px;">${otp}</strong></p>`
