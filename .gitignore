@@ -10,3 +10,14 @@ uploads/
 .next/
 .vercel/
 out/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Test files
+test_*.ts
+check_*.ts
+
+# Temporary files
+ts_errors*.txt
+metadata.json
