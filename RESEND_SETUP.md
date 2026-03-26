@@ -27,6 +27,8 @@ RESEND_FROM_EMAIL="onboarding@resend.dev"
 
 **Lưu ý:** Với tài khoản miễn phí, bạn chỉ có thể gửi email đến địa chỉ email đã đăng ký tài khoản Resend.
 
+**Ví dụ:** Nếu bạn đăng ký Resend với email `nguyenxuanmanh918@gmail.com`, thì chỉ email này mới nhận được OTP khi test. Để gửi đến bất kỳ email nào, bạn cần verify domain (xem phần Production bên dưới).
+
 ### Production (Môi trường production)
 
 1. **Verify Domain (Xác thực tên miền):**
