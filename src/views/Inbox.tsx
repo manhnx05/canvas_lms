@@ -71,13 +71,13 @@ export function Inbox() {
   };
 
   const refetchConversations = () =>
-    apiClient.get(`/conversations?userId=${currentUser.id}`)
+    apiClient.get('/conversations')
       .then(r => r.data)
       .then(data => { if (Array.isArray(data)) setConversations(data); })
       .catch(() => {});
 
   const fetchCourses = () => {
-    apiClient.get(`/courses?userId=${currentUser.id}`)
+    apiClient.get('/courses')
       .then(r => r.data)
       .then(data => setCourses(Array.isArray(data) ? data : []));
   };
