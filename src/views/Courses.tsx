@@ -84,9 +84,16 @@ export function Courses({ role }: { role: Role }) {
 
     try {
       await apiClient.delete(`/courses/${course.id}`);
-      fetchCourses();
+      // Immediately update UI to remove the deleted course
+      setCourses(prev => prev.filter(c => c.id !== course.id));
     } catch (err: any) {
-      alert('Lỗi khi xóa lớp học: ' + (err?.message || 'Vui lòng thử lại'));
+      // If course not found (404), it's already deleted, just refresh
+      if (err?.response?.status === 404) {
+        console.log('Course already deleted, refreshing list...');
+        fetchCourses();
+      } else {
+        alert('Lỗi khi xóa lớp học: ' + (err?.message || 'Vui lòng thử lại'));
+      }
     }
   };
 
