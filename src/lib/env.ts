@@ -11,8 +11,8 @@ const envSchema = z.object({
   // AI Services
   GEMINI_API_KEY: z.string().min(1, 'GEMINI_API_KEY is required'),
   
-  // Email Services
-  RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY is required'),
+  // Email Services (optional - app will work without email)
+  RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY is required').optional(),
   
   // App Configuration
   FRONTEND_URL: z.string().url('FRONTEND_URL must be a valid URL').optional(),
