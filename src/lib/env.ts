@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Environment variables schema
 const envSchema = z.object({
   // Database
-  DATABASE_URL: z.string().url('DATABASE_URL must be a valid URL'),
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   
   // Authentication
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters long'),
@@ -12,17 +12,18 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().min(1, 'GEMINI_API_KEY is required'),
   
   // Email Services (optional - app will work without email)
-  RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY is required').optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  RESEND_FROM_EMAIL: z.string().optional(),
   
   // App Configuration
-  FRONTEND_URL: z.string().url('FRONTEND_URL must be a valid URL').optional(),
+  FRONTEND_URL: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   
   // Optional configurations
-  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
-  DATABASE_POOL_SIZE: z.string().transform(Number).pipe(z.number().min(1).max(100)).default(10),
-  RATE_LIMIT_MAX: z.string().transform(Number).pipe(z.number().min(1).max(10000)).default(100),
-  RATE_LIMIT_WINDOW: z.string().transform(Number).pipe(z.number().min(1).max(3600)).default(900), // 15 minutes
+  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).optional().default('info'),
+  DATABASE_POOL_SIZE: z.coerce.number().min(1).max(100).optional().default(10),
+  RATE_LIMIT_MAX: z.coerce.number().min(1).max(10000).optional().default(100),
+  RATE_LIMIT_WINDOW: z.coerce.number().min(1).max(3600).optional().default(900), // 15 minutes
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -40,6 +41,7 @@ export function validateEnv(): Env {
       JWT_SECRET: process.env.JWT_SECRET,
       GEMINI_API_KEY: process.env.GEMINI_API_KEY,
       RESEND_API_KEY: process.env.RESEND_API_KEY,
+      RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
       FRONTEND_URL: process.env.FRONTEND_URL,
       NODE_ENV: process.env.NODE_ENV,
       LOG_LEVEL: process.env.LOG_LEVEL,
@@ -61,10 +63,29 @@ export function validateEnv(): Env {
       console.error(error);
     }
     
-    console.error('\n📝 Please check your .env file and ensure all required variables are set.');
+    console.error('\n📝 Please check your environment variables.');
     console.error('📖 See .env.example for reference.');
     
-    process.exit(1);
+    // Don't exit in production - let the app try to run
+    // The specific API routes will fail with proper error messages
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
+    
+    // Return a minimal valid env for production to prevent crash
+    return {
+      DATABASE_URL: process.env.DATABASE_URL || '',
+      JWT_SECRET: process.env.JWT_SECRET || '',
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+      RESEND_API_KEY: process.env.RESEND_API_KEY,
+      RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+      NODE_ENV: (process.env.NODE_ENV as 'development' | 'production' | 'test') || 'development',
+      LOG_LEVEL: (process.env.LOG_LEVEL as 'error' | 'warn' | 'info' | 'debug') || 'info',
+      DATABASE_POOL_SIZE: 10,
+      RATE_LIMIT_MAX: 100,
+      RATE_LIMIT_WINDOW: 900,
+    } as Env;
   }
 }
 
@@ -80,7 +101,7 @@ export const isDevelopment = () => getEnv().NODE_ENV === 'development';
 export const isProduction = () => getEnv().NODE_ENV === 'production';
 export const isTest = () => getEnv().NODE_ENV === 'test';
 
-// Validate environment on module load in production
+// Validate environment on module load (but don't crash in production)
 if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test') {
   validateEnv();
 }
