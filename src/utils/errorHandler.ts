@@ -54,7 +54,14 @@ export interface ErrorResponse {
 }
 
 export function handleApiError(error: unknown, req?: Request): NextResponse<ErrorResponse> {
-  console.error('API Error:', error);
+  // Log full error details for debugging
+  console.error('=== API Error Details ===');
+  console.error('Error:', error);
+  console.error('Error type:', error?.constructor?.name);
+  console.error('Error message:', error instanceof Error ? error.message : 'Unknown');
+  console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+  console.error('Request URL:', req?.url);
+  console.error('========================');
 
   const timestamp = new Date().toISOString();
   const path = req?.url;
@@ -153,6 +160,16 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
 
   // Handle generic errors
   if (error instanceof Error) {
+    // In production, log the full error but return a safe message
+    if (process.env.NODE_ENV === 'production') {
+      console.error('Production error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        path
+      });
+    }
+    
     return NextResponse.json({
       error: 'InternalServerError',
       message: process.env.NODE_ENV === 'production' 
