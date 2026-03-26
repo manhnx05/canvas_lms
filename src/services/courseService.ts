@@ -73,29 +73,48 @@ export const courseService = {
   },
 
   deleteCourse: async (id: string) => {
-    // Delete related data first (cascade delete)
-    await prisma.$transaction([
-      // Delete enrollments
-      prisma.enrollment.deleteMany({ where: { courseId: id } }),
-      // Delete announcements
-      prisma.announcement.deleteMany({ where: { courseId: id } }),
-      // Delete module items first, then modules
-      prisma.moduleItem.deleteMany({ 
-        where: { 
-          module: { courseId: id } 
-        } 
-      }),
-      prisma.courseModule.deleteMany({ where: { courseId: id } }),
-      // Delete assignments and their submissions
-      prisma.submission.deleteMany({
-        where: {
-          assignment: { courseId: id }
-        }
-      }),
-      prisma.assignment.deleteMany({ where: { courseId: id } }),
-      // Finally delete the course
-      prisma.course.delete({ where: { id } })
-    ]);
+    // Check if course exists
+    const course = await prisma.course.findUnique({ where: { id } });
+    if (!course) {
+      throw new HttpError(404, 'Không tìm thấy lớp học');
+    }
+
+    // Delete in correct order to avoid foreign key constraints
+    try {
+      await prisma.$transaction(async (tx) => {
+        // Delete submissions first (references assignments)
+        await tx.submission.deleteMany({
+          where: {
+            assignment: { courseId: id }
+          }
+        });
+
+        // Delete assignments
+        await tx.assignment.deleteMany({ where: { courseId: id } });
+
+        // Delete module items first (references modules)
+        await tx.moduleItem.deleteMany({ 
+          where: { 
+            module: { courseId: id } 
+          } 
+        });
+
+        // Delete modules
+        await tx.courseModule.deleteMany({ where: { courseId: id } });
+
+        // Delete announcements
+        await tx.announcement.deleteMany({ where: { courseId: id } });
+
+        // Delete enrollments
+        await tx.enrollment.deleteMany({ where: { courseId: id } });
+
+        // Finally delete the course
+        await tx.course.delete({ where: { id } });
+      });
+    } catch (error: any) {
+      console.error('Error deleting course:', error);
+      throw new HttpError(500, 'Không thể xóa lớp học. Vui lòng thử lại.');
+    }
   },
 
   enrollUser: async (courseId: string, userId: string) => {
