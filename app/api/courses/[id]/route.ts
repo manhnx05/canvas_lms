@@ -8,7 +8,11 @@ export const GET = withErrorHandler(async (req: Request, { params }: { params: P
   await requireAuth(req);
   const { id } = await params;
   
-  validateUUID(id, 'Course ID');
+  // Only validate UUID format if it looks like a UUID (contains dashes)
+  // This allows seed data IDs like "c1", "c2" to work
+  if (id.includes('-')) {
+    validateUUID(id, 'Course ID');
+  }
   
   const course = await courseService.getCourseById(id);
   return NextResponse.json(course);
@@ -18,7 +22,11 @@ export const PUT = withErrorHandler(async (req: Request, { params }: { params: P
   const user = await requireAuth(req, ['teacher']);
   const { id } = await params;
   
-  validateUUID(id, 'Course ID');
+  // Only validate UUID format if it looks like a UUID (contains dashes)
+  // This allows seed data IDs like "c1", "c2" to work
+  if (id.includes('-')) {
+    validateUUID(id, 'Course ID');
+  }
   
   const body = await req.json();
   const validatedData = validateRequestBody(updateCourseSchema, body);
@@ -31,7 +39,11 @@ export const DELETE = withErrorHandler(async (req: Request, { params }: { params
   await requireAuth(req, ['teacher']);
   const { id } = await params;
   
-  validateUUID(id, 'Course ID');
+  // Only validate UUID format if it looks like a UUID (contains dashes)
+  // This allows seed data IDs like "c1", "c2" to work
+  if (id.includes('-')) {
+    validateUUID(id, 'Course ID');
+  }
   
   await courseService.deleteCourse(id);
   return NextResponse.json({ message: 'Đã xóa lớp học thành công' });
