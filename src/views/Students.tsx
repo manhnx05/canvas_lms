@@ -19,6 +19,7 @@ export function Students({ role }: { role: Role }) {
   const [email, setEmail] = useState('');
   const [className, setClassName] = useState('Lớp 5A');
   const [avatar, setAvatar] = useState('');
+  const [formError, setFormError] = useState('');
 
   const fetchStudents = () => {
     setLoading(true);
@@ -35,18 +36,23 @@ export function Students({ role }: { role: Role }) {
   }, []);
 
   const resetForm = () => {
-    setName(''); setEmail(''); setClassName('Lớp 5A'); setAvatar(''); setEditId(null); setShowForm(false);
+    setName(''); setEmail(''); setClassName('Lớp 5A'); setAvatar(''); setEditId(null); setShowForm(false); setFormError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editId) {
-      await apiClient.put(`/users/${editId}`, { name, email, className, avatar });
-    } else {
-      await apiClient.post('/users', { name, email, className, avatar, role: 'student' });
+    setFormError('');
+    try {
+      if (editId) {
+        await apiClient.put(`/users/${editId}`, { name, email, className, avatar });
+      } else {
+        await apiClient.post('/users', { name, email, className, avatar, role: 'student' });
+      }
+      resetForm();
+      fetchStudents();
+    } catch (err: any) {
+      setFormError(err?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
     }
-    resetForm();
-    fetchStudents();
   };
 
   const handleEditClick = (student: any) => {
@@ -204,6 +210,11 @@ export function Students({ role }: { role: Role }) {
                 <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl flex gap-3 items-start text-amber-700 text-sm">
                   <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
                   <p>Mật khẩu mặc định cho các tài khoản tạo mới sẽ là <strong>123456</strong>.</p>
+                </div>
+              )}
+              {formError && (
+                <div className="px-4 py-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm font-medium">
+                  ⚠️ {formError}
                 </div>
               )}
               
