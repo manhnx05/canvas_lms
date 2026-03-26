@@ -519,6 +519,61 @@ Error → Classification → Logging → Structured Response → Client Handling
 
 This project is open source and available under the [MIT License](LICENSE).
 
+## 🚀 Deployment
+
+### Vercel Deployment
+
+#### Required Environment Variables
+
+Add these in Vercel Dashboard > Settings > Environment Variables:
+
+```env
+# Required
+DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
+JWT_SECRET=your_super_secret_jwt_key_at_least_32_characters_long
+GEMINI_API_KEY=your_gemini_api_key
+
+# Optional
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+RESEND_FROM_EMAIL=onboarding@resend.dev
+FRONTEND_URL=https://your-app.vercel.app
+NODE_ENV=production
+```
+
+#### Deployment Steps
+
+1. Push to GitHub: `git push origin main`
+2. Import repository to Vercel: https://vercel.com/new
+3. Configure environment variables in Vercel dashboard
+4. Deploy and monitor Function Logs for any errors
+
+#### Common Issues
+
+**500 Internal Server Error:**
+- Check Vercel Function Logs for detailed errors
+- Verify all environment variables are set
+- Ensure database is accessible from Vercel
+- Confirm Prisma client generated successfully
+
+**Database Connection Failed:**
+- Use pooled connection string with `?sslmode=require`
+- Check database provider's Vercel integration docs
+- Verify database allows connections from Vercel IPs
+
+**Prisma Client Not Found:**
+- Verify `postinstall` script in package.json
+- Check build logs for Prisma generation
+- Redeploy if needed
+
+#### Database Migrations
+
+Run migrations before deploying:
+```bash
+npx prisma migrate deploy
+```
+
+**Note:** Never run `prisma migrate dev` in production.
+
 ## 🆘 Support
 
 If you encounter any issues:
