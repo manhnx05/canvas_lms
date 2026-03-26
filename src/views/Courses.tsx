@@ -10,6 +10,7 @@ export function Courses({ role }: { role: Role }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalError, setModalError] = useState('');
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null); // Track which course is being deleted
   
   // Form states
   const [title, setTitle] = useState('');
@@ -78,10 +79,17 @@ export function Courses({ role }: { role: Role }) {
   const handleDelete = async (course: Course, e: React.MouseEvent) => {
     e.stopPropagation();
     
+    // Prevent double-click
+    if (deletingId === course.id) {
+      return;
+    }
+    
     if (!confirm(`Bạn có chắc chắn muốn xóa lớp học "${course.title}"?\n\nToàn bộ dữ liệu liên quan (bài tập, thông báo, học sinh) sẽ bị xóa!`)) {
       return;
     }
 
+    setDeletingId(course.id);
+    
     try {
       await apiClient.delete(`/courses/${course.id}`);
       // Immediately update UI to remove the deleted course
@@ -90,10 +98,12 @@ export function Courses({ role }: { role: Role }) {
       // If course not found (404), it's already deleted, just refresh
       if (err?.response?.status === 404) {
         console.log('Course already deleted, refreshing list...');
-        fetchCourses();
+        setCourses(prev => prev.filter(c => c.id !== course.id));
       } else {
         alert('Lỗi khi xóa lớp học: ' + (err?.message || 'Vui lòng thử lại'));
       }
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -161,10 +171,15 @@ export function Courses({ role }: { role: Role }) {
                   </button>
                   <button
                     onClick={(e) => handleDelete(course, e)}
-                    className="px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2.5 rounded-xl transition-colors border-2 border-rose-100 flex items-center justify-center"
+                    disabled={deletingId === course.id}
+                    className="px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2.5 rounded-xl transition-colors border-2 border-rose-100 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Xóa lớp học"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {deletingId === course.id ? (
+                      <div className="animate-spin w-4 h-4 border-2 border-rose-600 border-t-transparent rounded-full"></div>
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               )}
