@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { Plus, X, BookOpen, ChevronDown, Paperclip, Send, Trash2 } from 'lucide-react';
+import { useRef, useState, useMemo, useEffect } from 'react';
+import { Plus, X, BookOpen, ChevronDown, Paperclip, Send, Trash2, Search } from 'lucide-react';
 
 interface Attachment {
   name: string;
@@ -39,6 +39,55 @@ export function ComposeModal({
   onComposeChange, onAttach, onRemoveAttachment, onSend, onClose
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const courseDropdownRef = useRef<HTMLDivElement>(null);
+  const receiverDropdownRef = useRef<HTMLDivElement>(null);
+  const [courseSearch, setCourseSearch] = useState('');
+  const [receiverSearch, setReceiverSearch] = useState('');
+  const [showCourseDropdown, setShowCourseDropdown] = useState(false);
+  const [showReceiverDropdown, setShowReceiverDropdown] = useState(false);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (courseDropdownRef.current && !courseDropdownRef.current.contains(event.target as Node)) {
+        setShowCourseDropdown(false);
+        setCourseSearch('');
+      }
+      if (receiverDropdownRef.current && !receiverDropdownRef.current.contains(event.target as Node)) {
+        setShowReceiverDropdown(false);
+        setReceiverSearch('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filter courses based on search
+  const filteredCourses = useMemo(() => {
+    if (!courseSearch) return courses;
+    return courses.filter(c => 
+      c.title.toLowerCase().includes(courseSearch.toLowerCase())
+    );
+  }, [courses, courseSearch]);
+
+  // Filter receivers based on search
+  const filteredReceivers = useMemo(() => {
+    if (!receiverSearch) return courseMembers;
+    return courseMembers.filter(u => 
+      u.name.toLowerCase().includes(receiverSearch.toLowerCase()) ||
+      u.email?.toLowerCase().includes(receiverSearch.toLowerCase())
+    );
+  }, [courseMembers, receiverSearch]);
+
+  // Get selected course name
+  const selectedCourseName = courses.find(c => c.id === compose.courseId)?.title || 'Không thuộc môn học';
+  
+  // Get selected receiver name
+  const selectedReceiver = courseMembers.find(u => u.id === compose.receiverId);
+  const selectedReceiverName = selectedReceiver 
+    ? `${selectedReceiver.name} (${selectedReceiver.role === 'teacher' ? 'Giáo viên' : 'Học sinh'})`
+    : '-- Chọn người nhận --';
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
@@ -56,16 +105,63 @@ export function ComposeModal({
             <label className="flex items-center gap-2 px-5 py-3">
               <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
               <span className="text-xs font-semibold text-slate-500 w-20 shrink-0">Môn học</span>
-              <div className="relative flex-1">
-                <select
-                  value={compose.courseId}
-                  onChange={e => onComposeChange({ courseId: e.target.value, receiverId: '' })}
-                  className="w-full outline-none text-sm text-slate-700 appearance-none bg-transparent pr-5"
+              <div className="relative flex-1" ref={courseDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowCourseDropdown(!showCourseDropdown)}
+                  className="w-full outline-none text-sm text-slate-700 text-left flex items-center justify-between"
                 >
-                  <option value="">Không thuộc môn học</option>
-                  {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <span>{selectedCourseName}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+                
+                {showCourseDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-10 max-h-64 overflow-hidden flex flex-col">
+                    <div className="p-2 border-b border-slate-100">
+                      <div className="relative">
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={courseSearch}
+                          onChange={e => setCourseSearch(e.target.value)}
+                          placeholder="Tìm môn học..."
+                          className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:border-sky-500"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <div className="overflow-y-auto">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onComposeChange({ courseId: '', receiverId: '' });
+                          setShowCourseDropdown(false);
+                          setCourseSearch('');
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-sky-50 transition-colors"
+                      >
+                        Không thuộc môn học
+                      </button>
+                      {filteredCourses.map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            onComposeChange({ courseId: c.id, receiverId: '' });
+                            setShowCourseDropdown(false);
+                            setCourseSearch('');
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-sky-50 transition-colors"
+                        >
+                          {c.title}
+                        </button>
+                      ))}
+                      {filteredCourses.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-slate-400 text-center">Không tìm thấy môn học</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </label>
           </div>
@@ -74,19 +170,58 @@ export function ComposeModal({
           <div className="border-b border-slate-100">
             <label className="flex items-center gap-2 px-5 py-3">
               <span className="text-xs font-semibold text-slate-500 w-20 shrink-0 ml-6">Gửi đến</span>
-              <div className="relative flex-1">
-                <select
-                  value={compose.receiverId}
-                  onChange={e => onComposeChange({ receiverId: e.target.value })}
-                  className="w-full outline-none text-sm text-slate-700 appearance-none bg-transparent pr-5"
-                  required
+              <div className="relative flex-1" ref={receiverDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowReceiverDropdown(!showReceiverDropdown)}
+                  className="w-full outline-none text-sm text-slate-700 text-left flex items-center justify-between"
                 >
-                  <option value="">-- Chọn người nhận --</option>
-                  {courseMembers.map(u => (
-                    <option key={u.id} value={u.id}>{u.name} ({u.role === 'teacher' ? 'Giáo viên' : 'Học sinh'})</option>
-                  ))}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <span className={!compose.receiverId ? 'text-slate-400' : ''}>{selectedReceiverName}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+                
+                {showReceiverDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-10 max-h-64 overflow-hidden flex flex-col">
+                    <div className="p-2 border-b border-slate-100">
+                      <div className="relative">
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={receiverSearch}
+                          onChange={e => setReceiverSearch(e.target.value)}
+                          placeholder="Tìm người nhận..."
+                          className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:border-sky-500"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <div className="overflow-y-auto">
+                      {filteredReceivers.map(u => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => {
+                            onComposeChange({ receiverId: u.id });
+                            setShowReceiverDropdown(false);
+                            setReceiverSearch('');
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-sky-50 transition-colors flex items-center gap-2"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-sky-100 flex items-center justify-center text-xs font-bold text-sky-600 shrink-0">
+                            {u.name.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">{u.name}</div>
+                            <div className="text-xs text-slate-400">{u.role === 'teacher' ? 'Giáo viên' : 'Học sinh'}</div>
+                          </div>
+                        </button>
+                      ))}
+                      {filteredReceivers.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-slate-400 text-center">Không tìm thấy người nhận</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </label>
           </div>
