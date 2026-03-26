@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Users, X } from 'lucide-react';
+import { BookOpen, Users, X, Edit, Trash2 } from 'lucide-react';
 import { Role, Course } from '@/src/types';
 import apiClient from '@/src/lib/apiClient';
 
 export function Courses({ role }: { role: Role }) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [createError, setCreateError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalError, setModalError] = useState('');
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   
   // Form states
   const [title, setTitle] = useState('');
@@ -27,20 +28,65 @@ export function Courses({ role }: { role: Role }) {
     fetchCourses();
   }, []);
 
-  const handleCreateCourse = async (e: React.FormEvent) => {
+  const openCreateModal = () => {
+    setEditingCourse(null);
+    setTitle('');
+    setDescription('');
+    setColor('bg-blue-500');
+    setModalError('');
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (course: Course, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingCourse(course);
+    setTitle(course.title);
+    setDescription(course.description || '');
+    setColor(course.color);
+    setModalError('');
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingCourse(null);
+    setModalError('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCreateError('');
+    setModalError('');
     try {
-      const res = await apiClient.post('/courses', {
-        title, description, color, icon: 'BookOpen'
-      });
-      if (res.data) {
-        setIsCreating(false);
-        setTitle(''); setDescription(''); setColor('bg-blue-500'); setCreateError('');
-        fetchCourses();
+      if (editingCourse) {
+        // Update existing course
+        await apiClient.put(`/courses/${editingCourse.id}`, {
+          title, description, color, icon: 'BookOpen'
+        });
+      } else {
+        // Create new course
+        await apiClient.post('/courses', {
+          title, description, color, icon: 'BookOpen'
+        });
       }
+      closeModal();
+      fetchCourses();
     } catch (err: any) {
-      setCreateError(err?.message || 'Có lỗi xảy ra khi tạo lớp học. Vui lòng thử lại.');
+      setModalError(err?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+    }
+  };
+
+  const handleDelete = async (course: Course, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!confirm(`Bạn có chắc chắn muốn xóa lớp học "${course.title}"?\n\nToàn bộ dữ liệu liên quan (bài tập, thông báo, học sinh) sẽ bị xóa!`)) {
+      return;
+    }
+
+    try {
+      await apiClient.delete(`/courses/${course.id}`);
+      fetchCourses();
+    } catch (err: any) {
+      alert('Lỗi khi xóa lớp học: ' + (err?.message || 'Vui lòng thử lại'));
     }
   };
 
@@ -52,7 +98,7 @@ export function Courses({ role }: { role: Role }) {
         <h1 className="text-3xl font-extrabold text-sky-900">{role === 'student' ? 'Môn Học Của Bé' : 'Quản Lý Lớp Học'}</h1>
         {role === 'teacher' && (
           <button 
-            onClick={() => setIsCreating(true)}
+            onClick={openCreateModal}
             className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2.5 rounded-xl font-bold transition-colors shadow-sm shadow-sky-200"
           >
             + Tạo lớp mới
@@ -98,13 +144,21 @@ export function Courses({ role }: { role: Role }) {
                   </div>
                 </div>
               ) : (
-                <div className="mt-auto flex gap-3">
-                  <div className="flex-1 bg-sky-50 hover:bg-sky-100 text-sky-600 text-center font-bold py-2.5 rounded-xl transition-colors border-2 border-sky-100">
+                <div className="mt-auto flex gap-2">
+                  <button
+                    onClick={(e) => openEditModal(course, e)}
+                    className="flex-1 bg-sky-50 hover:bg-sky-100 text-sky-600 text-center font-bold py-2.5 rounded-xl transition-colors border-2 border-sky-100 flex items-center justify-center gap-2"
+                  >
+                    <Edit className="w-4 h-4" />
                     Sửa
-                  </div>
-                  <div className="flex-1 bg-sky-500 hover:bg-sky-600 text-white text-center font-bold py-2.5 rounded-xl transition-colors shadow-sm shadow-sky-200">
-                    Vào lớp
-                  </div>
+                  </button>
+                  <button
+                    onClick={(e) => handleDelete(course, e)}
+                    className="px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2.5 rounded-xl transition-colors border-2 border-rose-100 flex items-center justify-center"
+                    title="Xóa lớp học"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>
@@ -112,20 +166,22 @@ export function Courses({ role }: { role: Role }) {
         ))}
       </div>
 
-      {isCreating && (
+      {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden p-6 relative">
-            <button onClick={() => { setIsCreating(false); setCreateError(''); }} className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors">
+            <button onClick={closeModal} className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors">
               <X className="w-6 h-6" />
             </button>
-            <h2 className="text-2xl font-extrabold text-sky-900 mb-6">Tạo Lớp Học Mới</h2>
-            {createError && (
+            <h2 className="text-2xl font-extrabold text-sky-900 mb-6">
+              {editingCourse ? 'Chỉnh Sửa Lớp Học' : 'Tạo Lớp Học Mới'}
+            </h2>
+            {modalError && (
               <div className="mb-4 px-4 py-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm font-medium">
-                ⚠️ {createError}
+                ⚠️ {modalError}
               </div>
             )}
             
-            <form onSubmit={handleCreateCourse} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Tên môn học</label>
                 <input required value={title} onChange={e=>setTitle(e.target.value)} type="text" className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 outline-none focus:border-sky-500 font-medium" placeholder="VD: Lập trình Cơ bản" />
@@ -143,8 +199,10 @@ export function Courses({ role }: { role: Role }) {
                 </div>
               </div>
               <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setIsCreating(false)} className="flex-1 px-4 py-2.5 font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">Hủy</button>
-                <button type="submit" className="flex-1 px-4 py-2.5 font-bold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-colors shadow-lg shadow-sky-500/30">Lưu Lớp Học</button>
+                <button type="button" onClick={closeModal} className="flex-1 px-4 py-2.5 font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">Hủy</button>
+                <button type="submit" className="flex-1 px-4 py-2.5 font-bold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-colors shadow-lg shadow-sky-500/30">
+                  {editingCourse ? 'Cập Nhật' : 'Tạo Lớp Học'}
+                </button>
               </div>
             </form>
           </div>

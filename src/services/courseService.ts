@@ -56,6 +56,48 @@ export const courseService = {
     return course;
   },
 
+  updateCourse: async (id: string, data: any) => {
+    const { title, color, icon, description, teacher } = data;
+    
+    const updateData: any = {};
+    if (title !== undefined) updateData.title = title;
+    if (color !== undefined) updateData.color = color;
+    if (icon !== undefined) updateData.icon = icon;
+    if (description !== undefined) updateData.description = description;
+    if (teacher !== undefined) updateData.teacher = teacher;
+    
+    return prisma.course.update({
+      where: { id },
+      data: updateData
+    });
+  },
+
+  deleteCourse: async (id: string) => {
+    // Delete related data first (cascade delete)
+    await prisma.$transaction([
+      // Delete enrollments
+      prisma.enrollment.deleteMany({ where: { courseId: id } }),
+      // Delete announcements
+      prisma.announcement.deleteMany({ where: { courseId: id } }),
+      // Delete module items first, then modules
+      prisma.moduleItem.deleteMany({ 
+        where: { 
+          module: { courseId: id } 
+        } 
+      }),
+      prisma.courseModule.deleteMany({ where: { courseId: id } }),
+      // Delete assignments and their submissions
+      prisma.submission.deleteMany({
+        where: {
+          assignment: { courseId: id }
+        }
+      }),
+      prisma.assignment.deleteMany({ where: { courseId: id } }),
+      // Finally delete the course
+      prisma.course.delete({ where: { id } })
+    ]);
+  },
+
   enrollUser: async (courseId: string, userId: string) => {
     const enrollment = await prisma.enrollment.upsert({
       where: { userId_courseId: { userId, courseId } },
