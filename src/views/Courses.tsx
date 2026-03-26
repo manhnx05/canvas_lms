@@ -8,6 +8,7 @@ export function Courses({ role }: { role: Role }) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
   
   // Form states
   const [title, setTitle] = useState('');
@@ -28,17 +29,18 @@ export function Courses({ role }: { role: Role }) {
 
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreateError('');
     try {
       const res = await apiClient.post('/courses', {
         title, description, color, icon: 'BookOpen'
       });
       if (res.data) {
         setIsCreating(false);
-        setTitle(''); setDescription(''); setColor('bg-blue-500');
+        setTitle(''); setDescription(''); setColor('bg-blue-500'); setCreateError('');
         fetchCourses();
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setCreateError(err?.message || 'Có lỗi xảy ra khi tạo lớp học. Vui lòng thử lại.');
     }
   };
 
@@ -113,10 +115,15 @@ export function Courses({ role }: { role: Role }) {
       {isCreating && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden p-6 relative">
-            <button onClick={() => setIsCreating(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors">
+            <button onClick={() => { setIsCreating(false); setCreateError(''); }} className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors">
               <X className="w-6 h-6" />
             </button>
             <h2 className="text-2xl font-extrabold text-sky-900 mb-6">Tạo Lớp Học Mới</h2>
+            {createError && (
+              <div className="mb-4 px-4 py-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm font-medium">
+                ⚠️ {createError}
+              </div>
+            )}
             
             <form onSubmit={handleCreateCourse} className="space-y-4">
               <div>
