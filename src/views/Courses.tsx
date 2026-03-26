@@ -132,7 +132,7 @@ export function Courses({ role }: { role: Role }) {
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Mô tả tóm tắt</label>
-                <textarea required value={description} onChange={e=>setDescription(e.target.value)} rows={3} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 outline-none focus:border-sky-500 font-medium whitespace-pre-wrap" placeholder="Giới thiệu về môn học..." />
+                <textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 outline-none focus:border-sky-500 font-medium whitespace-pre-wrap" placeholder="Giới thiệu về môn học..." />
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Màu chủ đạo</label>
