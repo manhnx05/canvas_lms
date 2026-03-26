@@ -131,7 +131,7 @@ export const createExamSchema = z.object({
 // User validations
 export const updateProfileSchema = z.object({
   name: z.string().min(2, 'Tên phải có ít nhất 2 ký tự').max(100, 'Tên không được quá 100 ký tự').optional(),
-  avatar: z.string().url('URL avatar không hợp lệ').optional(),
+  avatar: z.string().url('URL avatar không hợp lệ').optional().or(z.literal('')),
   className: z.string().max(50, 'Tên lớp không được quá 50 ký tự').optional()
 });
 
@@ -140,7 +140,7 @@ export const createUserSchema = z.object({
   email: emailSchema,
   role: z.enum(['student', 'teacher']),
   className: z.string().max(50, 'Tên lớp không được quá 50 ký tự').optional(),
-  avatar: z.string().url('URL avatar không hợp lệ').optional()
+  avatar: z.string().url('URL avatar không hợp lệ').optional().or(z.literal(''))
 });
 
 // Utility function to validate request body
