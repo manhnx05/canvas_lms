@@ -57,7 +57,7 @@ export function AssignmentsTab({ courseId, courseTitle, assignments, role, onRef
           <input required value={title} onChange={e => setTitle(e.target.value)} type="text" placeholder="Tiêu đề bài tập" className="w-full px-4 py-2.5 rounded-xl border-2 border-amber-200 outline-none focus:border-amber-500 font-medium" />
           <div className="grid grid-cols-2 gap-4">
             <input required value={due} onChange={e => setDue(e.target.value)} type="text" placeholder="Hạn nộp (VD: Ngày mai)" className="w-full px-4 py-2.5 rounded-xl border-2 border-amber-200 outline-none focus:border-amber-500 font-medium" />
-            <input required value={stars} onChange={e => setStars(e.target.value)} type="number" placeholder="Điểm thưởng (Sao)" className="w-full px-4 py-2.5 rounded-xl border-2 border-amber-200 outline-none focus:border-amber-500 font-medium" />
+            <input required value={stars} onChange={e => setStars(e.target.value)} type="number" min="0" placeholder="Điểm thưởng (Sao)" className="w-full px-4 py-2.5 rounded-xl border-2 border-amber-200 outline-none focus:border-amber-500 font-medium" />
           </div>
           <div className="bg-white p-4 rounded-xl border border-amber-200 flex flex-col gap-3">
             <div className="flex gap-2">

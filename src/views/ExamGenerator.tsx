@@ -41,6 +41,10 @@ export const ExamGenerator: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleConfigChange = (key: keyof ExamConfig, value: string | number) => {
+    // Handle number inputs - prevent NaN
+    if (typeof value === 'number' && isNaN(value)) {
+      return; // Don't update if value is NaN
+    }
     setConfig(prev => ({ ...prev, [key]: value }));
   };
 
@@ -168,8 +172,8 @@ export const ExamGenerator: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Thời gian (phút)</label>
-              <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                value={config.duration} onChange={e => handleConfigChange('duration', parseInt(e.target.value))} />
+              <input type="number" min="1" className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                value={config.duration} onChange={e => handleConfigChange('duration', parseInt(e.target.value) || 0)} />
             </div>
           </div>
 
@@ -181,23 +185,23 @@ export const ExamGenerator: React.FC = () => {
           <div className="grid grid-cols-4 gap-6">
             <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
               <label className="block text-sm font-bold text-blue-800 mb-2">Nhận biết</label>
-              <input type="number" className="w-full px-3 py-2 border border-blue-200 rounded-lg bg-white"
-                value={config.nbCount} onChange={e => handleConfigChange('nbCount', parseInt(e.target.value))} />
+              <input type="number" min="0" className="w-full px-3 py-2 border border-blue-200 rounded-lg bg-white"
+                value={config.nbCount} onChange={e => handleConfigChange('nbCount', parseInt(e.target.value) || 0)} />
             </div>
             <div className="bg-green-50 p-4 rounded-xl border border-green-100">
               <label className="block text-sm font-bold text-green-800 mb-2">Thông hiểu</label>
-              <input type="number" className="w-full px-3 py-2 border border-green-200 rounded-lg bg-white"
-                value={config.thCount} onChange={e => handleConfigChange('thCount', parseInt(e.target.value))} />
+              <input type="number" min="0" className="w-full px-3 py-2 border border-green-200 rounded-lg bg-white"
+                value={config.thCount} onChange={e => handleConfigChange('thCount', parseInt(e.target.value) || 0)} />
             </div>
             <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
               <label className="block text-sm font-bold text-yellow-800 mb-2">Vận dụng</label>
-              <input type="number" className="w-full px-3 py-2 border border-yellow-200 rounded-lg bg-white"
-                value={config.vdCount} onChange={e => handleConfigChange('vdCount', parseInt(e.target.value))} />
+              <input type="number" min="0" className="w-full px-3 py-2 border border-yellow-200 rounded-lg bg-white"
+                value={config.vdCount} onChange={e => handleConfigChange('vdCount', parseInt(e.target.value) || 0)} />
             </div>
             <div className="bg-red-50 p-4 rounded-xl border border-red-100">
               <label className="block text-sm font-bold text-red-800 mb-2">VD Cao</label>
-              <input type="number" className="w-full px-3 py-2 border border-red-200 rounded-lg bg-white"
-                value={config.vdcCount} onChange={e => handleConfigChange('vdcCount', parseInt(e.target.value))} />
+              <input type="number" min="0" className="w-full px-3 py-2 border border-red-200 rounded-lg bg-white"
+                value={config.vdcCount} onChange={e => handleConfigChange('vdcCount', parseInt(e.target.value) || 0)} />
             </div>
           </div>
 
