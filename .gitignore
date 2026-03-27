@@ -36,3 +36,9 @@ python/htmlcov/
 *.egg-info/
 dist/
 build/
+
+# Python Documents (PDFs not committed to Git)
+python/documents/**/*.pdf
+python/documents/**/*.docx
+python/documents/**/*.txt
+!python/documents/README.md
