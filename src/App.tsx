@@ -14,6 +14,7 @@ import { Profile } from './views/Profile';
 import { Notifications } from './views/Notifications';
 import { Students } from './views/Students';
 import { EvaluationHub } from './views/EvaluationHub';
+import { AiChat } from './views/AiChat';
 import { ExamList } from './views/ExamList';
 import { ExamGenerator } from './views/ExamGenerator';
 import { ExamViewer } from './views/ExamViewer';
@@ -53,6 +54,7 @@ function AppContent() {
               <Route path="/assignments" element={<Assignments role={role} />} />
               <Route path="/assignments/:id" element={<AssignmentDetail role={role} />} />
               <Route path="/inbox" element={<Inbox />} />
+              <Route path="/ai-chat" element={<AiChat />} />
               <Route path="/rewards" element={<Rewards />} />
               <Route path="/profile" element={<Profile role={role} />} />
               <Route path="/notifications" element={<Notifications />} />
