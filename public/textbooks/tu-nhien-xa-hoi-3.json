@@ -1,0 +1,81 @@
+{
+  "book_metadata": {
+    "title": "Tự nhiên và Xã hội 3",
+    "series": "Kết nối tri thức với cuộc sống",
+    "grade": 3,
+    "subject": "Tự nhiên và Xã hội",
+    "total_themes": 6
+  },
+  "content": [
+    {
+      "id": "chu_de_1_bai_1",
+      "theme": "Gia đình",
+      "lesson_title": "Họ hàng và những ngày kỉ niệm của gia đình",
+      "keywords": ["họ hàng nội ngoại", "xưng hô", "ngày kỉ niệm"],
+      "content": "Họ hàng bên nội hoặc bên ngoại bao gồm ông bà, anh chị em ruột của bố hoặc mẹ và con ruột của họ. Mỗi vùng miền có cách xưng hô khác nhau (Ví dụ: bác, chú, cô, dì, cậu). Các thành viên trong gia đình gắn kết qua những ngày kỉ niệm hoặc sự kiện quan trọng."
+    },
+    {
+      "id": "chu_de_1_bai_2",
+      "theme": "Gia đình",
+      "lesson_title": "Phòng tránh hỏa hoạn khi ở nhà",
+      "keywords": ["phòng cháy", "114", "thoát nạn", "an toàn điện"],
+      "content": "Nguyên nhân cháy thường do để vật dễ cháy gần bếp, quên tắt bếp hoặc chập điện. Khi có cháy: Kêu cứu thật to, tìm cách thoát nhanh bằng cầu thang bộ (không dùng thang máy), gọi số 114. Cách phòng tránh: Ngắt điện khi không dùng, không để xăng/củi gần lửa."
+    },
+    {
+      "id": "chu_de_1_bai_3",
+      "theme": "Gia đình",
+      "lesson_title": "Vệ sinh xung quanh nhà",
+      "keywords": ["vệ sinh môi trường", "sốt xuất huyết", "diệt muỗi"],
+      "content": "Giữ vệ sinh xung quanh nhà giúp bảo vệ sức khỏe và phòng dịch bệnh như sốt xuất huyết. Cần quét dọn sân vườn, khơi thông cống rãnh, phát quang bụi rậm và không để nước đọng làm nơi muỗi đẻ trứng."
+    },
+    {
+      "id": "chu_de_2_bai_5",
+      "theme": "Trường học",
+      "lesson_title": "Hoạt động kết nối với cộng đồng",
+      "keywords": ["thiện nguyện", "tái chế", "giao thông", "trồng cây"],
+      "content": "Các hoạt động bao gồm: Ủng hộ đồng bào lũ lụt, ngày hội tái chế rác lấy cây xanh, tuyên truyền an toàn giao thông. Ý nghĩa giúp học sinh chia sẻ khó khăn và đóng góp cho xã hội."
+    },
+    {
+      "id": "chu_de_3_bai_9",
+      "theme": "Cộng đồng địa phương",
+      "lesson_title": "Hoạt động sản xuất nông nghiệp",
+      "keywords": ["trồng trọt", "chăn nuôi", "thủy sản", "lâm nghiệp"],
+      "content": "Bao gồm trồng trọt, chăn nuôi, trồng rừng, nuôi trồng và đánh bắt thủy hải sản. Lợi ích: Cung cấp lương thực, thực phẩm, nguyên liệu sản xuất và hàng hóa xuất khẩu."
+    },
+    {
+      "id": "chu_de_4_bai_13",
+      "theme": "Thực vật và Động vật",
+      "lesson_title": "Bộ phận và chức năng của thực vật",
+      "keywords": ["rễ cọc", "rễ chùm", "thân gỗ", "quang hợp"],
+      "content": "Cây có rễ (cọc hoặc chùm), thân (đứng, leo, bò), lá, hoa và quả. Rễ hút nước và muối khoáng. Thân vận chuyển chất dinh dưỡng. Lá thực hiện quang hợp, hô hấp và thoát hơi nước."
+    },
+    {
+      "id": "chu_de_5_bai_18",
+      "theme": "Con người và Sức khỏe",
+      "lesson_title": "Cơ quan tiêu hóa",
+      "keywords": ["dạ dày", "ruột non", "ruột già", "tuyến tiêu hóa"],
+      "content": "Gồm miệng, thực quản, dạ dày, ruột non, ruột già, hậu môn và các tuyến như gan, mật, tụy. Chức năng biến đổi thức ăn thành chất dinh dưỡng và đào thải chất bã. Ống tiêu hóa người dài khoảng 7 mét."
+    },
+    {
+      "id": "chu_de_5_bai_20",
+      "theme": "Con người và Sức khỏe",
+      "lesson_title": "Cơ quan tuần hoàn",
+      "keywords": ["tim", "mạch máu", "nhịp tim"],
+      "content": "Gồm tim và các mạch máu. Tim co bóp đẩy máu đi khắp cơ thể để cung cấp oxy và chất dinh dưỡng, đồng thời thu nhận chất thải để đào thải."
+    },
+    {
+      "id": "chu_de_5_bai_22",
+      "theme": "Con người và Sức khỏe",
+      "lesson_title": "Cơ quan thần kinh",
+      "keywords": ["não", "tủy sống", "phản xạ", "điều khiển"],
+      "content": "Gồm não, tủy sống và các dây thần kinh. Não điều khiển suy nghĩ và cảm xúc. Tủy sống điều khiển các phản xạ tự động. Cơ quan thần kinh phối hợp mọi hoạt động của cơ thể."
+    },
+    {
+      "id": "chu_de_6_trai_dat",
+      "theme": "Trái đất và Bầu trời",
+      "lesson_title": "Phương hướng và Trái đất",
+      "keywords": ["la bàn", "mặt trời", "nhiệt đới", "hệ mặt trời"],
+      "content": "Xác định hướng dựa vào mặt trời (mọc hướng Đông, lặn hướng Tây) hoặc la bàn. Trái Đất quay quanh Mặt Trời và có các đới khí hậu: Nhiệt đới, Ôn đới, Hàn đới. Mặt Trăng là vệ tinh của Trái Đất."
+    }
+  ]
+}

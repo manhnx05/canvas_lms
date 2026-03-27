@@ -28,17 +28,11 @@ __pycache__/
 *$py.class
 *.so
 .Python
-python/venv/
-python/.env
-python/.pytest_cache/
-python/.coverage
-python/htmlcov/
+venv/
+.env
+.pytest_cache/
+.coverage
+htmlcov/
 *.egg-info/
 dist/
 build/
-
-# Python Documents (PDFs not committed to Git)
-python/documents/**/*.pdf
-python/documents/**/*.docx
-python/documents/**/*.txt
-!python/documents/README.md
