@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText } from 'lucide-react';
+import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText, MessageCircle } from 'lucide-react';
 import { Role } from '@/src/types';
 
 export function Layout({ role, onLogout, children }: { role: Role, onLogout: () => void, children?: React.ReactNode }) {

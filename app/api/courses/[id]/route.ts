@@ -19,7 +19,7 @@ export const GET = withErrorHandler(async (req: Request, { params }: { params: P
 });
 
 export const PUT = withErrorHandler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
-  const user = await requireAuth(req, ['teacher']);
+  await requireAuth(req, ['teacher']);
   const { id } = await params;
   
   // Only validate UUID format if it looks like a UUID (contains dashes)

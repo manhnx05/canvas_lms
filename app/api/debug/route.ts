@@ -45,7 +45,7 @@ export async function GET(req: Request) {
   try {
     debug.prisma = {
       status: 'checking',
-      clientVersion: prisma.$version || 'unknown',
+      clientVersion: 'unknown', // Removed $version as it doesn't exist in PrismaClient
     };
     
     // Test database connection
@@ -53,7 +53,7 @@ export async function GET(req: Request) {
     debug.prisma.connection = 'connected';
     
     // Test query
-    const result = await prisma.$queryRaw`SELECT 1 as test`;
+    await prisma.$queryRaw`SELECT 1 as test`;
     debug.prisma.queryTest = 'success';
     
     // Count users

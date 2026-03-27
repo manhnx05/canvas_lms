@@ -1,81 +1,128 @@
 {
-  "book_metadata": {
+  "book_info": {
     "title": "Tự nhiên và Xã hội 3",
     "series": "Kết nối tri thức với cuộc sống",
-    "grade": 3,
-    "subject": "Tự nhiên và Xã hội",
-    "total_themes": 6
+    "publisher": "Nhà xuất bản Giáo dục Việt Nam"
   },
-  "content": [
+  "lessons": [
     {
-      "id": "chu_de_1_bai_1",
-      "theme": "Gia đình",
-      "lesson_title": "Họ hàng và những ngày kỉ niệm của gia đình",
-      "keywords": ["họ hàng nội ngoại", "xưng hô", "ngày kỉ niệm"],
-      "content": "Họ hàng bên nội hoặc bên ngoại bao gồm ông bà, anh chị em ruột của bố hoặc mẹ và con ruột của họ. Mỗi vùng miền có cách xưng hô khác nhau (Ví dụ: bác, chú, cô, dì, cậu). Các thành viên trong gia đình gắn kết qua những ngày kỉ niệm hoặc sự kiện quan trọng."
+      "theme": "GIA ĐÌNH",
+      "lesson_id": 1,
+      "title": "Họ hàng và những ngày kỉ niệm của gia đình",
+      "keywords": ["họ hàng nội ngoại", "xưng hô", "ngày kỉ niệm gia đình", "đường thời gian"],
+      "content": "Họ hàng bên nội bao gồm ông bà nội, các anh chị em ruột của bố và con của họ[cite: 30, 33]. Họ hàng bên ngoại bao gồm ông bà ngoại, các anh chị em ruột của mẹ và con của họ[cite: 32, 33]. Ở mỗi vùng miền có cách xưng hô khác nhau (ví dụ: bác, chú, cô, dì, cậu)[cite: 38]. Mỗi gia đình đều có những ngày kỉ niệm hoặc sự kiện quan trọng (ngày cưới, ngày sinh nhật, ngày đầu tiên đi học)[cite: 69, 75]. Đường thời gian giúp xác định thứ tự và mốc thời gian diễn ra các sự kiện[cite: 68, 69]."
     },
     {
-      "id": "chu_de_1_bai_2",
-      "theme": "Gia đình",
-      "lesson_title": "Phòng tránh hỏa hoạn khi ở nhà",
-      "keywords": ["phòng cháy", "114", "thoát nạn", "an toàn điện"],
-      "content": "Nguyên nhân cháy thường do để vật dễ cháy gần bếp, quên tắt bếp hoặc chập điện. Khi có cháy: Kêu cứu thật to, tìm cách thoát nhanh bằng cầu thang bộ (không dùng thang máy), gọi số 114. Cách phòng tránh: Ngắt điện khi không dùng, không để xăng/củi gần lửa."
+      "theme": "GIA ĐÌNH",
+      "lesson_id": 2,
+      "title": "Phòng tránh hoả hoạn khi ở nhà",
+      "keywords": ["nguyên nhân cháy", "thiệt hại hoả hoạn", "xử lí khi cháy", "số điện thoại 114"],
+      "content": "Nguyên nhân gây cháy nhà thường do để vật dễ cháy (can xăng, củi khô) gần bếp lửa, quên tắt bếp, hoặc chập điện[cite: 98, 122]. Hoả hoạn gây thiệt hại nghiêm trọng về người và tài sản[cite: 99]. Khi có cháy: Cần kêu cứu thật to, gọi 114, thoát nhanh bằng cầu thang bộ (tuyệt đối không dùng thang máy), dùng khăn ướt che mũi miệng khi có khói[cite: 102, 110, 116]. Phòng tránh: Không để vật dễ cháy gần bếp, ngắt nguồn điện khi không sử dụng[cite: 122]."
     },
     {
-      "id": "chu_de_1_bai_3",
-      "theme": "Gia đình",
-      "lesson_title": "Vệ sinh xung quanh nhà",
-      "keywords": ["vệ sinh môi trường", "sốt xuất huyết", "diệt muỗi"],
-      "content": "Giữ vệ sinh xung quanh nhà giúp bảo vệ sức khỏe và phòng dịch bệnh như sốt xuất huyết. Cần quét dọn sân vườn, khơi thông cống rãnh, phát quang bụi rậm và không để nước đọng làm nơi muỗi đẻ trứng."
+      "theme": "GIA ĐÌNH",
+      "lesson_id": 3,
+      "title": "Vệ sinh xung quanh nhà",
+      "keywords": ["vệ sinh môi trường", "phòng dịch bệnh", "diệt muỗi", "đổ rác đúng nơi"],
+      "content": "Giữ vệ sinh xung quanh nhà (quét dọn sân vườn, khơi thông cống rãnh, phát quang bụi rậm) giúp môi trường sạch đẹp và bảo vệ sức khoẻ[cite: 124, 126, 156]. Lợi ích chính là phòng tránh dịch bệnh, ví dụ như loại bỏ nơi đọng nước để muỗi không thể đẻ trứng, giúp phòng bệnh sốt xuất huyết[cite: 125, 126]. Cần đổ rác đúng nơi quy định và xử lí rác thải hợp lí[cite: 151, 152]."
     },
     {
-      "id": "chu_de_2_bai_5",
-      "theme": "Trường học",
-      "lesson_title": "Hoạt động kết nối với cộng đồng",
-      "keywords": ["thiện nguyện", "tái chế", "giao thông", "trồng cây"],
-      "content": "Các hoạt động bao gồm: Ủng hộ đồng bào lũ lụt, ngày hội tái chế rác lấy cây xanh, tuyên truyền an toàn giao thông. Ý nghĩa giúp học sinh chia sẻ khó khăn và đóng góp cho xã hội."
+      "theme": "TRƯỜNG HỌC",
+      "lesson_id": 5,
+      "title": "Hoạt động kết nối với cộng đồng",
+      "keywords": ["thiện nguyện", "ủng hộ vùng lũ", "tái chế", "an toàn giao thông"],
+      "content": "Học sinh tham gia các hoạt động kết nối cộng đồng như: Ủng hộ đồng bào vùng lũ (chia sẻ khó khăn), Ngày hội tái chế (đổi rác lấy cây xanh để bảo vệ môi trường), tuyên truyền an toàn giao thông và trồng cây xanh[cite: 193, 196, 198, 205]. Ý nghĩa: Giúp học sinh trải nghiệm thực tế, lan toả sự tích cực và yêu thương trong xã hội[cite: 204, 229]."
     },
     {
-      "id": "chu_de_3_bai_9",
-      "theme": "Cộng đồng địa phương",
-      "lesson_title": "Hoạt động sản xuất nông nghiệp",
-      "keywords": ["trồng trọt", "chăn nuôi", "thủy sản", "lâm nghiệp"],
-      "content": "Bao gồm trồng trọt, chăn nuôi, trồng rừng, nuôi trồng và đánh bắt thủy hải sản. Lợi ích: Cung cấp lương thực, thực phẩm, nguyên liệu sản xuất và hàng hóa xuất khẩu."
+      "theme": "TRƯỜNG HỌC",
+      "lesson_id": 6,
+      "title": "Truyền thống trường em",
+      "keywords": ["lịch sử trường", "thành tích dạy học", "tấm gương tiêu biểu", "tự hào nhà trường"],
+      "content": "Truyền thống nhà trường bao gồm: Lịch sử hình thành (năm thành lập, các thời kì hiệu trưởng), thành tích dạy và học, các danh hiệu thi đua, thành tích văn nghệ/thể thao và những tấm gương học sinh tiêu biểu[cite: 141, 142, 143, 145]. Học sinh có trách nhiệm tìm hiểu, tự hào và nỗ lực giữ gìn, phát huy các truyền thống tốt đẹp đó[cite: 167, 268]."
     },
     {
-      "id": "chu_de_4_bai_13",
-      "theme": "Thực vật và Động vật",
-      "lesson_title": "Bộ phận và chức năng của thực vật",
-      "keywords": ["rễ cọc", "rễ chùm", "thân gỗ", "quang hợp"],
-      "content": "Cây có rễ (cọc hoặc chùm), thân (đứng, leo, bò), lá, hoa và quả. Rễ hút nước và muối khoáng. Thân vận chuyển chất dinh dưỡng. Lá thực hiện quang hợp, hô hấp và thoát hơi nước."
+      "theme": "TRƯỜNG HỌC",
+      "lesson_id": 7,
+      "title": "Giữ an toàn và vệ sinh ở trường",
+      "keywords": ["khảo sát an toàn", "phòng học", "khu vệ sinh", "sân chơi"],
+      "content": "Cần thực hiện khảo sát định kì về an toàn và vệ sinh tại các khu vực: Phòng học (kiểm tra trần nhà, cửa kính, bàn ghế), cầu thang, sân chơi và khu vệ sinh (tránh sàn ướt gây trơn trượt)[cite: 290, 299, 301]. Việc giữ trường học an toàn, sạch sẽ giúp phòng tránh rủi ro tai nạn thương tích và bảo vệ sức khoẻ để học tập tốt[cite: 310, 331]."
     },
     {
-      "id": "chu_de_5_bai_18",
-      "theme": "Con người và Sức khỏe",
-      "lesson_title": "Cơ quan tiêu hóa",
-      "keywords": ["dạ dày", "ruột non", "ruột già", "tuyến tiêu hóa"],
-      "content": "Gồm miệng, thực quản, dạ dày, ruột non, ruột già, hậu môn và các tuyến như gan, mật, tụy. Chức năng biến đổi thức ăn thành chất dinh dưỡng và đào thải chất bã. Ống tiêu hóa người dài khoảng 7 mét."
+      "theme": "CỘNG ĐỒNG ĐỊA PHƯƠNG",
+      "lesson_id": 9,
+      "title": "Hoạt động sản xuất nông nghiệp",
+      "keywords": ["trồng trọt", "chăn nuôi", "nuôi trồng thuỷ sản", "lâm nghiệp", "xuất khẩu gạo"],
+      "content": "Sản xuất nông nghiệp bao gồm: Trồng trọt, chăn nuôi, trồng rừng (lâm nghiệp), đánh bắt và nuôi trồng thuỷ hải sản[cite: 365, 373]. Ích lợi: Cung cấp lương thực, thực phẩm cho đời sống, nguyên liệu cho sản xuất và mang lại giá trị kinh tế (Việt Nam là nước xuất khẩu gạo lớn)[cite: 369, 392, 408]. Cần sử dụng tiết kiệm các sản phẩm nông nghiệp để bảo vệ môi trường[cite: 386, 402]."
     },
     {
-      "id": "chu_de_5_bai_20",
-      "theme": "Con người và Sức khỏe",
-      "lesson_title": "Cơ quan tuần hoàn",
-      "keywords": ["tim", "mạch máu", "nhịp tim"],
-      "content": "Gồm tim và các mạch máu. Tim co bóp đẩy máu đi khắp cơ thể để cung cấp oxy và chất dinh dưỡng, đồng thời thu nhận chất thải để đào thải."
+      "theme": "CỘNG ĐỒNG ĐỊA PHƯƠNG",
+      "lesson_id": 10,
+      "title": "Hoạt động sản xuất thủ công và công nghiệp",
+      "keywords": ["sản xuất thủ công", "sản xuất công nghiệp", "máy móc", "tiết kiệm tiêu dùng"],
+      "content": "Sản xuất thủ công: Làm chủ yếu bằng tay với công cụ đơn giản, nguyên liệu thiên nhiên (gốm Bát Tràng, lụa Vạn Phúc, chiếu mây tre)[cite: 415, 420]. Sản xuất công nghiệp: Sử dụng máy móc để khai thác tài nguyên, chế tạo máy móc, thiết bị và chế biến nông sản[cite: 448, 465]. Cả hai loại hình đều phục vụ đời sống và phát triển kinh tế, yêu cầu người dân sử dụng sản phẩm tiết kiệm[cite: 450, 467, 471]."
     },
     {
-      "id": "chu_de_5_bai_22",
-      "theme": "Con người và Sức khỏe",
-      "lesson_title": "Cơ quan thần kinh",
-      "keywords": ["não", "tủy sống", "phản xạ", "điều khiển"],
-      "content": "Gồm não, tủy sống và các dây thần kinh. Não điều khiển suy nghĩ và cảm xúc. Tủy sống điều khiển các phản xạ tự động. Cơ quan thần kinh phối hợp mọi hoạt động của cơ thể."
+      "theme": "CỘNG ĐỒNG ĐỊA PHƯƠNG",
+      "lesson_id": 11,
+      "title": "Di tích lịch sử – văn hoá và cảnh quan thiên nhiên",
+      "keywords": ["Vịnh Hạ Long", "Cố đô Huế", "UNESCO", "quy định tham quan"],
+      "content": "Việt Nam có 8 di sản thế giới (Vịnh Hạ Long, Cố đô Huế, Mỹ Sơn, Hội An, Phong Nha - Kẻ Bàng, Tràng An, Thăng Long, Thành nhà Hồ)[cite: 477, 490]. Khi tham quan, cần tuân thủ quy định: Giữ vệ sinh, mặc trang phục lịch sự tại nơi tôn nghiêm, không leo trèo lên di tích để thể hiện sự tôn trọng[cite: 481, 482, 485, 494]."
     },
     {
-      "id": "chu_de_6_trai_dat",
-      "theme": "Trái đất và Bầu trời",
-      "lesson_title": "Phương hướng và Trái đất",
-      "keywords": ["la bàn", "mặt trời", "nhiệt đới", "hệ mặt trời"],
-      "content": "Xác định hướng dựa vào mặt trời (mọc hướng Đông, lặn hướng Tây) hoặc la bàn. Trái Đất quay quanh Mặt Trời và có các đới khí hậu: Nhiệt đới, Ôn đới, Hàn đới. Mặt Trăng là vệ tinh của Trái Đất."
+      "theme": "THỰC VẬT VÀ ĐỘNG VẬT",
+      "lesson_id": 13,
+      "title": "Một số bộ phận của thực vật",
+      "keywords": ["rễ cọc rễ chùm", "thân gỗ thân thảo", "cấu tạo lá", "nhị nhuỵ hoa"],
+      "content": "Rễ có hai loại chính: rễ cọc và rễ chùm[cite: 537, 553]. Thân gồm: thân đứng, thân leo, thân bò; chia làm thân gỗ hoặc thân thảo[cite: 542, 558, 559]. Lá gồm cuống lá, phiến lá và gân lá[cite: 565, 573]. Hoa có đài hoa, cánh hoa, nhị hoa và nhuỵ hoa[cite: 569, 577]. Quả có vỏ, thịt quả và hạt[cite: 570, 578]."
+    },
+    {
+      "theme": "THỰC VẬT VÀ ĐỘNG VẬT",
+      "lesson_id": 14,
+      "title": "Chức năng một số bộ phận của thực vật",
+      "keywords": ["hút nước", "quang hợp", "vận chuyển muối khoáng", "sinh sản"],
+      "content": "Rễ: Hút nước, muối khoáng và giúp cây bám chặt vào đất[cite: 588, 620]. Thân: Vận chuyển nước, muối khoáng đi khắp các bộ phận và nâng đỡ cây[cite: 587, 606, 620]. Lá: Hô hấp, thoát hơi nước và quang hợp tạo chất dinh dưỡng dưới ánh sáng mặt trời[cite: 592, 611, 620]. Hoa: Chức năng sinh sản (tạo quả)[cite: 620]. Quả: Chứa hạt để mọc thành cây mới[cite: 621, 633]."
+    },
+    {
+      "theme": "THỰC VẬT VÀ ĐỘNG VẬT",
+      "lesson_id": 15,
+      "title": "Một số bộ phận của động vật và chức năng",
+      "keywords": ["lớp che phủ", "cơ quan di chuyển", "phân loại động vật"],
+      "content": "Cơ thể động vật thường có đầu, mình và cơ quan di chuyển[cite: 625, 636]. Lớp che phủ bên ngoài rất đa dạng: Lông vũ (chim), lông mao (thú), vảy (cá), vỏ cứng (tôm, cua)[cite: 628, 639]. Cơ quan di chuyển bao gồm chân, cánh hoặc vây tùy loại môi trường sống[cite: 641, 642, 657, 661]."
+    },
+    {
+      "theme": "CON NGƯỜI VÀ SỨC KHOẺ",
+      "lesson_id": 18,
+      "title": "Cơ quan tiêu hoá",
+      "keywords": ["ống tiêu hoá", "tuyến tiêu hoá", "biến đổi thức ăn", "hậu môn"],
+      "content": "Ống tiêu hoá bao gồm: Miệng, thực quản, dạ dày, ruột non, ruột già và hậu môn[cite: 716, 732]. Tuyến tiêu hoá gồm: Tuyến nước bọt, gan, túi mật, tuỵ[cite: 719, 735]. Chức năng: Biến đổi thức ăn thành chất dinh dưỡng đi nuôi cơ thể (chủ yếu ở ruột non) và đào thải chất cặn bã ra ngoài[cite: 739, 740, 741]."
+    },
+    {
+      "theme": "CON NGƯỜI VÀ SỨC KHOẺ",
+      "lesson_id": 20,
+      "title": "Cơ quan tuần hoàn",
+      "keywords": ["tim", "mạch máu", "động mạch", "tĩnh mạch", "mao mạch"],
+      "content": "Cơ quan tuần hoàn gồm tim và các mạch máu (động mạch, tĩnh mạch, mao mạch)[cite: 789, 828, 844]. Chức năng: Tim co bóp đẩy máu lưu thông liên tục để cung cấp oxy, chất dinh dưỡng cho cơ thể và thu nhận khí các-bô-níc cùng chất thải[cite: 791, 797, 815, 830]. Tim đập khoảng 100.000 lần mỗi ngày[cite: 796, 814]."
+    },
+    {
+      "theme": "CON NGƯỜI VÀ SỨC KHOẺ",
+      "lesson_id": 22,
+      "title": "Cơ quan thần kinh",
+      "keywords": ["não", "tuỷ sống", "dây thần kinh", "phản xạ"],
+      "content": "Cơ quan thần kinh gồm não (nằm trong hộp sọ), tuỷ sống (nằm trong cột sống) và các dây thần kinh[cite: 874, 893, 906]. Não điều khiển suy nghĩ, cảm xúc và mọi hoạt động của cơ thể[cite: 897, 910]. Tuỷ sống điều khiển các phản xạ (phản ứng tự động và nhanh khi gặp kích thích bất ngờ)[cite: 902, 915]."
+    },
+    {
+      "theme": "TRÁI ĐẤT VÀ BẦU TRỜI",
+      "lesson_id": 26,
+      "title": "Xác định các phương trong không gian",
+      "keywords": ["la bàn", "mặt trời", "Đông Tây Nam Bắc"],
+      "content": "Có 4 phương chính: Đông, Tây, Nam, Bắc. Xác định phương dựa trên vị trí Mặt Trời: Mọc ở hướng Đông, lặn ở hướng Tây. Sử dụng la bàn là cách xác định phương hướng chính xác nhất bằng cách để kim nam châm chỉ đúng hướng Bắc[cite: 102, 120]."
+    },
+    {
+      "theme": "TRÁI ĐẤT VÀ BẦU TRỜI",
+      "lesson_id": 27,
+      "title": "Trái Đất và các đới khí hậu",
+      "keywords": ["xích đạo", "nhiệt đới", "ôn đới", "hàn đới"],
+      "content": "Trái Đất có 3 đới khí hậu chính: Nhiệt đới (nóng quanh năm, nằm gần xích đạo), Ôn đới (khí hậu ôn hoà, có 4 mùa rõ rệt), và Hàn đới (lạnh quanh năm, nằm ở hai cực)[cite: 106]. Việt Nam nằm trong đới khí hậu nhiệt đới[cite: 106]."
     }
   ]
 }
