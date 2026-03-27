@@ -21,3 +21,18 @@ check_*.ts
 # Temporary files
 ts_errors*.txt
 metadata.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+python/venv/
+python/.env
+python/.pytest_cache/
+python/.coverage
+python/htmlcov/
+*.egg-info/
+dist/
+build/
