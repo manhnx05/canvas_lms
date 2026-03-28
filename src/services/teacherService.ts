@@ -54,12 +54,9 @@ export const teacherService = {
       return { totalStudents: 0, pendingGrading: 0, totalCourses: 0, totalAssignments: 0 };
     }
 
-    const [totalStudents, pendingGrading, totalAssignments] = await Promise.all([
-      prisma.enrollment.count({
-        where: { 
-          courseId: { in: courseIds }, 
-          user: { role: 'student' } 
-        }
+    const [totalStudents, pendingGrading, totalAssignments, studentsByClassRaw] = await Promise.all([
+      prisma.user.count({
+        where: { role: 'student' } 
       }),
       prisma.submission.count({
         where: { 
@@ -69,8 +66,20 @@ export const teacherService = {
       }),
       prisma.assignment.count({
         where: { courseId: { in: courseIds } }
+      }),
+      prisma.user.groupBy({
+        by: ['className'],
+        where: { role: 'student' },
+        _count: { id: true },
+        orderBy: { _count: { id: 'desc' } },
+        take: 5
       })
     ]);
+
+    const studentsByClass = studentsByClassRaw.map(item => ({
+      name: item.className || 'Chưa Xếp',
+      value: item._count.id
+    }));
 
     return { 
       totalStudents, 
@@ -79,6 +88,7 @@ export const teacherService = {
       totalAssignments,
       activityTrend: [45, 52, 38, 65, 89, 75, 92],
       completionRate: 85,
+      studentsByClass
     };
   },
 

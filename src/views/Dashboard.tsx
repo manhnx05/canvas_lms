@@ -2,6 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, CheckCircle, AlertCircle, Star, Trophy, Users, FileText, TrendingUp } from 'lucide-react';
 import { Role } from '@/src/types';
 import { useDashboardData } from '../hooks/useDashboardData';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+const COLORS = ['#0ea5e9', '#6366f1', '#f59e0b', '#10b981', '#f43f5e'];
 
 export function Dashboard({ role }: { role: Role }) {
   const { courses, assignments, stats, loading } = useDashboardData(role);
@@ -107,35 +110,60 @@ export function Dashboard({ role }: { role: Role }) {
 
       {/* Professional Stats Chart - Teacher Only */}
       {role === 'teacher' && stats?.activityTrend && (
-        <div className="bg-white p-8 rounded-3xl border-2 border-indigo-50 shadow-sm">
-          <div className="flex justify-between items-end mb-6">
-            <div>
-              <h2 className="text-xl font-extrabold text-slate-800">Hiệu Suất Học Tập Trong Tuần</h2>
-              <p className="text-slate-500 font-medium mt-1">Số lượt nộp bài 7 ngày qua</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border-2 border-indigo-50 shadow-sm flex flex-col h-[350px]">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-800">Hiệu Suất Học Tập Sự Trong Tuần</h2>
+                <p className="text-slate-500 font-medium text-sm mt-1">Số lượt tương tác hoàn thành bài tập</p>
+              </div>
+              <div className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1">
+                <TrendingUp className="w-5 h-5" /> +{stats.completionRate}%
+              </div>
             </div>
-            <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl font-bold">
-              <TrendingUp className="w-5 h-5" />
-              <span>+{stats.completionRate}% Tỉ lệ</span>
+            <div className="flex-1 w-full min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.activityTrend.map((v: number, i: number) => ({ name: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][i], value: v }))}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }} dy={10} />
+                  <YAxis hide />
+                  <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Bar dataKey="value" fill="#6366f1" radius={[6, 6, 6, 6]} barSize={32} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          <div className="flex items-end gap-3 sm:gap-6 h-48 mt-4 pt-8 border-t border-slate-100">
-            {stats.activityTrend.map((value: number, idx: number) => {
-              const height = `${(value / Math.max(...stats.activityTrend)) * 100}%`;
-              return (
-                <div key={idx} className="flex-1 flex flex-col justify-end group cursor-pointer h-full">
-                  <div className="w-full flex-1 flex flex-col-reverse relative group-hover:-translate-y-1 transition-transform">
-                    <div className="w-full bg-gradient-to-t from-indigo-500 to-sky-400 rounded-t-xl transition-all shadow-sm" style={{ height }}>
-                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                         {value} bài
-                       </div>
-                    </div>
+
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border-2 border-sky-50 shadow-sm flex flex-col h-[350px]">
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-800">Phân Bổ Học Sinh Theo Lớp</h2>
+              <p className="text-slate-500 font-medium text-sm mt-1">Tỷ lệ học sinh trên toàn hệ thống ({stats.totalStudents} em)</p>
+            </div>
+            <div className="flex-1 w-full min-h-0 flex items-center justify-center -mt-4">
+              {stats.studentsByClass && stats.studentsByClass.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={stats.studentsByClass} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value">
+                      {stats.studentsByClass.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-slate-400 font-medium">Chưa có dữ liệu học sinh</div>
+              )}
+            </div>
+            {stats.studentsByClass && (
+              <div className="flex justify-center gap-4 flex-wrap mt-2">
+                {stats.studentsByClass.map((entry: any, index: number) => (
+                  <div key={entry.name} className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                    <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
+                    {entry.name}
                   </div>
-                  <div className="text-center mt-3 text-sm font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
-                    {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][idx]}
-                  </div>
-                </div>
-              );
-            })}
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
