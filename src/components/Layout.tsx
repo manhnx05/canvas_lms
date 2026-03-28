@@ -22,10 +22,10 @@ export function Layout({ role, onLogout, children }: { role: Role, onLogout: () 
     { icon: Home, label: 'Tổng quan', path: '/' },
     { icon: BookOpen, label: 'Lớp học', path: '/courses' },
     { icon: Users, label: 'Quản lý Học Sinh', path: '/students' },
-    { icon: PenTool, label: 'Chấm bài', path: '/assignments' },
-    { icon: MessageCircle, label: 'Hỏi AI', path: '/ai-chat' },
-    { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
     { icon: FileText, label: 'Ra đề thi', path: '/exams' },
+    { icon: PenTool, label: 'Chấm bài', path: '/assignments' },
+    { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
+    { icon: MessageCircle, label: 'Hỏi AI', path: '/ai-chat' },
     { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
   ];
 
