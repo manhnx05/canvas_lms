@@ -18,7 +18,7 @@ export function Dashboard({ role }: { role: Role }) {
       <div className={`rounded-3xl p-8 text-white shadow-lg relative overflow-hidden ${role === 'student' ? 'bg-gradient-to-r from-sky-400 to-indigo-500' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`}>
         <div className="relative z-10">
           <h1 className="text-3xl md:text-4xl font-extrabold mb-2">
-            {role === 'student' ? 'Chào bé An! 🌟' : 'Chào Cô Lan! 👩‍🏫'}
+            {role === 'student' ? 'Chào bé An! 🌟' : 'Chào cô Nguyễn Thị Ngọc Điệp! 👩‍🏫'}
           </h1>
           <p className="text-lg opacity-90 font-medium">
             {role === 'student' 
