@@ -22,15 +22,20 @@ export const aiService = {
       "explanation": string (giải thích ngắn tại sao đáp án đúng)
     }`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    
-    let cleanedText = text.trim();
-    if (cleanedText.startsWith('```json')) cleanedText = cleanedText.slice(7);
-    if (cleanedText.startsWith('```')) cleanedText = cleanedText.slice(3);
-    if (cleanedText.endsWith('```')) cleanedText = cleanedText.slice(0, -3);
-    
-    return JSON.parse(cleanedText.trim());
+    try {
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+      
+      let cleanedText = text.trim();
+      if (cleanedText.startsWith('```json')) cleanedText = cleanedText.slice(7);
+      if (cleanedText.startsWith('```')) cleanedText = cleanedText.slice(3);
+      if (cleanedText.endsWith('```')) cleanedText = cleanedText.slice(0, -3);
+      
+      return JSON.parse(cleanedText.trim());
+    } catch (error: any) {
+      console.error('AI generateQuiz error details:', error);
+      throw new HttpError(500, `Gemini API: ${error.message || 'Lỗi sinh đề quiz'}`);
+    }
   },
 
   evaluateSubmission: async (data: any) => {
@@ -51,8 +56,13 @@ export const aiService = {
     3. Lời khuyên/Đề xuất cải thiện để học tốt hơn.
     Hãy format bằng Markdown có in đậm tiêu đề. Không nói lan man.`;
 
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    try {
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (error: any) {
+      console.error('AI evaluateSubmission error details:', error);
+      throw new HttpError(500, `Gemini API: ${error.message || 'Lỗi nhận xét'}`);
+    }
   },
 
   chat: async (data: any) => {
@@ -78,7 +88,12 @@ Câu hỏi: "${message}"
 
 Trả lời bằng Markdown, ngắn gọn nhưng đầy đủ.`;
 
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    try {
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (error: any) {
+      console.error('AI chat error details:', error);
+      throw new HttpError(500, `Gemini API: ${error.message || 'Lỗi không xác định'}`);
+    }
   }
 };
