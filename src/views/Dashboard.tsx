@@ -143,7 +143,7 @@ export function Dashboard({ role }: { role: Role }) {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={stats.studentsByClass} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value">
-                      {stats.studentsByClass.map((entry: any, index: number) => (
+                      {stats.studentsByClass.map((_: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>

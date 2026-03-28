@@ -4,15 +4,6 @@ import { Users, Plus, Edit, Trash2, Search, Mail, BookOpen, X, ShieldAlert, Mess
 import { Role } from '@/src/types';
 import apiClient from '@/src/lib/apiClient';
 
-// Danh sách lớp học từ 1A đến 5B
-const CLASS_OPTIONS = [
-  'Lớp 1A', 'Lớp 1B',
-  'Lớp 2A', 'Lớp 2B',
-  'Lớp 3A', 'Lớp 3B',
-  'Lớp 4A', 'Lớp 4B',
-  'Lớp 5A', 'Lớp 5B',
-];
-
 export function Students({ role }: { role: Role }) {
   const navigate = useNavigate();
   const [students, setStudents] = useState<any[]>([]);
@@ -20,6 +11,9 @@ export function Students({ role }: { role: Role }) {
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState(''); // Filter by class
   const [exporting, setExporting] = useState(false);
+
+  // Derive dynamic class options from the actual data
+  const dynamicClasses = Array.from(new Set(students.map(s => s.className).filter(Boolean))).sort() as string[];
 
   // Modals
   const [showForm, setShowForm] = useState(false);
@@ -171,7 +165,7 @@ export function Students({ role }: { role: Role }) {
             className="px-4 py-2 bg-white border-2 border-sky-100 rounded-2xl focus:border-sky-300 outline-none transition-colors shadow-sm font-medium text-slate-700 cursor-pointer"
           >
             <option value="">Tất cả lớp</option>
-            {CLASS_OPTIONS.map(cls => (
+            {dynamicClasses.map(cls => (
               <option key={cls} value={cls}>{cls}</option>
             ))}
           </select>
@@ -332,16 +326,20 @@ export function Students({ role }: { role: Role }) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Lớp học</label>
-                  <select 
-                    required 
-                    value={className} 
-                    onChange={e=>setClassName(e.target.value)} 
-                    className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-sky-500 outline-none cursor-pointer"
-                  >
-                    {CLASS_OPTIONS.map(cls => (
-                      <option key={cls} value={cls}>{cls}</option>
+                  <input
+                    required
+                    type="text"
+                    list="class-list"
+                    value={className}
+                    onChange={e => setClassName(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-sky-500 outline-none"
+                    placeholder="Tham chiếu hoặc nhập tên lớp..."
+                  />
+                  <datalist id="class-list">
+                    {dynamicClasses.map(cls => (
+                      <option key={cls} value={cls} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Link Ảnh Đại Diện</label>
