@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Upload, Settings, CheckCircle, FileText, Settings2, Sparkles, Trash2, ArrowRight, ArrowLeft } from 'lucide-react';
+import { BookOpen, Settings, CheckCircle, Settings2, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
 import { LatexRenderer } from '../components/LatexRenderer';
 import apiClient from '@/src/lib/apiClient';
 
@@ -17,11 +17,13 @@ interface ExamConfig {
   vdcCount: number;
   textbookMode: boolean;
   textbookScope: string;
+  textbookTheme: string;
+  textbookLesson: number;
 }
 
 export const ExamGenerator: React.FC = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -50,11 +52,11 @@ export const ExamGenerator: React.FC = () => {
     vdcCount: 1,
     textbookMode: false,
     textbookScope: 'full',
+    textbookTheme: 'GIA ĐÌNH',
+    textbookLesson: 1,
   });
 
-  const [uploadedFiles, setUploadedFiles] = useState<{ id: string, name: string }[]>([]);
   const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleConfigChange = (key: keyof ExamConfig, value: string | number | boolean) => {
     // Handle number inputs - prevent NaN
@@ -62,37 +64,6 @@ export const ExamGenerator: React.FC = () => {
       return; // Don't update if value is NaN
     }
     setConfig(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      setLoading(true);
-      const res = await apiClient.post('/exams/upload-file', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      const data = res.data;
-      setUploadedFiles(prev => [...prev, { id: data.id, name: data.name }]);
-    } catch (err: any) {
-      setError('Lỗi tải lên file: ' + err.message);
-    } finally {
-      setLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleRemoveFile = async (id: string) => {
-    try {
-      await apiClient.delete(`/exams/files/${id}`);
-      setUploadedFiles(prev => prev.filter(f => f.id !== id));
-    } catch (err) {
-      console.error(err);
-    }
   };
 
   const generateAIExam = async () => {
@@ -114,7 +85,7 @@ export const ExamGenerator: React.FC = () => {
       
       const data = res.data;
       setGeneratedQuestions(data.questions);
-      setStep(3);
+      setStep(2);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -169,12 +140,11 @@ export const ExamGenerator: React.FC = () => {
       </h1>
 
       {/* Stepper */}
-      <div className="flex justify-between items-center mb-12 relative px-8">
-        <div className="absolute left-1/4 right-3/4 h-1 bg-gray-200 top-5 -z-10" />
-        <div className={`absolute top-5 left-12 right-12 h-1 -z-10 transition-all ${step > 1 ? 'bg-indigo-500' : 'bg-gray-200'} ${step === 3 ? 'w-full right-0 left-0' : step === 2 ? 'w-1/2' : 'w-0'}`} />
-        {renderStepIcon(1, <Settings2 size={20} />, 'Thiết lập')}
-        {renderStepIcon(2, <Upload size={20} />, 'Tài liệu')}
-        {renderStepIcon(3, <CheckCircle size={20} />, 'Xem & Lưu')}
+      <div className="flex justify-between items-center mb-12 relative px-20">
+        <div className="absolute left-1/4 right-1/4 h-1 bg-gray-200 top-5 -z-10" />
+        <div className={`absolute top-5 left-20 right-20 h-1 -z-10 transition-all ${step === 2 ? 'bg-indigo-500 w-full right-0 left-0' : 'bg-gray-200 w-0'}`} />
+        {renderStepIcon(1, <Settings2 size={20} />, '1. Thiết lập & Chọn Phạm Vi')}
+        {renderStepIcon(2, <CheckCircle size={20} />, '2. Duyệt Đề & Giao Bài')}
       </div>
 
       {error && (
@@ -240,15 +210,39 @@ export const ExamGenerator: React.FC = () => {
               </label>
             </div>
             {config.textbookMode && textbook && (
-              <div className="mt-4 pt-4 border-t border-indigo-100">
-                <label className="block text-sm font-medium text-indigo-800 mb-2">Phạm vi kiến thức ra đề:</label>
-                <select className="w-full px-4 py-2 border border-indigo-200 rounded-lg bg-white"
-                  value={config.textbookScope} onChange={e => handleConfigChange('textbookScope', e.target.value)}>
-                  <option value="full">Cả năm</option>
-                  <option value="term1">Học kì 1 (Bài 1 - 15)</option>
-                  <option value="term2">Học kì 2 (Bài 16 - 27)</option>
-                </select>
-                <p className="text-sm mt-2 text-indigo-600">AI sẽ tự động đọc dữ liệu SGK {textbook.book_info?.title} và chỉ ra câu hỏi nằm trong phạm vi kiến thức này.</p>
+              <div className="mt-4 pt-4 border-t border-indigo-100 flex flex-col gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-indigo-800 mb-2">Phạm vi kiến thức ra đề:</label>
+                  <select className="w-full px-4 py-2 border border-indigo-200 rounded-lg bg-white"
+                    value={config.textbookScope} onChange={e => handleConfigChange('textbookScope', e.target.value)}>
+                    <option value="full">Cả năm</option>
+                    <option value="term1">Học kì 1 (Bài 1 - 15)</option>
+                    <option value="term2">Học kì 2 (Bài 16 - 27)</option>
+                    <option value="theme">Ra đề theo Giới hạn Chương (Chủ đề)</option>
+                    <option value="lesson">Ra đề theo Giới hạn Bài học cụ thể</option>
+                  </select>
+                </div>
+                
+                {config.textbookScope === 'theme' && (
+                  <div className="animate-in fade-in slide-in-from-top-2">
+                    <label className="block text-sm font-medium text-indigo-800 mb-2">Chọn Chủ đề (Chương):</label>
+                    <select className="w-full px-4 py-2 border border-indigo-200 rounded-lg bg-white font-bold text-indigo-900"
+                      value={config.textbookTheme} onChange={e => handleConfigChange('textbookTheme', e.target.value)}>
+                      {Array.from(new Set(textbook.lessons.map((l: any) => l.theme))).map(t => <option key={String(t)} value={String(t)}>{String(t)}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {config.textbookScope === 'lesson' && (
+                  <div className="animate-in fade-in slide-in-from-top-2">
+                    <label className="block text-sm font-medium text-indigo-800 mb-2">Chọn Bài Học:</label>
+                    <select className="w-full px-4 py-2 border border-indigo-200 rounded-lg bg-white font-bold text-indigo-900"
+                      value={config.textbookLesson} onChange={e => handleConfigChange('textbookLesson', parseInt(e.target.value))}>
+                      {textbook.lessons.map((l: any) => <option key={l.lesson_id} value={l.lesson_id}>Bài {l.lesson_id}: {l.title}</option>)}
+                    </select>
+                  </div>
+                )}
+                <p className="text-sm mt-1 text-indigo-600 italic">AI sẽ tự động đối chiếu nội dung SGK {textbook.book_info?.title} và khoanh vùng theo chuẩn bạn yêu cầu.</p>
               </div>
             )}
           </div>
@@ -281,10 +275,15 @@ export const ExamGenerator: React.FC = () => {
 
           <div className="mt-8 flex justify-end">
             <button
-              onClick={() => setStep(2)}
-              className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              onClick={generateAIExam}
+              disabled={loading}
+              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:shadow-lg transition font-bold disabled:opacity-50"
             >
-              Tiếp tục <ArrowRight size={18} />
+              {loading ? (
+                <><span className="animate-spin text-xl">⏳</span> Đang yêu cầu AI tổng hợp...</>
+              ) : (
+                <><Sparkles size={20} /> AI Tạo Đề Ngay <ArrowRight size={18} /></>
+              )}
             </button>
           </div>
         </div>
@@ -292,76 +291,6 @@ export const ExamGenerator: React.FC = () => {
 
       {/* --- STEP 2 --- */}
       {step === 2 && (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 animate-in fade-in slide-in-from-right-4">
-          <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-            <FileText className="text-indigo-600" /> Tài liệu tham khảo (Tùy chọn)
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Tải lên sách giáo khoa hoặc tài liệu (PDF, DOCX, TXT) để AI tạo câu hỏi sát với nội dung bài học.
-          </p>
-
-          <div 
-            className="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:bg-gray-50 transition cursor-pointer"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-            <p className="text-sm text-gray-600 font-medium">Nhấn để chọn file hoặc kéo thả vào đây</p>
-            <p className="text-xs text-gray-400 mt-2">Hỗ trợ PDF, DOCX, TXT (Tối đa 10MB)</p>
-            <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.docx,.txt" onChange={handleFileUpload} />
-          </div>
-
-          {uploadedFiles.length > 0 && (
-            <div className="mt-6 space-y-3">
-              <h3 className="font-medium text-gray-700">Đã tải lên:</h3>
-              {uploadedFiles.map(file => (
-                <div key={file.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <FileText size={18} className="text-indigo-500" />
-                    <span className="text-sm font-medium">{file.name}</span>
-                  </div>
-                  <button onClick={() => handleRemoveFile(file.id)} className="text-red-500 hover:text-red-700">
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-8 flex justify-between items-center bg-indigo-50 p-6 rounded-xl border border-indigo-100">
-            <div>
-              <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
-                <Sparkles className="text-yellow-500" /> Sẵn sàng tạo đề!
-              </h3>
-              <p className="text-sm text-indigo-700 mt-1">
-                AI sẽ tổng hợp công thức, ra {config.nbCount + config.thCount + config.vdCount + config.vdcCount} câu theo yêu cầu.
-              </p>
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setStep(1)}
-                className="px-6 py-3 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                disabled={loading}
-              >
-                Quay lại
-              </button>
-              <button
-                onClick={generateAIExam}
-                disabled={loading}
-                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition font-medium disabled:opacity-50"
-              >
-                {loading ? (
-                  <><span className="animate-spin text-xl">⏳</span> Đang tạo...</>
-                ) : (
-                  <><Sparkles size={18} /> Bắt đầu tạo</>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- STEP 3 --- */}
-      {step === 3 && (
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 animate-in fade-in slide-in-from-right-4">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold flex items-center gap-2 text-indigo-900">

@@ -137,6 +137,8 @@ Chỉ trả về JSON array, không có bất kỳ text nào khác.`;
 
 export interface TextbookGenerationParams extends ExamGenerationParams {
   textbookScope: string;
+  textbookTheme?: string;
+  textbookLesson?: number;
   textbookData: any;
 }
 
@@ -149,6 +151,10 @@ export async function generateExamFromTextbook(params: TextbookGenerationParams)
     filteredLessons = filteredLessons.slice(0, 15);
   } else if (params.textbookScope === 'term2') {
     filteredLessons = filteredLessons.slice(15);
+  } else if (params.textbookScope === 'theme' && params.textbookTheme) {
+    filteredLessons = filteredLessons.filter((l: any) => l.theme === params.textbookTheme);
+  } else if (params.textbookScope === 'lesson' && params.textbookLesson) {
+    filteredLessons = filteredLessons.filter((l: any) => l.lesson_id === params.textbookLesson);
   } else if (params.textbookScope === 'custom' && params.customTopic) {
     // If we want exact lessons matching customTopic (e.g., "1,2,3")
     const specificIds = params.customTopic.split(',').map(s => parseInt(s.trim()));
