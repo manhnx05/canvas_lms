@@ -14,6 +14,26 @@ export const courseService = {
   },
 
   getCourseById: async (id: string) => {
+    // 1. Validate course exists
+    const baseCourse = await prisma.course.findUnique({ where: { id } });
+    if (!baseCourse) throw new HttpError(404, "Không tìm thấy khóa học");
+
+    // 2. Auto-sync students based on class name or fallback to all
+    const allStudents = await prisma.user.findMany({ where: { role: 'student' } });
+    let targetStudents = allStudents.filter(s => s.className && baseCourse.title.includes(s.className));
+    if (targetStudents.length === 0) targetStudents = allStudents;
+
+    if (targetStudents.length > 0) {
+      await prisma.enrollment.createMany({
+        data: targetStudents.map(s => ({ userId: s.id, courseId: id })),
+        skipDuplicates: true
+      });
+      // Also ensure teacher is still enrolled
+      const count = await prisma.enrollment.count({ where: { courseId: id } });
+      await prisma.course.update({ where: { id }, data: { studentsCount: count - 1 > 0 ? count - 1 : count } });
+    }
+
+    // 3. Fetch detailed course data
     const course = await prisma.course.findUnique({
       where: { id },
       include: {
@@ -24,16 +44,14 @@ export const courseService = {
           include: { items: { orderBy: { order: 'asc' } } }
         },
         enrollments: {
-          include: { user: { select: { id: true, name: true, email: true, role: true, avatar: true } } }
+          include: { user: { select: { id: true, name: true, email: true, role: true, avatar: true, className: true } } }
         }
       }
     });
 
-    if (!course) throw new HttpError(404, "Không tìm thấy khóa học");
-
     return {
       ...course,
-      people: course.enrollments.map(e => e.user)
+      people: course?.enrollments.map(e => e.user) || []
     };
   },
 
@@ -47,6 +65,19 @@ export const courseService = {
         progress: 0
       }
     });
+
+    // Auto-sync students mapped to this course
+    const allStudents = await prisma.user.findMany({ where: { role: 'student' } });
+    let targetStudents = allStudents.filter(s => s.className && title.includes(s.className));
+    if (targetStudents.length === 0) targetStudents = allStudents;
+
+    if (targetStudents.length > 0) {
+      await prisma.enrollment.createMany({
+        data: targetStudents.map(s => ({ userId: s.id, courseId: course.id })),
+        skipDuplicates: true
+      });
+      await prisma.course.update({ where: { id: course.id }, data: { studentsCount: targetStudents.length } });
+    }
 
     if (teacherId) {
       await prisma.enrollment.create({
