@@ -326,7 +326,7 @@ export function Students({ role }: { role: Role }) {
               
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">Tài khoản Email</label>
-                <input required type="email" value={email} onChange={e=>setEmail(e.target.value)} disabled={!!editId} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-sky-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" placeholder="VD: hs1@school.edu.vn" />
+                <input required type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-sky-500 outline-none" placeholder="VD: hs1@school.edu.vn" />
               </div>
               
               <div className="grid grid-cols-2 gap-4">

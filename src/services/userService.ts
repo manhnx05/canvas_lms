@@ -60,6 +60,14 @@ export const userService = {
 
   updateUser: async (id: string, data: any) => {
     const { name, email, className, avatar } = data;
+    
+    if (email) {
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing && existing.id !== id) {
+        throw new HttpError(400, 'Email đã tồn tại trong hệ thống');
+      }
+    }
+
     return prisma.user.update({
       where: { id },
       data: { name, email, className, avatar }

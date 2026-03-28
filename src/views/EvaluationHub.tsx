@@ -1,25 +1,23 @@
 import { useState } from 'react';
-import { Brain, TrendingUp, BarChart2, MessageCircle, Filter, Upload, Plus, Settings, Zap } from 'lucide-react';
+import { Brain, TrendingUp, BarChart2, Filter, Upload, Plus, Settings, Zap } from 'lucide-react';
 import { QuizSystem } from '../components/quiz/QuizSystem';
 import type { QuizFilters } from '../components/quiz/QuizFilterModal';
 import { QuizFilterModal } from '../components/quiz/QuizFilterModal';
 import { QuizUploadModal } from '../components/quiz/QuizUploadModal';
 import { ProgressDashboard } from '../components/stats/ProgressDashboard';
 import { ScoringStatistics } from '../components/stats/ScoringStatistics';
-import { AiChatSection } from '../sections/AiChatSection';
 import { ComparisonSection } from '../sections/ComparisonSection';
 
 interface EvaluationHubProps {
   role: string;
 }
 
-type Tab = 'quiz' | 'progress' | 'stats' | 'chat' | 'compare';
+type Tab = 'quiz' | 'progress' | 'stats' | 'compare';
 
 const TABS = [
   { id: 'quiz' as Tab, label: 'Làm Quiz', icon: Brain, color: 'text-indigo-600' },
   { id: 'progress' as Tab, label: 'Tiến độ', icon: TrendingUp, color: 'text-sky-600' },
   { id: 'stats' as Tab, label: 'Thống kê', icon: BarChart2, color: 'text-emerald-600' },
-  { id: 'chat' as Tab, label: 'Hỏi AI', icon: MessageCircle, color: 'text-amber-600' },
   { id: 'compare' as Tab, label: 'So sánh', icon: Zap, color: 'text-rose-600' },
 ];
 
@@ -184,10 +182,6 @@ export function EvaluationHub({ role }: EvaluationHubProps) {
         </div>
       )}
 
-      {/* Chat Tab */}
-      {activeTab === 'chat' && (
-        <AiChatSection studentName={currentUser.name} />
-      )}
 
       {/* Compare Tab */}
       {activeTab === 'compare' && (
