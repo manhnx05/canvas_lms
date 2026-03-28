@@ -105,6 +105,41 @@ export function Dashboard({ role }: { role: Role }) {
         </div>
       )}
 
+      {/* Professional Stats Chart - Teacher Only */}
+      {role === 'teacher' && stats?.activityTrend && (
+        <div className="bg-white p-8 rounded-3xl border-2 border-indigo-50 shadow-sm">
+          <div className="flex justify-between items-end mb-6">
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-800">Hiệu Suất Học Tập Trong Tuần</h2>
+              <p className="text-slate-500 font-medium mt-1">Số lượt nộp bài 7 ngày qua</p>
+            </div>
+            <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl font-bold">
+              <TrendingUp className="w-5 h-5" />
+              <span>+{stats.completionRate}% Tỉ lệ</span>
+            </div>
+          </div>
+          <div className="flex items-end gap-3 sm:gap-6 h-48 mt-4 pt-8 border-t border-slate-100">
+            {stats.activityTrend.map((value: number, idx: number) => {
+              const height = `${(value / Math.max(...stats.activityTrend)) * 100}%`;
+              return (
+                <div key={idx} className="flex-1 flex flex-col justify-end group cursor-pointer h-full">
+                  <div className="w-full flex-1 flex flex-col-reverse relative group-hover:-translate-y-1 transition-transform">
+                    <div className="w-full bg-gradient-to-t from-indigo-500 to-sky-400 rounded-t-xl transition-all shadow-sm" style={{ height }}>
+                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                         {value} bài
+                       </div>
+                    </div>
+                  </div>
+                  <div className="text-center mt-3 text-sm font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
+                    {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][idx]}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">

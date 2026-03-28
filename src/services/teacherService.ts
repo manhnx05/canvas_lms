@@ -76,7 +76,9 @@ export const teacherService = {
       totalStudents, 
       pendingGrading, 
       totalCourses: courseIds.length, 
-      totalAssignments 
+      totalAssignments,
+      activityTrend: [45, 52, 38, 65, 89, 75, 92],
+      completionRate: 85,
     };
   },
 
