@@ -15,6 +15,8 @@ interface ExamConfig {
   thCount: number;
   vdCount: number;
   vdcCount: number;
+  textbookMode: boolean;
+  textbookScope: string;
 }
 
 export const ExamGenerator: React.FC = () => {
@@ -22,6 +24,18 @@ export const ExamGenerator: React.FC = () => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const [courses, setCourses] = useState<any[]>([]);
+  const [textbook, setTextbook] = useState<any>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+
+  React.useEffect(() => {
+    apiClient.get('/courses').then(res => setCourses(res.data)).catch(console.error);
+    fetch('/textbooks/tu-nhien-xa-hoi-3.json')
+      .then(res => res.json())
+      .then(data => setTextbook(data))
+      .catch(console.error);
+  }, []);
 
   const [config, setConfig] = useState<ExamConfig>({
     title: 'Đề kiểm tra trắc nghiệm',
@@ -34,13 +48,15 @@ export const ExamGenerator: React.FC = () => {
     thCount: 4,
     vdCount: 2,
     vdcCount: 1,
+    textbookMode: false,
+    textbookScope: 'full',
   });
 
   const [uploadedFiles, setUploadedFiles] = useState<{ id: string, name: string }[]>([]);
   const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleConfigChange = (key: keyof ExamConfig, value: string | number) => {
+  const handleConfigChange = (key: keyof ExamConfig, value: string | number | boolean) => {
     // Handle number inputs - prevent NaN
     if (typeof value === 'number' && isNaN(value)) {
       return; // Don't update if value is NaN
@@ -87,10 +103,12 @@ export const ExamGenerator: React.FC = () => {
       const userStr = localStorage.getItem('canvas_user');
       const user = userStr ? JSON.parse(userStr) : null;
 
-      const res = await apiClient.post('/exams/generate-ai-quick', {
-        ...config,
-        createdBy: user?.id,
-      }).catch((err: any) => {
+      const endpoint = config.textbookMode ? '/exams/generate-from-textbook' : '/exams/generate-ai-quick';
+      const payload = config.textbookMode 
+        ? { ...config, createdBy: user?.id, textbookData: textbook }
+        : { ...config, createdBy: user?.id };
+        
+      const res = await apiClient.post(endpoint, payload).catch((err: any) => {
         throw new Error(err.response?.data?.error || 'Lỗi tạo đề');
       });
       
@@ -99,6 +117,37 @@ export const ExamGenerator: React.FC = () => {
       setStep(3);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAssign = async () => {
+    if (!selectedCourseId) {
+      setError('Vui lòng chọn lớp học để giao bài');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError('');
+      const selectedCourse = courses.find((c: any) => c.id === selectedCourseId);
+      
+      await apiClient.post('/assignments', {
+        title: config.title,
+        description: `Bài tập trắc nghiệm ${config.subject}`,
+        courseId: selectedCourseId,
+        courseName: selectedCourse?.title || 'Lớp học',
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        starsReward: config.totalScore,
+        type: 'quiz',
+        questions: generatedQuestions
+      });
+      
+      alert('Đã giao bài thành công!');
+      navigate('/assignments');
+    } catch (err: any) {
+      setError(err.message || 'Lỗi khi giao bài');
     } finally {
       setLoading(false);
     }
@@ -178,6 +227,31 @@ export const ExamGenerator: React.FC = () => {
           </div>
 
           <hr className="my-8 border-gray-100" />
+
+          {/* Sách giáo khoa Toggle */}
+          <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-100 mb-8">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
+                <BookOpen className="text-indigo-600" /> Tích hợp Sách giáo khoa (Tự nhiên Xã hội 3)
+              </h3>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" checked={config.textbookMode} onChange={e => handleConfigChange('textbookMode', e.target.checked)} />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+            {config.textbookMode && textbook && (
+              <div className="mt-4 pt-4 border-t border-indigo-100">
+                <label className="block text-sm font-medium text-indigo-800 mb-2">Phạm vi kiến thức ra đề:</label>
+                <select className="w-full px-4 py-2 border border-indigo-200 rounded-lg bg-white"
+                  value={config.textbookScope} onChange={e => handleConfigChange('textbookScope', e.target.value)}>
+                  <option value="full">Cả năm</option>
+                  <option value="term1">Học kì 1 (Bài 1 - 15)</option>
+                  <option value="term2">Học kì 2 (Bài 16 - 27)</option>
+                </select>
+                <p className="text-sm mt-2 text-indigo-600">AI sẽ tự động đọc dữ liệu SGK {textbook.book_info?.title} và chỉ ra câu hỏi nằm trong phạm vi kiến thức này.</p>
+              </div>
+            )}
+          </div>
           
           <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
             <Settings className="text-orange-500" /> Ma trận đề (Chuẩn CV 7991)
@@ -343,13 +417,33 @@ export const ExamGenerator: React.FC = () => {
             ))}
           </div>
 
-          <div className="mt-10 flex justify-center gap-4">
-            <button onClick={() => setStep(2)} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium">
-              <ArrowLeft className="inline mr-2" size={18} /> Tạo lại
-            </button>
-            <button onClick={() => navigate('/exams')} className="px-8 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold transition-colors">
-              Hoàn tất
-            </button>
+          <div className="mt-10 flex flex-col md:flex-row items-center justify-between bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+            <div className="flex-1 w-full md:w-auto mb-4 md:mb-0 md:mr-6">
+              <label className="block text-sm font-bold text-indigo-900 mb-2">Giao bài cho lớp:</label>
+              <select 
+                className="w-full px-4 py-2 border border-indigo-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-indigo-500"
+                value={selectedCourseId}
+                onChange={e => setSelectedCourseId(e.target.value)}
+              >
+                <option value="">-- Chọn lớp học --</option>
+                {courses.map((c: any) => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex gap-3">
+              <button onClick={() => setStep(2)} className="px-5 py-2.5 border border-indigo-200 bg-white text-indigo-700 rounded-lg hover:bg-indigo-50 font-bold transition-colors">
+                <ArrowLeft className="inline mr-2" size={18} /> Quay lại
+              </button>
+              <button 
+                onClick={handleAssign} 
+                disabled={loading || !selectedCourseId}
+                className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold transition-colors disabled:opacity-50 flex items-center shadow-md shadow-indigo-200"
+              >
+                Giao bài ngay <ArrowRight className="inline ml-2" size={18} />
+              </button>
+            </div>
           </div>
         </div>
       )}

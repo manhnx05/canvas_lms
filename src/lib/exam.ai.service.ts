@@ -134,3 +134,72 @@ Chỉ trả về JSON array, không có bất kỳ text nào khác.`;
     throw new Error('Không thể tạo đề thi bằng AI. Vui lòng thử lại.');
   }
 }
+
+export interface TextbookGenerationParams extends ExamGenerationParams {
+  textbookScope: string;
+  textbookData: any;
+}
+
+export async function generateExamFromTextbook(params: TextbookGenerationParams): Promise<ExamQuestion[]> {
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const totalQuestions = params.nbCount + params.thCount + params.vdCount + params.vdcCount;
+
+  let filteredLessons = params.textbookData.lessons;
+  if (params.textbookScope === 'term1') {
+    filteredLessons = filteredLessons.slice(0, 15);
+  } else if (params.textbookScope === 'term2') {
+    filteredLessons = filteredLessons.slice(15);
+  } else if (params.textbookScope === 'custom' && params.customTopic) {
+    // If we want exact lessons matching customTopic (e.g., "1,2,3")
+    const specificIds = params.customTopic.split(',').map(s => parseInt(s.trim()));
+    filteredLessons = filteredLessons.filter((l: any) => specificIds.includes(l.lesson_id));
+  }
+
+  const lessonContents = filteredLessons.map((l: any) => `- ${l.title}: ${l.content}`).join('\n');
+  const contextSection = `\n\nNỘI DUNG TÀI LIỆU SÁCH GIÁO KHOA:\n---\n${lessonContents}\n---\nCHỈ ĐƯỢC dùng kiến thức trong tài liệu này để ra đề. KHÔNG lấy kiến thức ngoài SGK.`;
+
+  const prompt = `Bạn là chuyên gia ra đề thi theo chuẩn Bộ GD&ĐT Việt Nam (Công văn 7991/BGDĐT-GDTrH).
+
+Hãy tạo đề thi môn Tự nhiên và Xã hội lớp 3 với các thông số sau:
+- Mức độ khó: ${params.difficulty === 'easy' ? 'Dễ' : params.difficulty === 'hard' ? 'Khó' : 'Trung bình'}
+- Ma trận đề (Công văn 7991):
+  + Nhận biết (NB): ${params.nbCount} câu
+  + Thông hiểu (TH): ${params.thCount} câu
+  + Vận dụng (VD): ${params.vdCount} câu
+  + Vận dụng cao (VDC): ${params.vdcCount} câu
+  + Tổng: ${totalQuestions} câu${contextSection}
+
+YÊU CẦU QUAN TRỌNG:
+1. Mọi câu hỏi phải TẬP TRUNG vào nội dung SGK đã cho.
+2. Đáp án phải chính xác, có giải thích rõ ràng
+3. Điểm mỗi câu phân bổ đều trong mức độ tương ứng
+
+Trả về JSON hợp lệ theo format sau (không có markdown, chỉ JSON thuần):
+[
+  {
+    "id": "q1",
+    "level": "NB",
+    "type": "multiple_choice",
+    "content": "Nội dung câu hỏi",
+    "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
+    "answer": "A",
+    "explanation": "Giải thích đáp án",
+    "score": 0.25
+  }
+]
+
+Chỉ trả về JSON array, không có bất kỳ text nào khác.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error('No JSON array found in response');
+
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    console.error('AI textbook generation error:', error);
+    throw new Error('Không thể tạo đề thi bằng AI từ SGK. Vui lòng thử lại.');
+  }
+}
