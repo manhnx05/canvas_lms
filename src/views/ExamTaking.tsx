@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, CheckCircle } from 'lucide-react';
+import { Clock, CheckCircle, Brain } from 'lucide-react';
 import apiClient from '@/src/lib/apiClient';
+import { LatexRenderer } from '../components/LatexRenderer';
 
 export const ExamTaking = () => {
   const { id } = useParams<{ id: string }>();
@@ -82,7 +83,6 @@ export const ExamTaking = () => {
     setSubmitting(true);
     try {
       const res = await apiClient.post(`/exams/${id}/submit`, {
-        userId: user.id,
         attemptId: attempt.id,
         answers
       });
@@ -100,7 +100,6 @@ export const ExamTaking = () => {
     setSubmitting(true);
     try {
       const res = await apiClient.post(`/exams/${id}/submit`, {
-        userId: user.id,
         attemptId: attempt.id,
         answers
       });
@@ -138,48 +137,59 @@ export const ExamTaking = () => {
         </div>
       </div>
 
+      {isCompleted && attempt.aiFeedback && (
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-2xl p-6 mb-8 shadow-sm">
+          <h2 className="text-xl font-bold text-indigo-900 mb-4 flex items-center gap-2">
+             <Brain size={24} className="text-indigo-600" /> Nhận xét từ AI Giáo Viên
+          </h2>
+          <div className="text-indigo-900 leading-relaxed max-w-none text-base space-y-2"
+               dangerouslySetInnerHTML={{ __html: attempt.aiFeedback.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+        </div>
+      )}
+
       <div className="space-y-6">
         {exam.questions.map((q: any, i: number) => {
           const selectedOption = answers.find(a => a.questionId === q.id)?.optionId;
-          const isCorrect = q.correctOptionId === selectedOption;
+          const isCorrect = q.answer === selectedOption;
           
           return (
             <div key={q.id} className={`bg-white rounded-xl shadow-sm border p-6 ${isCompleted && isCorrect ? 'border-green-300 bg-green-50' : isCompleted && !isCorrect ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                <span className="font-bold text-indigo-600 mr-2">Câu {i + 1}:</span>
-                {q.question}
-              </h3>
-              <div className="space-y-3">
-                {q.options.map((opt: any) => {
-                  const isSelected = selectedOption === opt.id;
-                  const isCorrectOption = q.correctOptionId === opt.id;
+              <div className="flex gap-2 font-medium mb-4 text-gray-900 text-lg">
+                <span className="font-bold text-indigo-600 mr-2 whitespace-nowrap">Câu {i + 1}:</span>
+                <div className="flex-1"><LatexRenderer content={q.content} /></div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {Array.isArray(q.options) && q.options.map((optString: string, oIdx: number) => {
+                  const optId = String.fromCharCode(65 + oIdx); // A, B, C, D
+                  const isSelected = selectedOption === optId;
+                  const isCorrectOption = q.answer === optId;
                   
-                  let optionClass = "block w-full text-left p-4 rounded-lg border-2 transition-all cursor-pointer ";
+                  let optionClass = "flex w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer items-start ";
                   
                   if (isCompleted) {
-                    if (isCorrectOption) optionClass += "border-green-500 bg-green-100 font-bold ";
-                    else if (isSelected) optionClass += "border-red-500 bg-red-100 ";
+                    if (isCorrectOption) optionClass += "border-green-500 bg-green-100 font-bold text-green-900 shadow-sm ";
+                    else if (isSelected) optionClass += "border-red-500 bg-red-100 text-red-900 ";
                     else optionClass += "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed ";
                   } else {
-                    optionClass += isSelected ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-indigo-300 hover:bg-gray-50";
+                    optionClass += isSelected ? "border-indigo-500 bg-indigo-50 text-indigo-900 shadow-sm" : "border-gray-200 hover:border-indigo-300 hover:bg-indigo-50";
                   }
 
                   return (
                     <button
-                      key={opt.id}
-                      onClick={() => handleSelectOption(q.id, opt.id)}
+                      key={optId}
+                      onClick={() => handleSelectOption(q.id, optId)}
                       disabled={isCompleted}
                       className={optionClass}
                     >
-                      <span className="font-bold mr-2">{opt.id}.</span> {opt.text}
+                      <div className="flex-1"><LatexRenderer content={optString} /></div>
                     </button>
                   );
                 })}
               </div>
               
               {isCompleted && q.explanation && (
-                <div className="mt-4 p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm">
-                  <strong>Giải thích:</strong> {q.explanation}
+                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 text-yellow-900 rounded-xl text-sm leading-relaxed">
+                  <strong>Giải thích:</strong> <LatexRenderer content={q.explanation} />
                 </div>
               )}
             </div>
@@ -192,9 +202,11 @@ export const ExamTaking = () => {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-indigo-700 transition shadow-lg disabled:opacity-50"
+            className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-10 py-3.5 rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition shadow-lg disabled:opacity-50"
           >
-            {submitting ? 'Đang nộp bài...' : 'Nộp Bài'}
+            {submitting ? (
+              <><span className="animate-spin text-xl">⏳</span> AI đang chấm bài...</>
+            ) : 'Nộp Bài & Chấm Điểm'}
           </button>
         </div>
       )}
