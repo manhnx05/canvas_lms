@@ -25,6 +25,7 @@ export const ExamGenerator: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
+  const [loadingElapsed, setLoadingElapsed] = useState(0);
   const [assigning, setAssigning] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -89,8 +90,12 @@ export const ExamGenerator: React.FC = () => {
     }
     try {
       setLoading(true);
+      setLoadingElapsed(0);
       setError('');
       setCreatedExamId(null);
+
+      // Start elapsed timer so teacher sees AI is working
+      const timer = setInterval(() => setLoadingElapsed(s => s + 1), 1000);
 
       const userStr = localStorage.getItem('canvas_user');
       const user = userStr ? JSON.parse(userStr) : null;
@@ -100,19 +105,23 @@ export const ExamGenerator: React.FC = () => {
         ? { ...config, createdBy: user?.id, textbookData: textbook }
         : { ...config, createdBy: user?.id };
 
-      const res = await apiClient.post(endpoint, payload).catch((err: any) => {
-        throw new Error(err.response?.data?.error || 'Lỗi tạo đề');
-      });
+      // NOTE: do NOT chain .catch() here — apiClient already transforms
+      // AxiosError into a plain Error, so err.response is undefined inside .catch().
+      // Let the outer try/catch catch everything cleanly.
+      const res = await apiClient.post(endpoint, payload);
 
+      clearInterval(timer);
       const data = res.data;
       setGeneratedQuestions(data.questions);
-      // Lưu lại examId để dùng khi giao bài
       if (data.exam?.id) setCreatedExamId(data.exam.id);
       setStep(2);
     } catch (err: any) {
-      setError(err.message);
+      // err.message is already the user-friendly message set by apiClient's interceptor
+      const msg = err.message || 'Không thể tạo đề thi. Vui lòng thử lại.';
+      setError(msg);
     } finally {
       setLoading(false);
+      setLoadingElapsed(0);
     }
   };
 
@@ -303,7 +312,9 @@ export const ExamGenerator: React.FC = () => {
               className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:shadow-lg transition font-bold disabled:opacity-50"
             >
               {loading ? (
-                <><span className="animate-spin text-xl">⏳</span> Đang yêu cầu AI tổng hợp...</>
+                <><span className="animate-spin text-xl">⏳</span>
+                  Đang yêu cầu AI tổng hợp{loadingElapsed > 0 ? ` (${loadingElapsed}s)` : '...'}
+                </>
               ) : (
                 <><Sparkles size={20} /> AI Tạo Đề Ngay <ArrowRight size={18} /></>
               )}
