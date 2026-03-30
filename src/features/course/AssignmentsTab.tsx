@@ -99,9 +99,16 @@ export function AssignmentsTab({ courseId, courseTitle, assignments, role, onRef
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-sky-900 text-lg">{a.title}</h3>
-                  <p className="text-sm flex items-center gap-1 mt-1 font-medium text-sky-500">
-                    <Clock className="w-4 h-4" /> Hạn: {dueDateLabel}
-                  </p>
+                  <div className="flex items-center gap-4 mt-1">
+                    <p className="text-sm flex items-center gap-1 font-medium text-sky-500">
+                      <Clock className="w-4 h-4" /> Hạn: {dueDateLabel}
+                    </p>
+                    {role === 'teacher' && typeof a._count?.submissions !== 'undefined' && (
+                      <p className="text-sm flex items-center gap-1 font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 shadow-sm">
+                        👥 {a._count.submissions} lượt nộp
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div>
                   {isClosed ? (
