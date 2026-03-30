@@ -16,7 +16,7 @@ export const POST = withErrorHandler(async (req: Request, { params }: { params: 
   await requireAuth(req, ['teacher']);
 
   const { id } = await params;
-  const { courseId, deadline, duration } = await req.json();
+  const { courseId, deadline, duration, maxAttempts } = await req.json();
 
   if (!courseId) throw new HttpError(400, 'courseId là bắt buộc');
 
@@ -42,6 +42,7 @@ export const POST = withErrorHandler(async (req: Request, { params }: { params: 
       courseName: course.title,
       deadline: deadlineDate,
       duration: duration ? parseInt(duration) : exam.duration,
+      maxAttempts: maxAttempts ? parseInt(maxAttempts) : exam.maxAttempts,
       status: 'published'
     }
   });

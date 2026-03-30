@@ -14,6 +14,8 @@ export const ExamTaking = () => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [maxAttempts, setMaxAttempts] = useState<number>(1);
+  const [attemptsCount, setAttemptsCount] = useState<number>(1);
 
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
 
@@ -39,16 +41,19 @@ export const ExamTaking = () => {
       setExam(examRes.data);
 
       const attemptRes = await apiClient.post(`/exams/${id}/start`, { userId: user.id });
-      setAttempt(attemptRes.data);
+      const currentAttempt = attemptRes.data;
+      setAttempt(currentAttempt);
+      if (currentAttempt.maxAttempts !== undefined) setMaxAttempts(currentAttempt.maxAttempts);
+      if (currentAttempt.attemptsCount !== undefined) setAttemptsCount(currentAttempt.attemptsCount);
 
-      if (attemptRes.data.status === 'completed') {
-        const storedAnswers = attemptRes.data.answers.map((a: any) => ({
+      if (currentAttempt.status === 'completed') {
+        const storedAnswers = currentAttempt.answers?.map((a: any) => ({
           questionId: a.questionId,
           optionId: a.optionId
-        }));
+        })) || [];
         setAnswers(storedAnswers);
       } else {
-        const elapsed = Math.floor((new Date().getTime() - new Date(attemptRes.data.startTime).getTime()) / 1000);
+        const elapsed = Math.floor((new Date().getTime() - new Date(currentAttempt.startTime).getTime()) / 1000);
         const remaining = (examRes.data.duration * 60) - elapsed;
         setTimeLeft(remaining > 0 ? remaining : 0);
       }
@@ -56,6 +61,26 @@ export const ExamTaking = () => {
       console.error(error);
       alert('Không thể bắt đầu bài làm');
       navigate('/exams');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!window.confirm(`Bạn muốn làm lại bài thi này? (Còn ${maxAttempts - attemptsCount} lượt)`)) return;
+    setLoading(true);
+    try {
+      const res = await apiClient.post(`/exams/${id}/retry`);
+      const newAttempt = res.data;
+      
+      setAttempt(newAttempt);
+      setMaxAttempts(newAttempt.maxAttempts);
+      setAttemptsCount(newAttempt.attemptsCount);
+      setAnswers([]);
+      setTimeLeft(exam.duration * 60);
+    } catch (err: any) {
+       console.error(err);
+       alert(err.response?.data?.error || 'Không thể làm lại bài.');
     } finally {
       setLoading(false);
     }
@@ -156,13 +181,16 @@ export const ExamTaking = () => {
             <div key={q.id} className={`bg-white rounded-xl shadow-sm border p-6 ${isCompleted && isCorrect ? 'border-green-300 bg-green-50' : isCompleted && !isCorrect ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
               <div className="flex gap-2 font-medium mb-4 text-gray-900 text-lg">
                 <span className="font-bold text-indigo-600 mr-2 whitespace-nowrap">Câu {i + 1}:</span>
-                <div className="flex-1"><LatexRenderer content={q.content} /></div>
+                <div className="flex-1"><LatexRenderer content={q.content || q.question} /></div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {Array.isArray(q.options) && q.options.map((optString: string, oIdx: number) => {
-                  const optId = String.fromCharCode(65 + oIdx); // A, B, C, D
+                {Array.isArray(q.options) && q.options.map((opt: any, oIdx: number) => {
+                  const isStringOpt = typeof opt === 'string';
+                  const optId = isStringOpt ? String.fromCharCode(65 + oIdx) : opt.id;
+                  const optText = isStringOpt ? opt : opt.text;
+                  
                   const isSelected = selectedOption === optId;
-                  const isCorrectOption = q.answer === optId;
+                  const isCorrectOption = (q.answer || q.correctOptionId) === optId;
                   
                   let optionClass = "flex w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer items-start ";
                   
@@ -181,7 +209,7 @@ export const ExamTaking = () => {
                       disabled={isCompleted}
                       className={optionClass}
                     >
-                      <div className="flex-1"><LatexRenderer content={optString} /></div>
+                      <div className="flex-1"><LatexRenderer content={optText} /></div>
                     </button>
                   );
                 })}
@@ -197,7 +225,7 @@ export const ExamTaking = () => {
         })}
       </div>
 
-      {!isCompleted && (
+      {!isCompleted ? (
         <div className="mt-8 flex justify-end">
           <button
             onClick={handleSubmit}
@@ -209,6 +237,17 @@ export const ExamTaking = () => {
             ) : 'Nộp Bài & Chấm Điểm'}
           </button>
         </div>
+      ) : (
+        attemptsCount < maxAttempts && (
+          <div className="mt-8 flex justify-end">
+            <button
+              onClick={handleRetry}
+              className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-10 py-3.5 rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition shadow-lg"
+            >
+              🔄 Làm Lại Bài Thi (Còn {maxAttempts - attemptsCount} lượt)
+            </button>
+          </div>
+        )
       )}
     </div>
   );

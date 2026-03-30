@@ -45,7 +45,7 @@ export const ExamViewer: React.FC = () => {
     apiClient.get('/courses').then(res => setCourses(res.data)).catch(console.error);
   }, [id]);
 
-  const handleAssign = async () => {
+  const handleAssign = async (assignMaxAttempts: number = 1) => {
     if (!selectedCourseId) { setAssignError('Vui lòng chọn lớp học'); return; }
     try {
       setAssigning(true);
@@ -53,7 +53,8 @@ export const ExamViewer: React.FC = () => {
       const res = await apiClient.post(`/exams/${id}/assign`, {
         courseId: selectedCourseId,
         deadline: deadline || null,
-        duration: assignDuration || exam?.duration
+        duration: assignDuration || exam?.duration,
+        maxAttempts: assignMaxAttempts
       });
       const data = res.data;
       setAssignSuccess(`✅ Đã giao bài cho ${courses.find(c => c.id === selectedCourseId)?.title}! Thông báo đến ${data.notified} học sinh.`);
@@ -197,9 +198,9 @@ export const ExamViewer: React.FC = () => {
         ) : (
           <>
             {assignError && <p className="text-red-600 text-sm mb-3 font-medium">{assignError}</p>}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-xs font-bold text-indigo-700 mb-1">Lớp học nhận đề:</label>
+                <label className="block text-xs font-bold text-indigo-700 mb-1">Lớp nhận đề:</label>
                 <select
                   className="w-full px-3 py-2 border border-indigo-200 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-indigo-400"
                   value={selectedCourseId}
@@ -230,10 +231,22 @@ export const ExamViewer: React.FC = () => {
                   onChange={e => setAssignDuration(parseInt(e.target.value) || '')}
                 />
               </div>
+              <div>
+                <label className="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1"><Clock size={12} /> Số lượt được làm:</label>
+                <input
+                  type="number" min="1"
+                  className="w-full px-3 py-2 border border-indigo-200 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-indigo-400"
+                  defaultValue={1}
+                  id="assignMaxAttempts"
+                />
+              </div>
             </div>
             <div className="flex justify-end mt-4">
               <button
-                onClick={handleAssign}
+                onClick={() => {
+                   const maxVal = parseInt((document.getElementById('assignMaxAttempts') as HTMLInputElement)?.value) || 1;
+                   handleAssign(maxVal);
+                }}
                 disabled={assigning || !selectedCourseId}
                 className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold flex items-center gap-2 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 transition-all shadow-md shadow-indigo-200"
               >
@@ -263,16 +276,20 @@ export const ExamViewer: React.FC = () => {
             <div key={idx} className="break-inside-avoid text-gray-900">
               <div className="flex gap-2 font-medium mb-3">
                 <span className="whitespace-nowrap font-bold">Câu {idx + 1}:</span>
-                <div className="flex-1"><LatexRenderer content={q.content} /></div>
+                <div className="flex-1"><LatexRenderer content={q.content || q.question} /></div>
               </div>
 
               {q.options && (
                 <div className="grid grid-cols-2 gap-x-8 gap-y-3 pl-12 mt-4 text-gray-800">
-                  {q.options.map((opt: string, oIdx: number) => {
-                    const isCorrect = viewAnswers && q.answer === String.fromCharCode(65 + oIdx);
+                  {q.options.map((opt: any, oIdx: number) => {
+                    const isStringOpt = typeof opt === 'string';
+                    const optId = isStringOpt ? String.fromCharCode(65 + oIdx) : opt.id;
+                    const optText = isStringOpt ? opt : opt.text;
+                    const isCorrect = viewAnswers && (q.answer || q.correctOptionId) === optId;
+                    
                     return (
                       <div key={oIdx} className={`flex gap-2 ${isCorrect ? 'text-green-700 font-bold bg-green-50 px-2 py-1 rounded' : ''}`}>
-                         <LatexRenderer content={opt} />
+                         <LatexRenderer content={`${optId}. ${optText}`} />
                       </div>
                     );
                   })}

@@ -195,19 +195,47 @@ export const examService = {
     const exam = await prisma.exam.findUnique({ where: { id: examId } });
     if (!exam) throw new HttpError(404, 'Không tìm thấy đề thi');
 
-    let attempt = await prisma.examAttempt.findUnique({
-      where: { examId_userId: { examId, userId } },
+    let attempt = await prisma.examAttempt.findFirst({
+      where: { examId, userId },
+      orderBy: { startTime: 'desc' },
       include: { answers: true }
     });
 
     if (!attempt) {
       attempt = await prisma.examAttempt.create({
-        data: { examId, userId },
+        data: { examId, userId, attemptNumber: 1 },
         include: { answers: true }
       });
     }
 
-    return attempt;
+    const count = await prisma.examAttempt.count({ where: { examId, userId } });
+    return { ...attempt, maxAttempts: exam.maxAttempts, attemptsCount: count };
+  },
+
+  retryExamAttempt: async (examId: string, userId: string) => {
+    const exam = await prisma.exam.findUnique({ where: { id: examId } });
+    if (!exam) throw new HttpError(404, 'Không tìm thấy đề thi');
+
+    const count = await prisma.examAttempt.count({ where: { examId, userId } });
+    if (count >= exam.maxAttempts) {
+      throw new HttpError(403, 'Bạn đã hết số lần làm bài');
+    }
+
+    const latest = await prisma.examAttempt.findFirst({
+      where: { examId, userId },
+      orderBy: { startTime: 'desc' }
+    });
+
+    if (latest && latest.status !== 'completed') {
+      throw new HttpError(400, 'Bạn đang có bài làm chưa nộp!');
+    }
+
+    const newAttempt = await prisma.examAttempt.create({
+      data: { examId, userId, attemptNumber: count + 1 },
+      include: { answers: true }
+    });
+
+    return { ...newAttempt, maxAttempts: exam.maxAttempts, attemptsCount: count + 1 };
   },
 
   submitExamAttempt: async (attemptId: string, userId: string, answers: any[]) => {
@@ -278,8 +306,9 @@ export const examService = {
   },
 
   getExamAttempt: async (examId: string, userId: string) => {
-    const attempt = await prisma.examAttempt.findUnique({
-      where: { examId_userId: { examId, userId } },
+    const attempt = await prisma.examAttempt.findFirst({
+      where: { examId, userId },
+      orderBy: { startTime: 'desc' },
       include: { answers: true, exam: true }
     });
     if (!attempt) throw new HttpError(404, 'Chưa có lượt làm bài');
