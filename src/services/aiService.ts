@@ -39,7 +39,7 @@ export const aiService = {
   },
 
   evaluateSubmission: async (data: any) => {
-    const { questions, answers, studentName } = data;
+    const { questions, answers, studentName, assignmentTitle, assignmentContext } = data;
     
     if (!process.env.GEMINI_API_KEY) {
       throw new HttpError(500, 'System is missing GEMINI_API_KEY');
@@ -47,12 +47,14 @@ export const aiService = {
 
     const model = getGeminiModel();
     const prompt = `Bạn là một giáo viên thân thiện. Dưới đây là bài làm trắc nghiệm của học sinh tên ${studentName || "bé"}.
+    Thông tin bài tập: "${assignmentTitle || "Bài kiểm tra"}".
+    Mục tiêu kiến thức (chuẩn đầu ra) / Yêu cầu: "${assignmentContext || "Không xác định"}".
     Danh sách câu hỏi đề thi: ${JSON.stringify(questions)}
     Đáp án học sinh chọn (Map of questionId -> optionId): ${JSON.stringify(answers)}
     
     Nhiệm vụ: Viết NHẬN XÉT chi tiết (không liệt kê lại câu hỏi) gửi trực tiếp cho học sinh đó (xưng hô Cô/Thầy và Con/Bé) gồm 3 phần rõ ràng:
-    1. Kiến thức đã hiểu tốt (Dựa vào các câu làm đúng)
-    2. Lỗ hổng kiến thức cần chú ý (Dựa vào các câu làm sai, giải thích ngắn gọn tại sao câu đó sai nếu có)
+    1. Kiến thức đã hiểu tốt (Dựa vào các câu làm đúng và đối chiếu với chuẩn đầu ra)
+    2. Lỗ hổng kiến thức cần chú ý (Dựa vào các câu làm sai, giải thích đối chiếu với chuẩn đầu ra/yêu cầu)
     3. Lời khuyên/Đề xuất cải thiện để học tốt hơn.
     Hãy format bằng Markdown có in đậm tiêu đề. Không nói lan man.`;
 

@@ -55,7 +55,13 @@ export function AssignmentDetail({ role }: { role: Role }) {
     
     try {
       // 1. Hỏi AI chấm và sinh nhận xét
-      const aiRes = await apiClient.post('/ai/evaluate-submission', { questions: assignment.questions, answers: sub.answers, studentName: sub.user?.name || "Học sinh" });
+      const aiRes = await apiClient.post('/ai/evaluate-submission', { 
+        questions: assignment.questions, 
+        answers: sub.answers, 
+        studentName: sub.user?.name || "Học sinh",
+        assignmentTitle: assignment.title,
+        assignmentContext: assignment.description || "Bài tập trắc nghiệm trên lớp học."
+      });
       const aiData = aiRes.data;
       if (aiData.error) { alert("Lỗi gọi AI: " + aiData.error); setEvaluatingSubId(null); return; }
       

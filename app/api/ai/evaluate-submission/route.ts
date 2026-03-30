@@ -8,7 +8,9 @@ import { validateRequestBody } from '@/src/lib/validations';
 const evaluateSubmissionSchema = z.object({
   questions: z.array(z.any()).min(1, 'Phải có ít nhất 1 câu hỏi'),
   answers: z.record(z.string(), z.string()),
-  studentName: z.string().max(100).optional()
+  studentName: z.string().max(100).optional(),
+  assignmentTitle: z.string().optional(),
+  assignmentContext: z.string().optional()
 });
 
 export const POST = withErrorHandler(async (req: Request) => {
