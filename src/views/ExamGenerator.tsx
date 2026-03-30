@@ -19,6 +19,9 @@ interface ExamConfig {
   textbookScope: string;
   textbookTheme: string;
   textbookLesson: number;
+  // Tên bài / Phạm vi kiểm tra
+  examScope: 'lesson' | 'term1' | 'term2' | 'full';
+  examScopeLabel: string; // label tự điền
 }
 
 export const ExamGenerator: React.FC = () => {
@@ -67,9 +70,18 @@ export const ExamGenerator: React.FC = () => {
     textbookScope: 'full',
     textbookTheme: 'GIA ĐÌNH',
     textbookLesson: 1,
+    examScope: 'full',
+    examScopeLabel: 'Kiểm tra cuối năm',
   });
 
   const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+
+  const SCOPE_OPTIONS = [
+    { value: 'lesson', label: 'Kiểm tra bài học' },
+    { value: 'term1', label: 'Kiểm tra giữa kì 1 / Học kì 1' },
+    { value: 'term2', label: 'Kiểm tra giữa kì 2 / Học kì 2' },
+    { value: 'full', label: 'Kiểm tra cuối năm' },
+  ];
 
   const handleConfigChange = (key: keyof ExamConfig, value: string | number | boolean) => {
     if (typeof value === 'number' && isNaN(value)) return;
@@ -77,7 +89,16 @@ export const ExamGenerator: React.FC = () => {
       const next = { ...prev, [key]: value };
       // Khi chọn lớp học, auto-fill tên đề thi
       if (key === 'subject') {
-        next.title = `Đề kiểm tra - ${value}`;
+        const scopeLabel = SCOPE_OPTIONS.find(o => o.value === next.examScope)?.label || next.examScopeLabel || '';
+        next.title = `Đề ${scopeLabel} - ${value}`;
+      }
+      // Khi đổi examScope, cập nhật label và rebuild title
+      if (key === 'examScope') {
+        const selected = SCOPE_OPTIONS.find(o => o.value === String(value));
+        next.examScopeLabel = selected?.label || '';
+        if (next.subject) {
+          next.title = `Đề ${selected?.label ?? value} - ${next.subject}`;
+        }
       }
       return next;
     });
@@ -102,8 +123,8 @@ export const ExamGenerator: React.FC = () => {
 
       const endpoint = config.textbookMode ? '/exams/generate-from-textbook' : '/exams/generate-ai-quick';
       const payload = config.textbookMode
-        ? { ...config, createdBy: user?.id, textbookData: textbook }
-        : { ...config, createdBy: user?.id };
+        ? { ...config, createdBy: user?.id, textbookData: textbook, examScopeLabel: config.examScopeLabel }
+        : { ...config, createdBy: user?.id, examScopeLabel: config.examScopeLabel };
 
       // NOTE: do NOT chain .catch() here — apiClient already transforms
       // AxiosError into a plain Error, so err.response is undefined inside .catch().
@@ -226,6 +247,46 @@ export const ExamGenerator: React.FC = () => {
               <input type="number" min="1" className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 value={config.duration} onChange={e => handleConfigChange('duration', parseInt(e.target.value) || 0)} />
             </div>
+            {/* Phạm vi kiểm tra */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Phạm vi / Loại kiểm tra
+                <span className="ml-2 text-xs text-indigo-500 font-normal">(sẽ xuất hiện trên header đề thi)</span>
+              </label>
+              <div className="grid grid-cols-4 gap-3">
+                {SCOPE_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleConfigChange('examScope', opt.value)}
+                    className={`py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all ${
+                      config.examScope === opt.value
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm shadow-indigo-100'
+                        : 'border-gray-200 text-gray-500 hover:border-indigo-200 hover:text-indigo-600'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {/* Custom label tùy ý */}
+              {config.examScope === 'lesson' && (
+                <div className="mt-3">
+                  <input
+                    type="text"
+                    placeholder="VD: Bài 5 - Gia Đình Em, Chương 2..."
+                    className="w-full px-4 py-2 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                    value={config.examScopeLabel === 'Kiểm tra bài học' ? '' : config.examScopeLabel}
+                    onChange={e => setConfig(prev => ({
+                      ...prev,
+                      examScopeLabel: e.target.value,
+                      title: prev.subject ? `Đề ${e.target.value} - ${prev.subject}` : prev.title
+                    }))}
+                  />
+                  <p className="text-xs text-indigo-400 mt-1">Nhập tên bài / chương cụ thể để AI nắm đúng phạm vi ra đề.</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <hr className="my-8 border-gray-100" />
@@ -336,6 +397,17 @@ export const ExamGenerator: React.FC = () => {
             >
               Lưu & Thoát
             </button>
+          </div>
+
+          {/* Exam Header - hiển thị như một trang đề thi thật */}
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-2xl p-6 mb-8 text-white text-center shadow-lg">
+            <p className="text-indigo-200 text-sm font-medium tracking-widest uppercase mb-1">TRƯỜNG TIỂU HỌC</p>
+            <h2 className="text-2xl font-extrabold mb-1">{config.title}</h2>
+            <div className="flex justify-center gap-6 mt-3 text-indigo-100 text-sm">
+              <span className="bg-white/20 px-3 py-1 rounded-full">📚 Môn: {config.subject || '--'}</span>
+              <span className="bg-white/20 px-3 py-1 rounded-full">⏱ Thời gian: {config.duration} phút</span>
+              <span className="bg-white/20 px-3 py-1 rounded-full">🏆 Phạm vi: {config.examScopeLabel}</span>
+            </div>
           </div>
 
           {/* Preview câu hỏi */}

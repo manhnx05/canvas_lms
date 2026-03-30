@@ -20,7 +20,8 @@ export const aiService = {
       "correctOptionId": string ("A", "B", "C" hoặc "D"),
       "difficulty": "easy" | "medium" | "hard",
       "explanation": string (giải thích ngắn tại sao đáp án đúng)
-    }`;
+    }
+    LƯU Ý QUAN TRỌNG: Trong trường "text" của options, TUYỆT ĐỐI KHÔNG ghi thêm ký tự tiền tố (VD: "A. ", "B. ", "C) ") mà CHỈ GHI phần nội dung đáp án trơn.`;
 
     try {
       const result = await model.generateContent(prompt);
@@ -31,7 +32,26 @@ export const aiService = {
       if (cleanedText.startsWith('```')) cleanedText = cleanedText.slice(3);
       if (cleanedText.endsWith('```')) cleanedText = cleanedText.slice(0, -3);
       
-      return JSON.parse(cleanedText.trim());
+      const parsedData = JSON.parse(cleanedText.trim());
+      
+      // Sanitization: Tẩy sạch triệt để nếu AI vẫn lỡ lầm chèn "A. "
+      if (Array.isArray(parsedData)) {
+         parsedData.forEach(q => {
+            if (Array.isArray(q.options)) {
+               q.options = q.options.map((opt: any) => {
+                  if (typeof opt === 'string') {
+                     return opt.replace(/^[A-D][\.\:\)]\s*/i, '');
+                  } else if (opt && typeof opt.text === 'string') {
+                     opt.text = opt.text.replace(/^[A-D][\.\:\)]\s*/i, '');
+                     return opt;
+                  }
+                  return opt;
+               });
+            }
+         });
+      }
+      
+      return parsedData;
     } catch (error: any) {
       console.error('AI generateQuiz error details:', error);
       throw new HttpError(500, `Gemini API: ${error.message || 'Lỗi sinh đề quiz'}`);
