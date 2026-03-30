@@ -8,7 +8,7 @@ import { aiService } from '@/src/services/aiService';
 
 export const examService = {
   getExams: async (query: any) => {
-    const { courseId, subject, grade, createdBy, status } = query;
+    const { courseId, subject, grade, createdBy, status, userId } = query;
     const where: any = {};
     if (courseId) where.courseId = String(courseId);
     if (subject) where.subject = String(subject);
@@ -16,11 +16,31 @@ export const examService = {
     if (createdBy) where.createdBy = String(createdBy);
     if (status) where.status = String(status);
 
-    return prisma.exam.findMany({
+    const exams = await prisma.exam.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       include: { sourceFiles: true },
     });
+
+    // If userId provided (student), attach their latest attempt status to each exam
+    if (userId) {
+      const attempts = await prisma.examAttempt.findMany({
+        where: { userId: String(userId) },
+        orderBy: { startTime: 'desc' },
+        select: { examId: true, status: true, score: true, endTime: true }
+      });
+      // Keep only the latest attempt per exam
+      const latestAttemptMap: Record<string, any> = {};
+      for (const a of attempts) {
+        if (!latestAttemptMap[a.examId]) latestAttemptMap[a.examId] = a;
+      }
+      return exams.map(exam => ({
+        ...exam,
+        myAttempt: latestAttemptMap[exam.id] ?? null
+      }));
+    }
+
+    return exams;
   },
 
   getExamById: async (id: string) => {
