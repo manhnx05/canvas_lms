@@ -4,6 +4,7 @@ import { generateExamWithAI, extractTextFromFile } from '@/src/lib/exam.ai.servi
 import * as path from 'path';
 import * as fs from 'fs';
 import { HttpError } from '@/src/utils/errorHandler';
+import { aiService } from '@/src/services/aiService';
 
 export const examService = {
   getExams: async (query: any) => {
@@ -212,7 +213,7 @@ export const examService = {
   submitExamAttempt: async (attemptId: string, userId: string, answers: any[]) => {
     const attempt = await prisma.examAttempt.findUnique({
       where: { id: attemptId },
-      include: { exam: true }
+      include: { exam: true, user: true }
     });
 
     if (!attempt) throw new HttpError(404, 'Không tìm thấy lượt làm bài');
@@ -222,10 +223,12 @@ export const examService = {
     const examQuestions = attempt.exam.questions as any[];
     let correctCount = 0;
     const answerRecords: any[] = [];
+    const answersMap: Record<string, string> = {};
 
     for (const ans of answers) {
       const q = examQuestions.find((qx: any) => qx.id === ans.questionId);
-      const isCorrect = q ? q.correctOptionId === ans.optionId : false;
+      // AI returns Correct option in `q.answer` (e.g. 'A', 'B')
+      const isCorrect = q ? q.answer === ans.optionId : false;
       if (isCorrect) correctCount++;
 
       answerRecords.push({
@@ -234,11 +237,27 @@ export const examService = {
         optionId: ans.optionId,
         isCorrect
       });
+      answersMap[ans.questionId] = ans.optionId;
     }
 
     const totalQuestions = examQuestions.length || 1; // Prevent division by 0
     const rawScore = (correctCount / totalQuestions) * attempt.exam.totalScore;
     const score = Math.round(rawScore * 100) / 100; // Round to 2 decimals
+
+    // Generate AI Feedback based on learning outcomes
+    let aiFeedback = "Bài làm đã được ghi nhận.";
+    try {
+      aiFeedback = await aiService.evaluateSubmission({
+        questions: examQuestions,
+        answers: answersMap,
+        studentName: attempt.user?.name || 'Học sinh',
+        assignmentTitle: attempt.exam.title,
+        assignmentContext: `Môn ${attempt.exam.subject} - Chuẩn: ${attempt.exam.standard}`
+      });
+    } catch (e) {
+      console.error('Không thể tạo nhận xét AI:', e);
+      aiFeedback = "Hệ thống AI hiện đang bận, không thể đưa ra nhận xét lúc này. Hãy liên hệ với giáo viên của bạn.";
+    }
 
     await prisma.examAnswer.createMany({
       data: answerRecords
@@ -249,9 +268,10 @@ export const examService = {
       data: {
         score,
         status: 'completed',
-        endTime: new Date()
+        endTime: new Date(),
+        aiFeedback
       },
-      include: { answers: true }
+      include: { answers: true, exam: true }
     });
 
     return finishedAttempt;
