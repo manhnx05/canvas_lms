@@ -99,12 +99,32 @@ export function createAuthMiddleware(requiredRoles?: Role[]) {
 }
 
 export async function requireAuth(req: Request | NextRequest, requiredRoles?: Role[]) {
-  // Convert Request to NextRequest if needed
   const nextReq = req as NextRequest;
-  const authResult = await createAuthMiddleware(requiredRoles)(nextReq);
-  if (authResult) {
-    throw authResult; // This will be caught by the route handler
+
+  const token = extractTokenFromRequest(nextReq);
+  if (!token) {
+    const { AuthenticationError } = await import('@/src/utils/errorHandler');
+    throw new AuthenticationError('Token không được cung cấp');
   }
+
+  const payload = verifyToken(token);
+  if (!payload) {
+    const { AuthenticationError } = await import('@/src/utils/errorHandler');
+    throw new AuthenticationError('Token không hợp lệ hoặc đã hết hạn');
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (payload.exp < now) {
+    const { AuthenticationError } = await import('@/src/utils/errorHandler');
+    throw new AuthenticationError('Token đã hết hạn, vui lòng đăng nhập lại');
+  }
+
+  if (requiredRoles && !requiredRoles.includes(payload.role)) {
+    const { AuthorizationError } = await import('@/src/utils/errorHandler');
+    throw new AuthorizationError('Bạn không có quyền thực hiện thao tác này');
+  }
+
+  (nextReq as AuthenticatedRequest).user = { id: payload.id, role: payload.role };
   return (nextReq as AuthenticatedRequest).user!;
 }
 
