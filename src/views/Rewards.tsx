@@ -6,11 +6,16 @@ export function Rewards() {
   const [rewards, setRewards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
+  const [points, setPoints] = useState(user.stars || 0);
 
   useEffect(() => {
     apiClient.get('/rewards')
       .then(res => res.data)
-      .then(data => { setRewards(data); setLoading(false); })
+      .then(data => { 
+         setRewards(data.items || []); 
+         if (data.points !== undefined) setPoints(data.points);
+         setLoading(false); 
+      })
       .catch(err => { console.error(err); setLoading(false); });
   }, []);
 
@@ -30,7 +35,7 @@ export function Rewards() {
             </div>
             <div>
               <p className="text-sm font-bold text-amber-100 uppercase tracking-wider">Tổng Sao</p>
-              <p className="text-3xl font-extrabold drop-shadow-md">{user.stars || 0}</p>
+              <p className="text-3xl font-extrabold drop-shadow-md">{points}</p>
             </div>
           </div>
         </div>
