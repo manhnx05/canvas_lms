@@ -4,6 +4,7 @@ import { ArrowLeft, Clock, Star, Upload, CheckCircle, Sparkles, BrainCircuit, Us
 import { Role } from '@/src/types';
 import ReactMarkdown from 'react-markdown';
 import apiClient from '@/src/lib/apiClient';
+import { LatexRenderer } from '../components/LatexRenderer';
 
 export function AssignmentDetail({ role }: { role: Role }) {
   const { id } = useParams();
@@ -69,7 +70,8 @@ export function AssignmentDetail({ role }: { role: Role }) {
       let correctCount = 0;
       let totalQs = assignment.questions?.length || 1;
       assignment.questions?.forEach((q: any) => {
-         if (sub.answers && sub.answers[q.id] === q.correctOptionId) correctCount++;
+         const correctOpt = q.answer || q.correctOptionId;
+         if (sub.answers && sub.answers[q.id] === correctOpt) correctCount++;
       });
       const maxReward = assignment.starsReward || 10;
       const finalScore = Math.floor((correctCount / totalQs) * maxReward);
@@ -144,21 +146,39 @@ export function AssignmentDetail({ role }: { role: Role }) {
                   
                   {isQuiz ? (
                     <div className="space-y-6">
-                      {assignment.questions.map((q: any, i: number) => (
-                        <div key={q.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
-                          <p className="font-bold text-lg text-slate-800 mb-4">Câu {i + 1}: {q.question}</p>
-                          <div className="space-y-3">
-                            {q.options.map((opt: any) => (
-                              <label key={opt.id} onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt.id }))} className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-colors ${answers[q.id] === opt.id ? 'border-sky-400 bg-sky-50' : 'border-slate-200 bg-white hover:border-sky-200'}`}>
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${answers[q.id] === opt.id ? 'border-sky-500' : 'border-slate-300'}`}>
-                                   {answers[q.id] === opt.id && <div className="w-2.5 h-2.5 bg-sky-500 rounded-full" />}
-                                </div>
-                                <span className="font-medium text-slate-700">{opt.id}. {opt.text}</span>
-                              </label>
-                            ))}
+                      {assignment.questions.map((q: any, i: number) => {
+                        const questionText = q.question || q.content;
+                        
+                        return (
+                          <div key={q.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+                            <div className="flex gap-2 font-bold text-lg text-slate-800 mb-4">
+                              <span className="text-sky-600 whitespace-nowrap">Câu {i + 1}:</span>
+                              <div className="flex-1 font-medium"><LatexRenderer content={questionText} /></div>
+                            </div>
+                            <div className="space-y-3">
+                              {Array.isArray(q.options) && q.options.map((opt: any, oIdx: number) => {
+                                // AI can generate either array of strings or array of {id, text}
+                                const isStringOpt = typeof opt === 'string';
+                                const optId = isStringOpt ? String.fromCharCode(65 + oIdx) : opt.id;
+                                const optText = isStringOpt ? opt : opt.text;
+                                const isSelected = answers[q.id] === optId;
+                                
+                                return (
+                                  <label key={optId} onClick={() => setAnswers(prev => ({ ...prev, [q.id]: optId }))} className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-colors ${isSelected ? 'border-sky-400 bg-sky-50' : 'border-slate-200 bg-white hover:border-sky-200'}`}>
+                                    <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-sky-500' : 'border-slate-300'}`}>
+                                       {isSelected && <div className="w-2.5 h-2.5 bg-sky-500 rounded-full" />}
+                                    </div>
+                                    <div className="font-medium text-slate-700 flex-1">
+                                      <span className="font-bold mr-2">{optId}.</span>
+                                      <LatexRenderer content={optText} />
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       <button onClick={handleSubmitQuiz} disabled={loading} className="w-full bg-amber-400 hover:bg-amber-500 disabled:opacity-50 text-white py-4 rounded-2xl font-extrabold text-xl transition-colors shadow-sm shadow-amber-200">
                         {loading ? "Đang Khóa Đáp Án..." : "Nộp Bài Ngay!"}
                       </button>
