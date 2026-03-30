@@ -6,7 +6,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 seconds timeout
+  timeout: 120000, // 120 seconds — AI generation can take 60-120s
 });
 
 // Request Interceptor
@@ -16,6 +16,11 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem('canvas_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Extra-long timeout for AI/exam generation endpoints
+    const url = config.url || '';
+    if (url.includes('/exams/generate') || url.includes('/ai/')) {
+      config.timeout = 180000; // 3 minutes for AI endpoints
     }
     return config;
   },
@@ -66,9 +71,12 @@ apiClient.interceptors.response.use(
         console.error('Server error:', data);
       }
       
-      // Return structured error
+      // Return structured error — preserve response so callers can inspect it
       const errorMessage = (data as any)?.message || (data as any)?.error || 'An error occurred';
-      return Promise.reject(new Error(errorMessage));
+      const structuredError = new Error(errorMessage) as any;
+      structuredError.statusCode = status;
+      structuredError.responseData = data;
+      return Promise.reject(structuredError);
     }
     
     // Handle network errors
