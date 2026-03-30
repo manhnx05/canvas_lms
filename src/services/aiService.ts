@@ -52,11 +52,20 @@ export const aiService = {
     Danh sách câu hỏi đề thi: ${JSON.stringify(questions)}
     Đáp án học sinh chọn (Map of questionId -> optionId): ${JSON.stringify(answers)}
     
-    Nhiệm vụ: Viết NHẬN XÉT chi tiết (không liệt kê lại câu hỏi) gửi trực tiếp cho học sinh đó (xưng hô Cô/Thầy và Con/Bé) gồm 3 phần rõ ràng:
-    1. Kiến thức đã hiểu tốt (Dựa vào các câu làm đúng và đối chiếu với chuẩn đầu ra)
-    2. Lỗ hổng kiến thức cần chú ý (Dựa vào các câu làm sai, giải thích đối chiếu với chuẩn đầu ra/yêu cầu)
-    3. Lời khuyên/Đề xuất cải thiện để học tốt hơn.
-    Hãy format bằng Markdown có in đậm tiêu đề. Không nói lan man.`;
+    Nhiệm vụ: Viết NHẬN XÉT gửi trực tiếp cho học sinh (xưng hô Cô/Thầy và Con/Bé) BẮT BUỘC tuân thủ ĐÚNG cấu trúc Markdown gồm 3 mục dưới đây (không thêm bớt tựa đề chính):
+    
+    **1. Phần đã tốt**
+    - Kiến thức: (Nhận xét những kiến thức môn học làm đúng)
+    - Năng lực: (Nhận xét kỹ năng tư duy logic, áp dụng, v.v.)
+    
+    **2. Phần hạn chế**
+    - Kiến thức: (Chỉ ra những lỗ hổng kiến thức con làm sai so với chuẩn đầu ra)
+    - Năng lực: (Yếu tố logic chưa tốt, thiếu cẩn thận, phân tích sai đồ thị...)
+    
+    **3. Lời khuyên/ lời đề xuất cải thiện**
+    - (Đưa ra các phương pháp học tập/ôn tập cụ thể giúp con tiến bộ hơn)
+
+    Tuyệt đối phải theo khung này, không liệt kê lại câu hỏi dài dòng.`;
 
     try {
       const result = await model.generateContent(prompt);

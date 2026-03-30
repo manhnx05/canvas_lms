@@ -313,5 +313,14 @@ export const examService = {
     });
     if (!attempt) throw new HttpError(404, 'Chưa có lượt làm bài');
     return attempt;
+  },
+
+  getExamStatistics: async (examId: string) => {
+    const attempts = await prisma.examAttempt.findMany({
+      where: { examId },
+      include: { user: { select: { id: true, name: true, role: true } } },
+      orderBy: { startTime: 'desc' },
+    });
+    return attempts;
   }
 };

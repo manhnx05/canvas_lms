@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Download, Printer, ArrowLeft, DownloadCloud, Send, Calendar, Clock } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { LatexRenderer } from '../components/LatexRenderer';
 import apiClient from '@/src/lib/apiClient';
 import html2canvas from 'html2canvas';
@@ -14,6 +15,7 @@ export const ExamViewer: React.FC = () => {
   const [exam, setExam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [viewAnswers, setViewAnswers] = useState(false);
+  const [statistics, setStatistics] = useState<any[]>([]);
   const printRef = useRef<HTMLDivElement>(null);
 
   // Giao bài state
@@ -43,6 +45,7 @@ export const ExamViewer: React.FC = () => {
     fetchExam();
     // Lấy danh sách lớp học thật
     apiClient.get('/courses').then(res => setCourses(res.data)).catch(console.error);
+    apiClient.get(`/exams/${id}/statistics`).then(res => setStatistics(res.data)).catch(console.error);
   }, [id]);
 
   const handleAssign = async (assignMaxAttempts: number = 1) => {
@@ -256,6 +259,49 @@ export const ExamViewer: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Thống kê học sinh làm bài */}
+      {statistics && statistics.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8 print:hidden">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"><div className="w-2 h-7 bg-amber-500 rounded-full"></div> Kết Quả Bài Làm ({statistics.length} lượt nộp)</h2>
+          <div className="space-y-5">
+            {statistics.map((stat: any) => (
+              <div key={stat.id} className="bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm transition hover:border-indigo-300">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-indigo-100 text-indigo-700 rounded-full font-bold flex justify-center items-center text-xl uppercase border-2 border-indigo-200 shadow-sm">
+                       {(stat.user?.name || "HS")[0]}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-indigo-900 text-xl">{stat.user?.name || 'Học sinh Ẩn danh'}</h3>
+                      <p className="text-sm text-gray-500 font-medium mt-1">
+                        Lượt thi số: <span className="text-indigo-600 font-bold px-2 py-0.5 bg-indigo-100 rounded mr-2">{stat.attemptNumber}</span> 
+                        {stat.status === 'completed' ? `Nộp lúc: ${new Date(stat.endTime || stat.startTime).toLocaleString('vi-VN')}` : `Bắt đầu: ${new Date(stat.startTime).toLocaleString('vi-VN')}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right flex flex-col items-end gap-2">
+                    <span className={`px-4 py-1.5 flex items-center gap-1 text-sm font-bold rounded-full border shadow-sm ${stat.status === 'completed' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
+                      {stat.status === 'completed' ? 'Đã Chấm Điểm' : 'Đang Làm...'}
+                    </span>
+                    {stat.status === 'completed' && (
+                       <p className="text-2xl font-black text-amber-500 bg-amber-50 px-4 py-1.5 rounded-xl border border-amber-200 shadow-sm">{stat.score !== null ? stat.score : '?'} <span className="text-sm text-amber-600">Khế</span></p>
+                    )}
+                  </div>
+                </div>
+                {stat.aiFeedback && (
+                  <div className="mt-4 bg-white p-6 rounded-xl border border-indigo-100 shadow-sm relative">
+                     <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-4 flex items-center gap-2">✨ Nhận Xét Của AI</h4>
+                     <div className="prose prose-sm max-w-none text-gray-800 font-medium leading-relaxed prose-p:my-1 prose-ul:my-1 prose-h1:text-lg prose-h2:text-base prose-h1:text-indigo-900 prose-h2:text-indigo-800 prose-strong:text-indigo-900">
+                        <ReactMarkdown>{stat.aiFeedback}</ReactMarkdown>
+                     </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Printable Area */}
       <div ref={printRef} className="bg-white p-10 rounded-xl shadow-sm border border-gray-100 print:shadow-none print:border-none print:p-0">
