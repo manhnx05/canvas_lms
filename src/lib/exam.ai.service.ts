@@ -4,6 +4,22 @@ import * as path from 'path';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
+/** Try gemini-2.5-flash first; fall back to gemini-1.5-flash if unavailable */
+async function getModel() {
+  const preferredModels = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+  for (const modelName of preferredModels) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      // Quick probe: list models gracefully — just return the model object
+      return { model, modelName };
+    } catch {
+      // continue to next
+    }
+  }
+  // Final fallback — return 1.5-flash unconditionally
+  return { model: genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }), modelName: 'gemini-1.5-flash' };
+}
+
 export interface ExamQuestion {
   id: string;
   level: 'NB' | 'TH' | 'VD' | 'VDC';
@@ -73,7 +89,7 @@ export async function extractTextFromFile(filePath: string): Promise<string> {
 }
 
 export async function generateExamWithAI(params: ExamGenerationParams): Promise<ExamQuestion[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const { model } = await getModel();
 
   const subjectName = SUBJECT_MAP[params.subject] || params.subject;
   const totalQuestions = params.nbCount + params.thCount + params.vdCount + params.vdcCount;
@@ -120,20 +136,38 @@ Trả về JSON hợp lệ theo format sau (không có markdown, chỉ JSON thu�
 
 Chỉ trả về JSON array, không có bất kỳ text nào khác.`;
 
-  try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
+  const tryGenerate = async (retryModel?: any): Promise<ExamQuestion[]> => {
+    const activeModel = retryModel || model;
+    try {
+      const result = await activeModel.generateContent(prompt);
+      const text = result.response.text().trim();
 
-    // Extract JSON from response
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('No JSON array found in response');
+      // Extract JSON from response
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        console.error('Raw AI response (no JSON array found):', text.slice(0, 500));
+        throw new Error('AI không trả về JSON hợp lệ. Vui lòng thử lại.');
+      }
 
-    const questions: ExamQuestion[] = JSON.parse(jsonMatch[0]);
-    return cleanQuestions(questions);
-  } catch (error) {
-    console.error('AI generation error:', error);
-    throw new Error('Không thể tạo đề thi bằng AI. Vui lòng thử lại.');
-  }
+      const questions: ExamQuestion[] = JSON.parse(jsonMatch[0]);
+      return cleanQuestions(questions);
+    } catch (error: any) {
+      // If this is the preferred model failing, retry with fallback
+      if (!retryModel) {
+        console.warn('gemini-2.5-flash failed, falling back to gemini-1.5-flash:', error.message);
+        const fallback = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        return tryGenerate(fallback);
+      }
+      console.error('AI generation error:', error);
+      const userMsg = error.message?.includes('API key') ? 'GEMINI_API_KEY không hợp lệ hoặc chưa được cấu hình'
+        : error.message?.includes('quota') ? 'Vượt giới hạn quota Gemini API'
+        : error.message?.includes('404') ? 'Model AI không tồn tại hoặc không khả dụng'
+        : error.message || 'Không thể tạo đề thi bằng AI';
+      throw new Error(userMsg);
+    }
+  };
+
+  return tryGenerate();
 }
 
 export interface TextbookGenerationParams extends ExamGenerationParams {
@@ -144,7 +178,7 @@ export interface TextbookGenerationParams extends ExamGenerationParams {
 }
 
 export async function generateExamFromTextbook(params: TextbookGenerationParams): Promise<ExamQuestion[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const { model } = await getModel();
   const totalQuestions = params.nbCount + params.thCount + params.vdCount + params.vdcCount;
 
   let filteredLessons = params.textbookData.lessons;
@@ -157,7 +191,6 @@ export async function generateExamFromTextbook(params: TextbookGenerationParams)
   } else if (params.textbookScope === 'lesson' && params.textbookLesson) {
     filteredLessons = filteredLessons.filter((l: any) => l.lesson_id === params.textbookLesson);
   } else if (params.textbookScope === 'custom' && params.customTopic) {
-    // If we want exact lessons matching customTopic (e.g., "1,2,3")
     const specificIds = params.customTopic.split(',').map(s => parseInt(s.trim()));
     filteredLessons = filteredLessons.filter((l: any) => specificIds.includes(l.lesson_id));
   }
@@ -203,13 +236,19 @@ Chỉ trả về JSON array, không có bất kỳ text nào khác.`;
     const text = result.response.text().trim();
 
     const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('No JSON array found in response');
+    if (!jsonMatch) {
+      console.error('Raw AI textbook response (no JSON array):', text.slice(0, 500));
+      throw new Error('AI không trả về JSON hợp lệ. Vui lòng thử lại.');
+    }
 
     const questions: ExamQuestion[] = JSON.parse(jsonMatch[0]);
     return cleanQuestions(questions);
-  } catch (error) {
+  } catch (error: any) {
     console.error('AI textbook generation error:', error);
-    throw new Error('Không thể tạo đề thi bằng AI từ SGK. Vui lòng thử lại.');
+    const userMsg = error.message?.includes('API key') ? 'GEMINI_API_KEY không hợp lệ hoặc chưa được cấu hình'
+      : error.message?.includes('quota') ? 'Vượt giới hạn quota Gemini API'
+      : error.message || 'Không thể tạo đề thi từ SGK bằng AI';
+    throw new Error(userMsg);
   }
 }
 
