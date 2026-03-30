@@ -23,7 +23,12 @@ export function AssignmentDetail({ role }: { role: Role }) {
   const loadData = () => {
     apiClient.get(`/assignments/${id}`)
       .then(res => res.data)
-      .then(data => setAssignment(data));
+      .then(data => {
+        setAssignment(data);
+        if (data.mySubmission?.answers) {
+           setAnswers(data.mySubmission.answers);
+        }
+      });
   };
 
   useEffect(() => { loadData(); }, [id]);
@@ -163,15 +168,38 @@ export function AssignmentDetail({ role }: { role: Role }) {
                                 const optText = isStringOpt ? opt : opt.text;
                                 const isSelected = answers[q.id] === optId;
                                 
+                                const isGraded = mySub && mySub.status === 'graded';
+                                const isCorrectOpt = (q.answer || q.correctOptionId) === optId;
+                                
+                                let containerClass = isSelected ? 'border-sky-400 bg-sky-50' : 'border-slate-200 bg-white hover:border-sky-200';
+                                let circleClass = isSelected ? 'border-sky-500' : 'border-slate-300';
+                                let dotClass = 'bg-sky-500';
+                                
+                                if (isGraded) {
+                                  if (isCorrectOpt) {
+                                    containerClass = 'border-emerald-500 bg-emerald-50';
+                                    circleClass = 'border-emerald-500 bg-emerald-100';
+                                    dotClass = 'bg-emerald-600';
+                                  } else if (isSelected && !isCorrectOpt) {
+                                    containerClass = 'border-rose-500 bg-rose-50';
+                                    circleClass = 'border-rose-500 bg-rose-100';
+                                    dotClass = 'bg-rose-600';
+                                  } else {
+                                    containerClass = 'border-slate-200 bg-slate-50 opacity-60';
+                                    circleClass = 'border-slate-200';
+                                  }
+                                }
+                                
                                 return (
-                                  <label key={optId} onClick={() => setAnswers(prev => ({ ...prev, [q.id]: optId }))} className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-colors ${isSelected ? 'border-sky-400 bg-sky-50' : 'border-slate-200 bg-white hover:border-sky-200'}`}>
-                                    <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-sky-500' : 'border-slate-300'}`}>
-                                       {isSelected && <div className="w-2.5 h-2.5 bg-sky-500 rounded-full" />}
+                                  <label key={optId} onClick={() => !isGraded && setAnswers(prev => ({ ...prev, [q.id]: optId }))} className={`flex items-start gap-3 p-4 border-2 rounded-xl transition-colors ${!isGraded ? 'cursor-pointer' : 'cursor-default'} ${containerClass}`}>
+                                    <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${circleClass}`}>
+                                       {isSelected && <div className={`w-2.5 h-2.5 rounded-full ${dotClass}`} />}
                                     </div>
                                     <div className="font-medium text-slate-700 flex-1">
                                       <span className="font-bold mr-2">{optId}.</span>
                                       <LatexRenderer content={optText} />
                                     </div>
+                                    {isGraded && isCorrectOpt && <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />}
                                   </label>
                                 );
                               })}
@@ -179,9 +207,11 @@ export function AssignmentDetail({ role }: { role: Role }) {
                           </div>
                         );
                       })}
-                      <button onClick={handleSubmitQuiz} disabled={loading} className="w-full bg-amber-400 hover:bg-amber-500 disabled:opacity-50 text-white py-4 rounded-2xl font-extrabold text-xl transition-colors shadow-sm shadow-amber-200">
-                        {loading ? "Đang Khóa Đáp Án..." : "Nộp Bài Ngay!"}
-                      </button>
+                      {!mySub || mySub.status === 'pending' ? (
+                        <button onClick={handleSubmitQuiz} disabled={loading} className="w-full bg-amber-400 hover:bg-amber-500 disabled:opacity-50 text-white py-4 rounded-2xl font-extrabold text-xl transition-colors shadow-sm shadow-amber-200">
+                          {loading ? "Đang Khóa Đáp Án..." : "Nộp Bài Ngay!"}
+                        </button>
+                      ) : null}
                     </div>
                   ) : (
                     // CŨ: Tải File
@@ -231,14 +261,17 @@ export function AssignmentDetail({ role }: { role: Role }) {
                   </div>
                   
                   {mySub.aiFeedback && (
-                    <div className="bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-8 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 bg-indigo-200 text-indigo-800 px-4 py-1 rounded-bl-2xl font-bold flex items-center gap-1 text-sm shadow-sm">
-                        <Sparkles className="w-4 h-4" /> Báo Cáo Từ Thầy Cô AI
-                      </div>
-                      <div className="prose prose-indigo prose-lg font-medium text-indigo-900 mt-4 leading-relaxed max-w-none prose-strong:text-indigo-950 prose-p:my-2">
+                    <details className="bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-6 group cursor-pointer">
+                      <summary className="font-bold flex items-center justify-between text-indigo-900 list-none outline-none">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-5 h-5" /> Đọc Lời Bình Nhận Xét Của Thầy Cô AI
+                        </div>
+                        <span className="bg-indigo-200 text-indigo-800 px-3 py-1 rounded-full text-xs transition-transform group-open:rotate-180">▼ Mở Ra</span>
+                      </summary>
+                      <div className="prose prose-indigo prose-lg font-medium text-indigo-900 mt-6 pt-4 border-t-2 border-indigo-200 leading-relaxed max-w-none prose-strong:text-indigo-950 prose-p:my-2 cursor-text">
                          <ReactMarkdown>{mySub.aiFeedback}</ReactMarkdown>
                       </div>
-                    </div>
+                    </details>
                   )}
                 </div>
               ) : null}
@@ -303,9 +336,17 @@ export function AssignmentDetail({ role }: { role: Role }) {
                            </div>
                            
                            {sub.aiFeedback && (
-                              <div className="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-900 prose prose-sm max-w-none">
-                                <ReactMarkdown>{sub.aiFeedback}</ReactMarkdown>
-                              </div>
+                              <details className="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-4 mt-4 group cursor-pointer outline-none">
+                                <summary className="font-bold text-indigo-800 list-none flex items-center justify-between outline-none">
+                                  <div className="flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" /> Xem Nhận Xét AI
+                                  </div>
+                                  <span className="text-indigo-500 group-open:rotate-180 transition-transform text-xs bg-indigo-100 px-2 py-1 rounded-md">▼ Mở</span>
+                                </summary>
+                                <div className="mt-4 pt-4 border-t border-indigo-200 text-indigo-900 prose prose-sm max-w-none cursor-text">
+                                  <ReactMarkdown>{sub.aiFeedback}</ReactMarkdown>
+                                </div>
+                              </details>
                            )}
                         </div>
                      </div>

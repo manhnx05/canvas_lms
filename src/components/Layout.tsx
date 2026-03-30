@@ -11,11 +11,12 @@ export function Layout({ role, onLogout, children }: { role: Role, onLogout: () 
   const studentNav = [
     { icon: Home, label: 'Bảng điều khiển', path: '/' },
     { icon: BookOpen, label: 'Môn học', path: '/courses' },
+    { icon: Users, label: 'Thành viên', path: '/students' },
     { icon: PenTool, label: 'Bài tập', path: '/assignments' },
     { icon: MessageCircle, label: 'Hỏi AI', path: '/ai-chat' },
     { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
-    { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
     { icon: Trophy, label: 'Góc khen thưởng', path: '/rewards' },
+    { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
   ];
 
   const teacherNav = [

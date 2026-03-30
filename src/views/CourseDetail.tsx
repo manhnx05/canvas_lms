@@ -79,7 +79,7 @@ export function CourseDetail({ role }: { role: Role }) {
             <AssignmentsTab courseId={course.id} courseTitle={course.title} assignments={course.assignments || []} role={role} onRefresh={fetchCourse} />
           )}
           {activeTab === 'grades' && (
-            <GradesTab assignments={course.assignments || []} />
+            <GradesTab assignments={course.assignments || []} role={role} />
           )}
           {activeTab === 'members' && (
             <MembersTab courseTitle={course.title} teacher={course.teacher} members={course.people || []} role={role} />
