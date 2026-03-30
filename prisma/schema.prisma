@@ -232,7 +232,7 @@ model Notification {
 model Exam {
   id          String     @id @default(uuid())
   title       String
-  subject     String     // 'math' | 'physics' | 'chemistry' | 'biology' | 'literature' | 'history' | 'geography'
+  subject     String     // tên môn/lớp học (lấy từ Course.title)
   grade       String     // '1' | '2' | '3' | '4' | '5'
   duration    Int        // phút
   totalScore  Int        @default(10)
@@ -240,8 +240,10 @@ model Exam {
   difficulty  String     @default("medium")  // 'easy' | 'medium' | 'hard'
   questions   Json       // mảng ExamQuestion[]
   courseId    String?
+  courseName  String?    // tên lớp học đã giao
   createdBy   String     // userId giáo viên
   status      String     @default("draft") // 'draft' | 'published'
+  deadline    DateTime?  // thời hạn khóa bài thi (null = không giới hạn)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
