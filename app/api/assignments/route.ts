@@ -5,7 +5,7 @@ import { withErrorHandler } from '@/src/utils/errorHandler';
 import prisma from '@/src/lib/prisma';
 
 export const GET = withErrorHandler(async (req: Request) => {
-  await requireAuth(req);
+  const user = await requireAuth(req);
   
   const { searchParams } = new URL(req.url);
   const courseId = searchParams.get('courseId');
@@ -20,20 +20,36 @@ export const GET = withErrorHandler(async (req: Request) => {
   if (userId) {
     validateUUID(userId, 'User ID');
   }
+
+  // Filter: only assignments belonging to courses the user is enrolled in
+  if (user.role === 'student' || user.role === 'teacher') {
+    where.course = {
+      enrollments: {
+        some: { userId: user.id }
+      }
+    };
+  }
   
   const assignments = await prisma.assignment.findMany({
     where,
     include: {
       course: { select: { id: true, title: true } },
-      submissions: userId ? { 
-        where: { userId: userId },
+      submissions: user.id ? { 
+        where: { userId: user.id },
         select: { id: true, status: true, score: true, createdAt: true }
       } : false,
     },
     orderBy: { dueDate: 'asc' },
   });
   
-  return NextResponse.json(assignments);
+  // Transform to match frontend expectations (mySubmission)
+  const formattedAssignments = assignments.map(a => ({
+    ...a,
+    mySubmission: a.submissions?.[0] || null,
+    submissions: undefined // Remove the array to avoid duplication/confusion
+  }));
+
+  return NextResponse.json(formattedAssignments);
 });
 
 export const POST = withErrorHandler(async (req: Request) => {

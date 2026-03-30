@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PenTool, Star, Clock, CheckCircle, Search, Filter } from 'lucide-react';
+import { PenTool, Star, Clock, CheckCircle, Search, Filter, FileText } from 'lucide-react';
 import { Role } from '@/src/types';
 import { useAssignments } from '../hooks/useAssignments';
 import { CreateAssignmentModal } from '../features/assignments/CreateAssignmentModal';
@@ -49,13 +49,19 @@ export function Assignments({ role }: { role: Role }) {
 
       <div className="bg-white rounded-3xl border-2 border-sky-100 shadow-sm overflow-hidden">
         <div className="grid grid-cols-1 divide-y-2 divide-sky-50">
-          {assignments.map(assignment => (
-            <div key={assignment.id} onClick={() => navigate(`/assignments/${assignment.id}`)} className="cursor-pointer p-6 flex flex-col md:flex-row md:items-center gap-6 hover:bg-sky-50/50 transition-colors group">
+          {assignments.map((assignment: any) => (
+            <div key={assignment.id} onClick={() => {
+              if (assignment.itemType === 'exam') {
+                 navigate(role === 'student' ? `/exams/${assignment.id}/take` : `/exams/${assignment.id}`);
+              } else {
+                 navigate(`/assignments/${assignment.id}`);
+              }
+            }} className="cursor-pointer p-6 flex flex-col md:flex-row md:items-center gap-6 hover:bg-sky-50/50 transition-colors group">
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${
                 assignment.status === 'pending' ? 'bg-amber-100 text-amber-500' : 
                 assignment.mySubmission?.status === 'submitted' ? 'bg-sky-100 text-sky-500' : 'bg-emerald-100 text-emerald-500'
               }`}>
-                {assignment.status === 'pending' ? <Clock className="w-8 h-8" /> : 
+                {assignment.itemType === 'exam' ? <FileText className="w-8 h-8" /> : assignment.status === 'pending' ? <Clock className="w-8 h-8" /> : 
                  assignment.mySubmission?.status === 'submitted' ? <PenTool className="w-8 h-8" /> : <CheckCircle className="w-8 h-8" />}
               </div>
               
@@ -64,7 +70,12 @@ export function Assignments({ role }: { role: Role }) {
                   <span className="px-3 py-1 bg-sky-100 text-sky-600 rounded-lg text-xs font-bold uppercase tracking-wider">
                     {assignment.courseName}
                   </span>
-                  {role === 'student' && (
+                  {assignment.itemType === 'exam' && (
+                    <span className="px-2 py-1 bg-rose-100 text-rose-600 rounded-lg text-xs font-bold uppercase tracking-wider border border-rose-200">
+                      ĐỀ THI
+                    </span>
+                  )}
+                  {role === 'student' && assignment.itemType !== 'exam' && (
                     <span className="flex items-center gap-1 text-amber-500 font-bold text-sm">
                       +{assignment.starsReward} <Star className="w-4 h-4 fill-current" />
                     </span>
@@ -73,7 +84,7 @@ export function Assignments({ role }: { role: Role }) {
                 <h3 className="text-xl font-extrabold text-sky-900 truncate group-hover:text-sky-600 transition-colors">
                   {assignment.title}
                 </h3>
-                <p className="text-sky-500 font-medium mt-1">Hạn chót: {assignment.dueDate}</p>
+                <p className="text-sky-500 font-medium mt-1">Hạn chót: {assignment.dueDate ? new Date(assignment.dueDate).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : 'Không giới hạn'}</p>
               </div>
 
               <div className="flex items-center gap-3 shrink-0">

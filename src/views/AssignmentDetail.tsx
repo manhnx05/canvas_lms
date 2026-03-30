@@ -101,6 +101,18 @@ export function AssignmentDetail({ role }: { role: Role }) {
     ? dueDate.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', dateStyle: 'full', timeStyle: 'short' })
     : assignment.dueDate;
 
+  // Tính thống kê cho quiz đã chấm
+  let correctCount = 0;
+  const totalQuestions = isQuiz ? assignment.questions.length : 0;
+  if (isQuiz && mySub?.status === 'graded') {
+    assignment.questions.forEach((q: any) => {
+      const correctOpt = q.answer || q.correctOptionId;
+      if (answers[q.id] === correctOpt) correctCount++;
+    });
+  }
+  const scoreOn10 = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) / 10 : 0;
+  const ratio = totalQuestions > 0 ? Math.round(correctCount / totalQuestions * 100) : 0;
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
       <Link to="/courses" className="inline-flex items-center gap-2 text-sky-500 font-bold hover:text-sky-700">
@@ -249,16 +261,46 @@ export function AssignmentDetail({ role }: { role: Role }) {
                 </div>
               ) : mySub.status === 'graded' ? (
                 <div className="space-y-6">
-                  <div className="bg-sky-50 border-2 border-sky-200 p-6 rounded-3xl flex items-center justify-between gap-4">
-                     <div>
-                       <h3 className="text-sky-900 font-extrabold text-2xl">Kết Quả Bài Tập!</h3>
-                       <p className="text-sky-700 font-medium text-lg mt-1">Bé đã siêu xuất sắc nhận được Khế Thưởng.</p>
-                     </div>
-                     <div className="flex flex-col items-center bg-white py-3 px-6 rounded-2xl border-2 border-amber-200 shadow-sm shadow-amber-100">
-                        <Star className="w-10 h-10 text-amber-500 fill-current mb-1" />
-                        <span className="text-amber-600 font-black text-2xl">+{mySub.score} Khế</span>
-                     </div>
-                  </div>
+                  {isQuiz ? (
+                    <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-8 mb-8 text-white shadow-xl">
+                      <h2 className="text-3xl font-extrabold mb-6 text-center tracking-wide">🎉 Thống Kê Kết Quả 🎉</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center border border-white/30">
+                          <p className="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Số Câu Đúng</p>
+                          <p className="text-4xl font-black">{correctCount}</p>
+                          <p className="text-indigo-200 text-sm mt-1">/ {totalQuestions} câu</p>
+                        </div>
+                        <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 text-center border-2 border-white/50 transform scale-105 shadow-lg">
+                          <p className="text-indigo-100 text-xs font-bold uppercase tracking-widest mb-1">Điểm Số Thang 10</p>
+                          <p className="text-5xl font-black text-yellow-300 drop-shadow-md">{scoreOn10.toFixed(1)}</p>
+                          <p className="text-indigo-100 text-sm mt-1">/ 10.0</p>
+                        </div>
+                        <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center border border-white/30">
+                          <p className="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Khế Thưởng</p>
+                          <p className="text-4xl font-black text-amber-300">+{mySub.score}</p>
+                          <p className="text-indigo-200 text-sm flex justify-center items-center mt-1"><Star className="w-4 h-4 fill-current text-amber-300" /> Tối đa: {assignment.starsReward}</p>
+                        </div>
+                        <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center border border-white/30">
+                          <p className="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Đánh Giá</p>
+                          <p className="text-4xl font-black">{ratio}<span className="text-2xl">%</span></p>
+                          <p className="text-indigo-200 text-sm mt-1">
+                            {ratio >= 80 ? '🏆 Siêu Đỉnh' : ratio >= 60 ? '👍 Rất Tốt' : '📚 Cố Gắng Lên'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-sky-50 border-2 border-sky-200 p-6 rounded-3xl flex items-center justify-between gap-4">
+                       <div>
+                         <h3 className="text-sky-900 font-extrabold text-2xl">Kết Quả Bài Tập!</h3>
+                         <p className="text-sky-700 font-medium text-lg mt-1">Bé đã siêu xuất sắc nhận được Khế Thưởng.</p>
+                       </div>
+                       <div className="flex flex-col items-center bg-white py-3 px-6 rounded-2xl border-2 border-amber-200 shadow-sm shadow-amber-100">
+                          <Star className="w-10 h-10 text-amber-500 fill-current mb-1" />
+                          <span className="text-amber-600 font-black text-2xl">+{mySub.score} Khế</span>
+                       </div>
+                    </div>
+                  )}
                   
                   {mySub.aiFeedback && (
                     <details className="bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-6 group cursor-pointer">
