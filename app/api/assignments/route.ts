@@ -44,7 +44,8 @@ export const POST = withErrorHandler(async (req: Request) => {
   
   // Verify course exists
   const course = await prisma.course.findUnique({
-    where: { id: validatedData.courseId }
+    where: { id: validatedData.courseId },
+    include: { enrollments: true }
   });
   
   if (!course) {
@@ -67,6 +68,19 @@ export const POST = withErrorHandler(async (req: Request) => {
       course: { select: { id: true, title: true } }
     }
   });
+
+  // Gửi thông báo cho toàn bộ học sinh trong khóa học
+  if (course.enrollments && course.enrollments.length > 0) {
+    const notifications = course.enrollments.map(e => ({
+      userId: e.userId,
+      title: `Bài tập mới: ${assignment.title}`,
+      content: `Giáo viên vừa giao bài tập trong lớp ${course.title}. Hạn chót nộp bài: ${assignment.dueDate}`
+    }));
+
+    await prisma.notification.createMany({
+      data: notifications
+    });
+  }
   
   return NextResponse.json(assignment, { status: 201 });
 });
