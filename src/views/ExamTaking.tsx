@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, CheckCircle, Brain } from 'lucide-react';
+import { Clock, CheckCircle } from 'lucide-react';
 import apiClient from '@/src/lib/apiClient';
 import { LatexRenderer } from '../components/LatexRenderer';
 
@@ -112,7 +112,7 @@ export const ExamTaking = () => {
         answers
       });
       setAttempt(res.data);
-      alert('Nộp bài thành công!');
+      // No intrusive alert — result will be shown in the UI below
     } catch (error) {
       console.error(error);
       alert('Lỗi nộp bài');
@@ -142,6 +142,17 @@ export const ExamTaking = () => {
 
   const isCompleted = attempt?.status === 'completed';
 
+  // Tính số câu đúng khi đã hoàn thành
+  const correctCount = isCompleted && exam?.questions
+    ? exam.questions.filter((q: any) => {
+        const chosen = answers.find((a: any) => a.questionId === q.id)?.optionId;
+        return chosen && chosen === (q.answer || q.correctOptionId);
+      }).length
+    : 0;
+  const totalQuestions = exam?.questions?.length ?? 0;
+  // Điểm thạt tính trên 10
+  const scoreOn10 = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) / 10 : 0;
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6 flex justify-between items-center sticky top-4 z-10">
@@ -162,13 +173,38 @@ export const ExamTaking = () => {
         </div>
       </div>
 
-      {isCompleted && attempt.aiFeedback && (
-        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-2xl p-6 mb-8 shadow-sm">
-          <h2 className="text-xl font-bold text-indigo-900 mb-4 flex items-center gap-2">
-             <Brain size={24} className="text-indigo-600" /> Nhận xét từ AI Giáo Viên
-          </h2>
-          <div className="text-indigo-900 leading-relaxed max-w-none text-base space-y-2"
-               dangerouslySetInnerHTML={{ __html: attempt.aiFeedback.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+      {isCompleted && (
+        <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 mb-8 text-white shadow-xl">
+          <h2 className="text-2xl font-extrabold mb-5 text-center tracking-wide">🎉 Kết Quả Bài Thi</h2>
+          <div className="grid grid-cols-3 gap-4 mb-5">
+            <div className="bg-white/20 backdrop-blur rounded-xl p-4 text-center">
+              <p className="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Số Câu Đúng</p>
+              <p className="text-4xl font-black">{correctCount}</p>
+              <p className="text-indigo-200 text-sm mt-1">/ {totalQuestions} câu</p>
+            </div>
+            <div className="bg-white/30 backdrop-blur rounded-xl p-4 text-center border-2 border-white/40">
+              <p className="text-indigo-100 text-xs font-bold uppercase tracking-widest mb-1">Điểm Số (Thang 10)</p>
+              <p className="text-5xl font-black text-yellow-300">{scoreOn10.toFixed(1)}</p>
+              <p className="text-indigo-200 text-sm mt-1">/ 10.0 điểm</p>
+            </div>
+            <div className="bg-white/20 backdrop-blur rounded-xl p-4 text-center">
+              <p className="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Tỉ Lệ Đúng</p>
+              <p className="text-4xl font-black">{totalQuestions > 0 ? Math.round(correctCount / totalQuestions * 100) : 0}<span className="text-2xl">%</span></p>
+              <p className="text-indigo-200 text-sm mt-1">
+                {correctCount / totalQuestions >= 0.8 ? '🏆 Xuất Sắc' : correctCount / totalQuestions >= 0.6 ? '👍 Khá' : '📚 Cần Cố Gắng'}
+              </p>
+            </div>
+          </div>
+          {attempt?.aiFeedback && (
+            <details className="bg-white/10 rounded-xl p-4 cursor-pointer group">
+              <summary className="font-bold flex items-center justify-between list-none outline-none">
+                <div className="flex items-center gap-2">✨ Nhận Xét Chi Tiết Từ AI Giáo Viên</div>
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs group-open:rotate-180 transition-transform">▼ Mở</span>
+              </summary>
+              <div className="mt-4 pt-4 border-t border-white/20 text-indigo-100 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: attempt.aiFeedback.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+            </details>
+          )}
         </div>
       )}
 

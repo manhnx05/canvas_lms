@@ -265,7 +265,21 @@ export const ExamViewer: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8 print:hidden">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"><div className="w-2 h-7 bg-amber-500 rounded-full"></div> Kết Quả Bài Làm ({statistics.length} lượt nộp)</h2>
           <div className="space-y-5">
-            {statistics.map((stat: any) => (
+            {statistics.map((stat: any) => {
+              // Tính số câu đúng của từng học sinh
+              const questionsArr = exam?.questions ?? [];
+              const statCorrect = stat.status === 'completed'
+                ? questionsArr.filter((q: any) => {
+                    const chosen = stat.answers?.find((a: any) => a.questionId === q.id)?.optionId;
+                    return chosen && chosen === (q.answer || q.correctOptionId);
+                  }).length
+                : null;
+              const totalQ = questionsArr.length;
+              const statScore10 = statCorrect !== null && totalQ > 0
+                ? Math.round((statCorrect / totalQ) * 100) / 10
+                : null;
+
+              return (
               <div key={stat.id} className="bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm transition hover:border-indigo-300">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
@@ -284,21 +298,34 @@ export const ExamViewer: React.FC = () => {
                     <span className={`px-4 py-1.5 flex items-center gap-1 text-sm font-bold rounded-full border shadow-sm ${stat.status === 'completed' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
                       {stat.status === 'completed' ? 'Đã Chấm Điểm' : 'Đang Làm...'}
                     </span>
-                    {stat.status === 'completed' && (
-                       <p className="text-2xl font-black text-amber-500 bg-amber-50 px-4 py-1.5 rounded-xl border border-amber-200 shadow-sm">{stat.score !== null ? stat.score : '?'} <span className="text-sm text-amber-600">Khế</span></p>
+                    {stat.status === 'completed' && statCorrect !== null && (
+                      <div className="flex gap-2 items-center">
+                        <div className="text-center bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-1.5">
+                          <p className="text-xs text-indigo-500 font-bold">Số Câu Đúng</p>
+                          <p className="font-black text-indigo-700 text-lg">{statCorrect}<span className="text-xs font-normal text-indigo-400">/{totalQ}</span></p>
+                        </div>
+                        <div className="text-center bg-amber-50 border border-amber-200 rounded-xl px-3 py-1.5">
+                          <p className="text-xs text-amber-500 font-bold">Thang 10</p>
+                          <p className="font-black text-amber-600 text-lg">{statScore10?.toFixed(1)}<span className="text-xs font-normal text-amber-400">/10</span></p>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
                 {stat.aiFeedback && (
-                  <div className="mt-4 bg-white p-6 rounded-xl border border-indigo-100 shadow-sm relative">
-                     <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-4 flex items-center gap-2">✨ Nhận Xét Của AI</h4>
-                     <div className="prose prose-sm max-w-none text-gray-800 font-medium leading-relaxed prose-p:my-1 prose-ul:my-1 prose-h1:text-lg prose-h2:text-base prose-h1:text-indigo-900 prose-h2:text-indigo-800 prose-strong:text-indigo-900">
+                  <details className="mt-4 bg-white rounded-xl border border-indigo-100 shadow-sm cursor-pointer group p-4 outline-none">
+                     <summary className="text-sm font-bold text-indigo-600 flex items-center justify-between list-none outline-none">
+                       <span className="flex items-center gap-2">✨ Nhận Xét Của AI</span>
+                       <span className="bg-indigo-50 px-2 py-0.5 rounded-full text-xs group-open:rotate-180 transition-transform">▼ Mở</span>
+                     </summary>
+                     <div className="mt-4 pt-4 border-t border-indigo-100 prose prose-sm max-w-none text-gray-800 font-medium leading-relaxed prose-p:my-1 prose-ul:my-1 prose-h1:text-lg prose-h2:text-base prose-h1:text-indigo-900 prose-h2:text-indigo-800 prose-strong:text-indigo-900 cursor-text">
                         <ReactMarkdown>{stat.aiFeedback}</ReactMarkdown>
                      </div>
-                  </div>
+                  </details>
                 )}
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       )}
