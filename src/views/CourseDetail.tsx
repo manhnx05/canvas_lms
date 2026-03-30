@@ -6,6 +6,7 @@ import { CourseModulesTab } from '../features/course/CourseModulesTab';
 import { AnnouncementsTab } from '../features/course/AnnouncementsTab';
 import { AssignmentsTab } from '../features/course/AssignmentsTab';
 import { GradesTab } from '../features/course/GradesTab';
+import { MembersTab } from '../features/course/MembersTab';
 
 import { useCourseDetail } from '../hooks/useCourseDetail';
 
@@ -19,6 +20,7 @@ export function CourseDetail({ role }: { role: Role }) {
     { id: 'announcements', icon: Megaphone, label: 'Thông Báo' },
     { id: 'assignments', icon: CheckSquare, label: 'Bài Tập' },
     { id: 'grades', icon: BarChart, label: 'Điểm Số' },
+    { id: 'members', icon: Users, label: 'Thành Viên' },
   ];
 
   if (loading || !course) return <div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
@@ -78,6 +80,9 @@ export function CourseDetail({ role }: { role: Role }) {
           )}
           {activeTab === 'grades' && (
             <GradesTab assignments={course.assignments || []} />
+          )}
+          {activeTab === 'members' && (
+            <MembersTab courseTitle={course.title} teacher={course.teacher} members={course.people || []} role={role} />
           )}
         </div>
       </div>
