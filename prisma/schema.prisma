@@ -276,10 +276,11 @@ model ExamAttempt {
   id        String   @id @default(uuid())
   examId    String
   userId    String
-  startTime DateTime @default(now())
-  endTime   DateTime?
-  score     Float?
-  status    String   @default("in_progress") // 'in_progress' | 'completed'
+  startTime  DateTime @default(now())
+  endTime    DateTime?
+  score      Float?
+  status     String   @default("in_progress") // 'in_progress' | 'completed'
+  aiFeedback String?
 
   exam      Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
