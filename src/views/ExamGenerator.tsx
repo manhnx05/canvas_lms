@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Settings, CheckCircle, Settings2, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
+import { BookOpen, Settings, CheckCircle, Settings2, Sparkles, ArrowRight, ArrowLeft, Send, Clock, Calendar } from 'lucide-react';
 import { LatexRenderer } from '../components/LatexRenderer';
 import apiClient from '@/src/lib/apiClient';
 
 interface ExamConfig {
   title: string;
-  subject: string;
+  subject: string;   // Course.title (môn/lớp học)
   grade: string;
   duration: number;
   totalScore: number;
@@ -25,14 +25,26 @@ export const ExamGenerator: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
+  const [assigning, setAssigning] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
+  // Danh sách lớp học thật từ API
   const [courses, setCourses] = useState<any[]>([]);
   const [textbook, setTextbook] = useState<any>(null);
+  const [createdExamId, setCreatedExamId] = useState<string | null>(null);
+
+  // Giao bài settings
   const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [deadline, setDeadline] = useState('');
+  const [assignDuration, setAssignDuration] = useState<number | ''>('');
 
   React.useEffect(() => {
-    apiClient.get('/courses').then(res => setCourses(res.data)).catch(console.error);
+    // Lấy danh sách lớp học (môn học) thật từ module Quản lý Lớp học
+    apiClient.get('/courses')
+      .then(res => setCourses(res.data))
+      .catch(console.error);
+
     fetch('/textbooks/tu-nhien-xa-hoi-3.json')
       .then(res => res.json())
       .then(data => setTextbook(data))
@@ -41,8 +53,8 @@ export const ExamGenerator: React.FC = () => {
 
   const [config, setConfig] = useState<ExamConfig>({
     title: 'Đề kiểm tra trắc nghiệm',
-    subject: 'math',
-    grade: '1',
+    subject: '',   // Sẽ được chọn từ dropdown lớp học
+    grade: '3',
     duration: 45,
     totalScore: 10,
     difficulty: 'medium',
@@ -59,32 +71,43 @@ export const ExamGenerator: React.FC = () => {
   const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
 
   const handleConfigChange = (key: keyof ExamConfig, value: string | number | boolean) => {
-    // Handle number inputs - prevent NaN
-    if (typeof value === 'number' && isNaN(value)) {
-      return; // Don't update if value is NaN
-    }
-    setConfig(prev => ({ ...prev, [key]: value }));
+    if (typeof value === 'number' && isNaN(value)) return;
+    setConfig(prev => {
+      const next = { ...prev, [key]: value };
+      // Khi chọn lớp học, auto-fill tên đề thi
+      if (key === 'subject') {
+        next.title = `Đề kiểm tra - ${value}`;
+      }
+      return next;
+    });
   };
 
   const generateAIExam = async () => {
+    if (!config.subject) {
+      setError('Vui lòng chọn lớp học / môn học trước khi tạo đề.');
+      return;
+    }
     try {
       setLoading(true);
       setError('');
-      
+      setCreatedExamId(null);
+
       const userStr = localStorage.getItem('canvas_user');
       const user = userStr ? JSON.parse(userStr) : null;
 
       const endpoint = config.textbookMode ? '/exams/generate-from-textbook' : '/exams/generate-ai-quick';
-      const payload = config.textbookMode 
+      const payload = config.textbookMode
         ? { ...config, createdBy: user?.id, textbookData: textbook }
         : { ...config, createdBy: user?.id };
-        
+
       const res = await apiClient.post(endpoint, payload).catch((err: any) => {
         throw new Error(err.response?.data?.error || 'Lỗi tạo đề');
       });
-      
+
       const data = res.data;
       setGeneratedQuestions(data.questions);
+      // Lưu lại examId để dùng khi giao bài
+      if (data.exam?.id) setCreatedExamId(data.exam.id);
       setStep(2);
     } catch (err: any) {
       setError(err.message);
@@ -98,29 +121,27 @@ export const ExamGenerator: React.FC = () => {
       setError('Vui lòng chọn lớp học để giao bài');
       return;
     }
-    
+    if (!createdExamId) {
+      setError('Không tìm thấy ID đề thi, vui lòng tạo lại đề.');
+      return;
+    }
+
     try {
-      setLoading(true);
+      setAssigning(true);
       setError('');
-      const selectedCourse = courses.find((c: any) => c.id === selectedCourseId);
-      
-      await apiClient.post('/assignments', {
-        title: config.title,
-        description: `Bài tập trắc nghiệm ${config.subject}`,
+
+      const res = await apiClient.post(`/exams/${createdExamId}/assign`, {
         courseId: selectedCourseId,
-        courseName: selectedCourse?.title || 'Lớp học',
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        starsReward: config.totalScore,
-        type: 'quiz',
-        questions: generatedQuestions
+        deadline: deadline || null,
+        duration: assignDuration || config.duration
       });
-      
-      alert('Đã giao bài thành công!');
-      navigate('/assignments');
+
+      const data = res.data;
+      setSuccessMsg(`✅ Đã giao bài thành công cho ${courses.find(c => c.id === selectedCourseId)?.title}! Đã thông báo cho ${data.notified} học sinh.`);
     } catch (err: any) {
-      setError(err.message || 'Lỗi khi giao bài');
+      setError(err.response?.data?.error || err.message || 'Lỗi khi giao bài');
     } finally {
-      setLoading(false);
+      setAssigning(false);
     }
   };
 
@@ -142,7 +163,6 @@ export const ExamGenerator: React.FC = () => {
       {/* Stepper */}
       <div className="flex justify-between items-center mb-12 relative px-20">
         <div className="absolute left-1/4 right-1/4 h-1 bg-gray-200 top-5 -z-10" />
-        <div className={`absolute top-5 left-20 right-20 h-1 -z-10 transition-all ${step === 2 ? 'bg-indigo-500 w-full right-0 left-0' : 'bg-gray-200 w-0'}`} />
         {renderStepIcon(1, <Settings2 size={20} />, '1. Thiết lập & Chọn Phạm Vi')}
         {renderStepIcon(2, <CheckCircle size={20} />, '2. Duyệt Đề & Giao Bài')}
       </div>
@@ -162,22 +182,25 @@ export const ExamGenerator: React.FC = () => {
           <div className="grid grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Tên đề thi</label>
-              <input 
+              <input
                 type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 value={config.title} onChange={e => handleConfigChange('title', e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Môn học</label>
-              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                value={config.subject} onChange={e => handleConfigChange('subject', e.target.value)}>
-                <option value="math">Toán học</option>
-                <option value="physics">Vật lý</option>
-                <option value="chemistry">Hóa học</option>
-                <option value="biology">Sinh học</option>
-                <option value="literature">Ngữ văn</option>
-                <option value="history">Lịch sử</option>
-                <option value="geography">Địa lý</option>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Lớp học / Môn học
+                <span className="ml-2 text-xs text-indigo-500 font-normal">(từ danh sách lớp của bạn)</span>
+              </label>
+              <select
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                value={config.subject}
+                onChange={e => handleConfigChange('subject', e.target.value)}
+              >
+                <option value="">-- Chọn lớp học --</option>
+                {courses.map((c: any) => (
+                  <option key={c.id} value={c.title}>{c.title}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -222,7 +245,7 @@ export const ExamGenerator: React.FC = () => {
                     <option value="lesson">Ra đề theo Giới hạn Bài học cụ thể</option>
                   </select>
                 </div>
-                
+
                 {config.textbookScope === 'theme' && (
                   <div className="animate-in fade-in slide-in-from-top-2">
                     <label className="block text-sm font-medium text-indigo-800 mb-2">Chọn Chủ đề (Chương):</label>
@@ -246,7 +269,7 @@ export const ExamGenerator: React.FC = () => {
               </div>
             )}
           </div>
-          
+
           <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
             <Settings className="text-orange-500" /> Ma trận đề (Chuẩn CV 7991)
           </h2>
@@ -289,12 +312,12 @@ export const ExamGenerator: React.FC = () => {
         </div>
       )}
 
-      {/* --- STEP 2 --- */}
+      {/* --- STEP 2: Duyệt đề & Giao bài --- */}
       {step === 2 && (
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 animate-in fade-in slide-in-from-right-4">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold flex items-center gap-2 text-indigo-900">
-              <CheckCircle className="text-green-500" /> Bản xem trước
+              <CheckCircle className="text-green-500" /> Bản xem trước đề thi
             </h2>
             <button
               onClick={() => navigate('/exams')}
@@ -304,7 +327,8 @@ export const ExamGenerator: React.FC = () => {
             </button>
           </div>
 
-          <div className="space-y-8">
+          {/* Preview câu hỏi */}
+          <div className="space-y-8 mb-10">
             {generatedQuestions.map((q, idx) => (
               <div key={q.id || idx} className="p-6 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white transition-colors hover:shadow-md">
                 <div className="flex justify-between items-start mb-4">
@@ -313,13 +337,9 @@ export const ExamGenerator: React.FC = () => {
                   </h3>
                   <span className="text-sm font-medium text-gray-500">{q.score} điểm</span>
                 </div>
-                
-                {/* Câu hỏi có chứa LaTeX */}
                 <div className="mb-6 text-gray-800 text-lg">
                   <LatexRenderer content={q.content} />
                 </div>
-
-                {/* Đáp án */}
                 {q.type === 'multiple_choice' && q.options && (
                   <div className="grid grid-cols-2 gap-4">
                     {q.options.map((opt: string, oIdx: number) => {
@@ -332,48 +352,89 @@ export const ExamGenerator: React.FC = () => {
                     })}
                   </div>
                 )}
-
-                {/* Giải thích */}
                 {q.explanation && (
                   <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <strong className="text-yellow-800">Giải thích:</strong>
-                    <div className="mt-2 text-sm text-yellow-900">
-                      <LatexRenderer content={q.explanation} />
-                    </div>
+                    <div className="mt-2 text-sm text-yellow-900"><LatexRenderer content={q.explanation} /></div>
                   </div>
                 )}
               </div>
             ))}
           </div>
 
-          <div className="mt-10 flex flex-col md:flex-row items-center justify-between bg-indigo-50 p-6 rounded-xl border border-indigo-100">
-            <div className="flex-1 w-full md:w-auto mb-4 md:mb-0 md:mr-6">
-              <label className="block text-sm font-bold text-indigo-900 mb-2">Giao bài cho lớp:</label>
-              <select 
-                className="w-full px-4 py-2 border border-indigo-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-indigo-500"
-                value={selectedCourseId}
-                onChange={e => setSelectedCourseId(e.target.value)}
-              >
-                <option value="">-- Chọn lớp học --</option>
-                {courses.map((c: any) => (
-                  <option key={c.id} value={c.id}>{c.title}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="flex gap-3">
-              <button onClick={() => setStep(2)} className="px-5 py-2.5 border border-indigo-200 bg-white text-indigo-700 rounded-lg hover:bg-indigo-50 font-bold transition-colors">
-                <ArrowLeft className="inline mr-2" size={18} /> Quay lại
-              </button>
-              <button 
-                onClick={handleAssign} 
-                disabled={loading || !selectedCourseId}
-                className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold transition-colors disabled:opacity-50 flex items-center shadow-md shadow-indigo-200"
-              >
-                Giao bài ngay <ArrowRight className="inline ml-2" size={18} />
+          {/* Panel Giao bài */}
+          {successMsg ? (
+            <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-6 text-center">
+              <p className="text-green-800 font-bold text-lg">{successMsg}</p>
+              <button onClick={() => navigate('/exams')} className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition">
+                Quản lý đề thi
               </button>
             </div>
-          </div>
+          ) : (
+            <div className="bg-indigo-50 rounded-2xl border-2 border-indigo-100 p-6">
+              <h3 className="font-bold text-indigo-900 text-lg mb-5 flex items-center gap-2">
+                <Send size={18} className="text-indigo-600" /> Giao Bài Cho Lớp
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                {/* Chọn lớp */}
+                <div>
+                  <label className="block text-sm font-bold text-indigo-800 mb-2">Lớp học nhận đề:</label>
+                  <select
+                    className="w-full px-4 py-2.5 border border-indigo-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={selectedCourseId}
+                    onChange={e => setSelectedCourseId(e.target.value)}
+                  >
+                    <option value="">-- Chọn lớp --</option>
+                    {courses.map((c: any) => (
+                      <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Deadline */}
+                <div>
+                  <label className="block text-sm font-bold text-indigo-800 mb-2 flex items-center gap-1">
+                    <Calendar size={14} /> Deadline khóa bài:
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="w-full px-4 py-2.5 border border-indigo-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    value={deadline}
+                    onChange={e => setDeadline(e.target.value)}
+                  />
+                  <p className="text-xs text-indigo-500 mt-1">Để trống = không giới hạn thời gian</p>
+                </div>
+
+                {/* Duration override */}
+                <div>
+                  <label className="block text-sm font-bold text-indigo-800 mb-2 flex items-center gap-1">
+                    <Clock size={14} /> Thời lượng làm bài (phút):
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder={String(config.duration)}
+                    className="w-full px-4 py-2.5 border border-indigo-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={assignDuration}
+                    onChange={e => setAssignDuration(parseInt(e.target.value) || '')}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button onClick={() => setStep(1)} className="px-5 py-2.5 border border-indigo-200 bg-white text-indigo-700 rounded-xl hover:bg-indigo-50 font-bold transition-colors">
+                  <ArrowLeft className="inline mr-2" size={18} /> Quay lại
+                </button>
+                <button
+                  onClick={handleAssign}
+                  disabled={assigning || !selectedCourseId}
+                  className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 font-bold transition-all disabled:opacity-50 flex items-center gap-2 shadow-md shadow-indigo-200"
+                >
+                  {assigning ? <><span className="animate-spin">⏳</span> Đang giao...</> : <><Send size={18} /> Giao bài ngay</>}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

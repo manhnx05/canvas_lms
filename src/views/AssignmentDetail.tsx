@@ -86,8 +86,13 @@ export function AssignmentDetail({ role }: { role: Role }) {
   if (!assignment) return <div className="p-12 text-center animate-pulse">Đang tải...</div>;
 
   const isQuiz = assignment.questions && assignment.questions.length > 0;
-  // Với code mock hiện tại, sub của student đang test là mySubmission
-  const mySub = assignment.mySubmission; 
+  const mySub = assignment.mySubmission;
+  // Kiểm tra deadline đã qua chưa
+  const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
+  const isClosed = dueDate && dueDate < new Date();
+  const dueDateLabel = dueDate
+    ? dueDate.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', dateStyle: 'full', timeStyle: 'short' })
+    : assignment.dueDate;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
@@ -104,9 +109,16 @@ export function AssignmentDetail({ role }: { role: Role }) {
             </span>
           </div>
           <h1 className="text-4xl font-extrabold text-sky-900 mb-2">{assignment.title}</h1>
-          <p className="text-sky-600 flex items-center gap-2 font-medium">
-            <Clock className="w-5 h-5" /> Hạn hoàn thành: {assignment.dueDate}
-          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-sky-600 flex items-center gap-2 font-medium">
+              <Clock className="w-5 h-5" /> Hạn hoàn thành: {dueDateLabel}
+            </p>
+            {isClosed && (
+              <span className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold border border-red-200">
+                🔒 Đã đóng nộp bài
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="p-8 space-y-8">
@@ -119,7 +131,13 @@ export function AssignmentDetail({ role }: { role: Role }) {
 
           {role === 'student' ? (
             <div className="border-t-2 border-sky-50 pt-8 mt-8">
-              {!mySub || mySub.status === 'pending' ? (
+              {/* Bài đã đóng */}
+              {isClosed && !mySub ? (
+                <div className="bg-red-50 border-2 border-red-200 rounded-3xl p-8 text-center">
+                  <p className="text-red-700 font-bold text-xl">🔒 Bài tập đã đóng nộp bài</p>
+                  <p className="text-red-500 mt-2">Thời hạn nộp bài đã kết thúc vào {dueDateLabel}.</p>
+                </div>
+              ) : !mySub || mySub.status === 'pending' ? (
                 // LÀM BÀI / NỘP BÀI
                 <div className="space-y-6">
                   <h2 className="text-2xl font-bold text-sky-900 mb-4">Bài Làm Của Bé</h2>

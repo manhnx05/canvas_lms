@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Download, Printer, ArrowLeft, DownloadCloud } from 'lucide-react';
+import { Download, Printer, ArrowLeft, DownloadCloud, Send, Calendar, Clock } from 'lucide-react';
 import { LatexRenderer } from '../components/LatexRenderer';
+import apiClient from '@/src/lib/apiClient';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { Document, Paragraph, TextRun, Packer } from 'docx';
@@ -15,12 +16,24 @@ export const ExamViewer: React.FC = () => {
   const [viewAnswers, setViewAnswers] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Giao bài state
+  const [courses, setCourses] = useState<any[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [deadline, setDeadline] = useState('');
+  const [assignDuration, setAssignDuration] = useState<number | ''>('');
+  const [assigning, setAssigning] = useState(false);
+  const [assignSuccess, setAssignSuccess] = useState('');
+  const [assignError, setAssignError] = useState('');
+
   useEffect(() => {
     const fetchExam = async () => {
       try {
         const res = await fetch(`/api/exams/${id}`);
         const data = await res.json();
         setExam(data);
+        // Pre-select lớp nếu đề đã được giao
+        if (data.courseId) setSelectedCourseId(data.courseId);
+        if (data.deadline) setDeadline(new Date(data.deadline).toISOString().slice(0,16));
       } catch (err) {
         console.error(err);
       } finally {
@@ -28,7 +41,29 @@ export const ExamViewer: React.FC = () => {
       }
     };
     fetchExam();
+    // Lấy danh sách lớp học thật
+    apiClient.get('/courses').then(res => setCourses(res.data)).catch(console.error);
   }, [id]);
+
+  const handleAssign = async () => {
+    if (!selectedCourseId) { setAssignError('Vui lòng chọn lớp học'); return; }
+    try {
+      setAssigning(true);
+      setAssignError('');
+      const res = await apiClient.post(`/exams/${id}/assign`, {
+        courseId: selectedCourseId,
+        deadline: deadline || null,
+        duration: assignDuration || exam?.duration
+      });
+      const data = res.data;
+      setAssignSuccess(`✅ Đã giao bài cho ${courses.find(c => c.id === selectedCourseId)?.title}! Thông báo đến ${data.notified} học sinh.`);
+      setExam((prev: any) => ({ ...prev, courseId: selectedCourseId, courseName: courses.find(c => c.id === selectedCourseId)?.title, status: 'published' }));
+    } catch (err: any) {
+      setAssignError(err.response?.data?.error || err.message || 'Lỗi khi giao bài');
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   const handleDownloadPDF = async () => {
     if (!printRef.current) return;
@@ -119,21 +154,27 @@ export const ExamViewer: React.FC = () => {
         </button>
 
         <div className="flex items-center gap-4">
+          {/* Trạng thái đề */}
+          {exam?.status === 'published' && exam?.courseName && (
+            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-bold border border-green-200">
+              ✅ Đã giao: {exam.courseName}
+            </span>
+          )}
           <div className="bg-gray-100 rounded-lg p-1 flex">
-            <button 
+            <button
               onClick={() => setViewAnswers(false)}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${!viewAnswers ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
             >
               Xem đề bài
             </button>
-            <button 
+            <button
               onClick={() => setViewAnswers(true)}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${viewAnswers ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
             >
               Kèm đáp án
             </button>
           </div>
-          
+
           <button onClick={handleDownloadWord} className="flex items-center gap-2 px-4 py-2 border border-blue-200 text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
             <DownloadCloud size={18} /> Word
           </button>
@@ -144,6 +185,63 @@ export const ExamViewer: React.FC = () => {
             <Printer size={18} /> In
           </button>
         </div>
+      </div>
+
+      {/* Panel Giao bài — chỉ hiển thị cho giáo viên, ẩn khi in */}
+      <div className="bg-indigo-50 rounded-2xl border-2 border-indigo-100 p-6 mb-8 print:hidden">
+        <h3 className="font-bold text-indigo-900 text-base mb-4 flex items-center gap-2">
+          <Send size={16} className="text-indigo-600" /> Giao Bài Cho Lớp
+        </h3>
+        {assignSuccess ? (
+          <p className="text-green-700 font-bold">{assignSuccess}</p>
+        ) : (
+          <>
+            {assignError && <p className="text-red-600 text-sm mb-3 font-medium">{assignError}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-indigo-700 mb-1">Lớp học nhận đề:</label>
+                <select
+                  className="w-full px-3 py-2 border border-indigo-200 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-indigo-400"
+                  value={selectedCourseId}
+                  onChange={e => setSelectedCourseId(e.target.value)}
+                >
+                  <option value="">-- Chọn lớp --</option>
+                  {courses.map((c: any) => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1"><Calendar size={12} /> Deadline khóa bài:</label>
+                <input
+                  type="datetime-local"
+                  className="w-full px-3 py-2 border border-indigo-200 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-indigo-400"
+                  value={deadline}
+                  onChange={e => setDeadline(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1"><Clock size={12} /> Thời lượng (phút):</label>
+                <input
+                  type="number" min="1"
+                  placeholder={exam ? String(exam.duration) : '45'}
+                  className="w-full px-3 py-2 border border-indigo-200 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-indigo-400"
+                  value={assignDuration}
+                  onChange={e => setAssignDuration(parseInt(e.target.value) || '')}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={handleAssign}
+                disabled={assigning || !selectedCourseId}
+                className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold flex items-center gap-2 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 transition-all shadow-md shadow-indigo-200"
+              >
+                {assigning ? <><span className="animate-spin">⏳</span> Đang giao...</> : <><Send size={16} /> Giao bài ngay</>}
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Printable Area */}

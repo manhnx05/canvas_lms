@@ -83,27 +83,41 @@ export function AssignmentsTab({ courseId, courseTitle, assignments, role, onRef
 
       <div className="space-y-4">
         {assignments?.length === 0 && <p className="text-slate-400 italic">Chưa có bài tập nào.</p>}
-        {assignments?.map((a: any) => (
-          <a key={a.id} href={`/assignments/${a.id}`} className="block">
-            <div className="p-4 bg-white border-2 border-slate-100 hover:border-sky-300 rounded-2xl flex items-center gap-4 transition-colors group">
-              <div className="w-12 h-12 bg-sky-50 text-sky-500 rounded-xl flex items-center justify-center group-hover:bg-sky-500 group-hover:text-white transition-colors">
-                <FileText className="w-6 h-6" />
+        {assignments?.map((a: any) => {
+          const dueDate = a.dueDate ? new Date(a.dueDate) : null;
+          const isClosed = dueDate && dueDate < new Date();
+          const dueDateLabel = dueDate
+            ? dueDate.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', dateStyle: 'short', timeStyle: 'short' })
+            : a.dueDate;
+
+          return (
+            <a key={a.id} href={isClosed ? undefined : `/assignments/${a.id}`}
+              className={`block ${isClosed ? 'opacity-70 cursor-not-allowed' : ''}`}>
+              <div className={`p-4 bg-white border-2 rounded-2xl flex items-center gap-4 transition-colors group ${isClosed ? 'border-slate-200' : 'border-slate-100 hover:border-sky-300'}`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${isClosed ? 'bg-slate-100 text-slate-400' : 'bg-sky-50 text-sky-500 group-hover:bg-sky-500 group-hover:text-white'}`}>
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-sky-900 text-lg">{a.title}</h3>
+                  <p className="text-sm flex items-center gap-1 mt-1 font-medium text-sky-500">
+                    <Clock className="w-4 h-4" /> Hạn: {dueDateLabel}
+                  </p>
+                </div>
+                <div>
+                  {isClosed ? (
+                    <div className="bg-slate-100 text-slate-500 px-3 py-1.5 rounded-lg text-sm font-bold border border-slate-200">
+                      🔒 Đã đóng
+                    </div>
+                  ) : a.status === 'graded' ? (
+                    <CheckCircle className="text-emerald-500 w-8 h-8" />
+                  ) : (
+                    <div className="bg-amber-100 text-amber-600 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">+{a.starsReward} Sao</div>
+                  )}
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-sky-900 text-lg">{a.title}</h3>
-                <p className="text-sm text-sky-500 flex items-center gap-1 mt-1 font-medium">
-                  <Clock className="w-4 h-4" /> Hạn: {a.dueDate}
-                </p>
-              </div>
-              <div>
-                {a.status === 'graded'
-                  ? <CheckCircle className="text-emerald-500 w-8 h-8" />
-                  : <div className="bg-amber-100 text-amber-600 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">+{a.starsReward} Sao</div>
-                }
-              </div>
-            </div>
-          </a>
-        ))}
+            </a>
+          );
+        })}
       </div>
     </div>
   );
