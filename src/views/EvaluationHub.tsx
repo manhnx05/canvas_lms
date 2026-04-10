@@ -160,8 +160,8 @@ export function EvaluationHub({ role }: EvaluationHubProps) {
               {...(questions.length > 0 && { questions })}
               {...(topic && { topic })}
               {...(currentUser.name && { studentName: currentUser.name })}
-              onComplete={(result) => {
-                console.log('Quiz complete:', result);
+              onComplete={() => {
+                // Quiz completed — results shown inline by QuizSystem
               }}
             />
           </div>

@@ -38,7 +38,6 @@ export async function POST(req: Request) {
     // Check if Resend API key is configured
     if (!process.env.RESEND_API_KEY) {
       console.error('[Register] RESEND_API_KEY không được cấu hình!');
-      console.log('[Register] OTP cho testing:', otp);
       return NextResponse.json({ 
         message: 'Mã OTP đã được tạo. (Email service chưa được cấu hình)',
         otp: process.env.NODE_ENV === 'development' ? otp : undefined
@@ -47,11 +46,6 @@ export async function POST(req: Request) {
 
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
-      
-      console.log('[Register] Đang gửi email đến:', email);
-      console.log('[Register] Từ địa chỉ:', FROM_EMAIL);
-      console.log('[Register] OTP:', otp);
-      
       const { data, error } = await resend.emails.send({
         from: `Canvas LMS <${FROM_EMAIL}>`,
         to: [email],
@@ -80,7 +74,6 @@ export async function POST(req: Request) {
         }, { status: 500 });
       }
       
-      console.log('[Register] ✅ Đã gửi OTP thành công qua Resend:', data);
       return NextResponse.json({ 
         message: 'Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.',
         emailId: data?.id

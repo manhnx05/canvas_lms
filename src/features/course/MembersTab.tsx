@@ -8,7 +8,7 @@ interface MembersTabProps {
   role: Role;
 }
 
-export function MembersTab({ courseTitle, teacher, members, role }: MembersTabProps) {
+export function MembersTab({ courseTitle, teacher, members }: MembersTabProps) {
   // Sort members so teachers/admins appear first, then students by name
   const sortedMembers = [...members].sort((a, b) => {
     if (a.role === 'teacher' && b.role !== 'teacher') return -1;

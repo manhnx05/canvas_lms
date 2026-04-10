@@ -10,6 +10,8 @@
     "postinstall": "prisma generate",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "type-check": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -26,6 +28,7 @@
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.22.0",
     "@tailwindcss/postcss": "^4.2.2",
+    "@tanstack/react-query": "^5.96.2",
     "@types/file-saver": "^2.0.7",
     "@types/pdf-parse": "^1.1.5",
     "axios": "^1.13.6",
@@ -45,6 +48,7 @@
     "postcss": "^8.5.8",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-hot-toast": "^2.6.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.2",
     "recharts": "^3.8.1",
@@ -53,15 +57,19 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
+    "jsdom": "^29.0.1",
     "prisma": "^5.22.0",
     "tailwindcss": "^4.1.14",
     "ts-morph": "^27.0.2",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.2"
+    "typescript": "~5.8.2",
+    "vitest": "^4.1.2"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

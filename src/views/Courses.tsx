@@ -1,16 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Users, X, Edit, Trash2 } from 'lucide-react';
 import { Role, Course } from '@/src/types';
-import apiClient from '@/src/lib/apiClient';
+import { useCourses } from '@/src/hooks/api/useCourses';
 
 export function Courses({ role }: { role: Role }) {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { courses, isLoading, createCourse, updateCourse, deleteCourse, isDeletingId } = useCourses();
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalError, setModalError] = useState('');
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null); // Track which course is being deleted
   
   // Form states
   const [title, setTitle] = useState('');
@@ -18,23 +16,11 @@ export function Courses({ role }: { role: Role }) {
   const [color, setColor] = useState('bg-blue-500');
   const navigate = useNavigate();
 
-  const fetchCourses = () => {
-    apiClient.get('/courses')
-      .then(res => res.data)
-      .then(data => { setCourses(data); setLoading(false); })
-      .catch(err => { console.error("Failed to fetch courses", err); setLoading(false); });
-  };
-
-  useEffect(() => {
-    fetchCourses();
-  }, []);
-
   const openCreateModal = () => {
     setEditingCourse(null);
     setTitle('');
     setDescription('');
     setColor('bg-blue-500');
-    setModalError('');
     setIsModalOpen(true);
   };
 
@@ -44,35 +30,25 @@ export function Courses({ role }: { role: Role }) {
     setTitle(course.title);
     setDescription(course.description || '');
     setColor(course.color);
-    setModalError('');
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingCourse(null);
-    setModalError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setModalError('');
     try {
       if (editingCourse) {
-        // Update existing course
-        await apiClient.put(`/courses/${editingCourse.id}`, {
-          title, description, color, icon: 'BookOpen'
-        });
+        await updateCourse({ id: editingCourse.id, title, description, color, icon: 'BookOpen' });
       } else {
-        // Create new course
-        await apiClient.post('/courses', {
-          title, description, color, icon: 'BookOpen'
-        });
+        await createCourse({ title, description, color, icon: 'BookOpen' });
       }
       closeModal();
-      fetchCourses();
     } catch (err: any) {
-      setModalError(err?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      // Errors are handled in the hook via toast
     }
   };
 
@@ -80,34 +56,22 @@ export function Courses({ role }: { role: Role }) {
     e.stopPropagation();
     
     // Prevent double-click
-    if (deletingId === course.id) {
-      return;
-    }
+    if (isDeletingId === course.id) return;
     
-    if (!confirm(`Bạn có chắc chắn muốn xóa lớp học "${course.title}"?\n\nToàn bộ dữ liệu liên quan (bài tập, thông báo, học sinh) sẽ bị xóa!`)) {
+    // Better UX using a toast confirm or simple confirm is fine, but toast is already configured.
+    // For critical delete, window.confirm is acceptable temporarily if we don't have a Dialog component.
+    if (!confirm(`Bạn có chắc chắn muốn xóa lớp học "${course.title}"?\n\nToàn bộ dữ liệu liên quan sẽ bị xóa!`)) {
       return;
     }
 
-    setDeletingId(course.id);
-    
     try {
-      await apiClient.delete(`/courses/${course.id}`);
-      // Immediately update UI to remove the deleted course
-      setCourses(prev => prev.filter(c => c.id !== course.id));
+      await deleteCourse(course.id);
     } catch (err: any) {
-      // If course not found (404), it's already deleted, just refresh
-      if (err?.response?.status === 404) {
-        console.log('Course already deleted, refreshing list...');
-        setCourses(prev => prev.filter(c => c.id !== course.id));
-      } else {
-        alert('Lỗi khi xóa lớp học: ' + (err?.message || 'Vui lòng thử lại'));
-      }
-    } finally {
-      setDeletingId(null);
+      // Toast error handled in hook
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
+  if (isLoading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
 
   return (
     <div className="space-y-8 relative">
@@ -171,11 +135,11 @@ export function Courses({ role }: { role: Role }) {
                   </button>
                   <button
                     onClick={(e) => handleDelete(course, e)}
-                    disabled={deletingId === course.id}
+                    disabled={isDeletingId === course.id}
                     className="px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2.5 rounded-xl transition-colors border-2 border-rose-100 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Xóa lớp học"
                   >
-                    {deletingId === course.id ? (
+                    {isDeletingId === course.id ? (
                       <div className="animate-spin w-4 h-4 border-2 border-rose-600 border-t-transparent rounded-full"></div>
                     ) : (
                       <Trash2 className="w-4 h-4" />
@@ -197,11 +161,6 @@ export function Courses({ role }: { role: Role }) {
             <h2 className="text-2xl font-extrabold text-sky-900 mb-6">
               {editingCourse ? 'Chỉnh Sửa Lớp Học' : 'Tạo Lớp Học Mới'}
             </h2>
-            {modalError && (
-              <div className="mb-4 px-4 py-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm font-medium">
-                ⚠️ {modalError}
-              </div>
-            )}
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -233,3 +192,4 @@ export function Courses({ role }: { role: Role }) {
     </div>
   );
 }
+

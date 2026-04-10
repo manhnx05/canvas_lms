@@ -1,75 +1,149 @@
 # Canvas LMS
 
-An advanced, full-stack Learning Management System (LMS) inspired by Canvas, enhanced with AI to streamline the educational experience for both teachers and students.
+AI-powered Learning Management System inspired by Canvas. Kết hợp UI hiện đại với tính năng tạo đề thi, chấm điểm và hỗ trợ AI để nâng cao trải nghiệm giảng dạy và học tập.
 
-## 🚀 Quick Start
+## 🚀 Bắt đầu nhanh
 
-1. **Install Dependencies**
+1. **Cài đặt phụ thuộc**
    ```bash
    npm install
    ```
 
-2. **Environment Setup**
-   Copy `.env.example` to `.env` and fill in:
-   ```env
-   DATABASE_URL="postgresql://user:password@host:5432/canvas_lms"
-   JWT_SECRET="your_super_secret_jwt_key_32_chars"
-   GEMINI_API_KEY="your_gemini_api_key"
-   RESEND_API_KEY="re_your_resend_api_key"
-   RESEND_FROM_EMAIL="onboarding@resend.dev"
-   ```
+2. **Cài đặt biến môi trường**
+   Copy `.env.example` sang `.env` và điền giá trị phù hợp.
 
-3. **Database Initialization**
+3. **Khởi tạo cơ sở dữ liệu**
    ```bash
-   npx prisma generate
-   npx prisma migrate deploy
-   npx prisma db seed
+   npm run db:generate
+   npm run db:migrate
+   npm run db:seed
    ```
 
-4. **Run Development Server**
+4. **Chạy server development**
    ```bash
    npm run dev
    ```
-   *Available at `http://localhost:3000`*
+   Mở `http://localhost:3000`
 
 ---
 
-## 🏗️ Architecture
+## 📁 Cấu trúc dự án
 
-- **Frontend**: React 19, Next.js 16 (App Router), Tailwind CSS
-- **Backend**: Next.js API Routes, Prisma ORM, PostgreSQL
-- **Security**: JWT Auth, RBAC, Zod Validation, Rate Limiting
-- **AI**: Google Generative AI (Gemini)
-- **Design Pattern**: Clean Architecture (Services Layer -> Data Access -> Controllers)
+### Thư mục chính
 
-### Directory Structure
+- `app/`
+  - `api/` - API routes của Next.js
+    - `ai/` - endpoint AI (chat, generate quiz, evaluate submission)
+    - `assignments/` - quản lý assignment
+    - `auth/` - đăng nhập, đăng ký, mật khẩu
+    - `conversations/` - hội thoại, chat
+    - `courses/` - dữ liệu khóa học
+    - `debug/` - kiểm tra hệ thống
+    - `exams/` - tạo và quản lý đề thi
+    - `health/` - kiểm tra trạng thái
+    - `notifications/` - thông báo
+    - `rewards/` - phần thưởng
+    - `teacher/` - chức năng giáo viên
+    - `test-email/` - gửi email thử
+    - `upload/` - upload file
+    - `users/` - quản lý người dùng
 
-```text
-canvas_lms/
-├── app/api/               # Next.js API Routes (Controllers)
-├── src/
-│   ├── components/        # Reusable UI & Layout Components
-│   ├── features/          # Feature-specific components (e.g. course tabs)
-│   ├── lib/               # Utilities (Prisma, Zod, Gemini, API Client)
-│   ├── services/          # Business Logic Layer (AI, Course, User)
-│   ├── middleware/        # JWT Auth, Rate Limits, Security
-│   └── views/             # Main Pages / Screen Views
-├── prisma/                # Db Schema & Migrations
-└── ...
-```
+- `src/`
+  - `components/` - thành phần giao diện tái sử dụng
+    - `quiz/`, `shared/`, `stats/`
+  - `context/` - React context (`AuthContext.tsx`)
+  - `features/` - UI theo tính năng cụ thể
+    - `assignments/`, `course/`, `inbox/`
+  - `hooks/` - custom hooks và API hooks
+    - `api/`, `useAssignments.ts`, `useAuth.ts`, `useCourseDetail.ts`, `useDashboardData.ts`, `useSocket.ts`
+  - `lib/` - helper, client, cấu hình chung
+    - `apiClient.ts`, `env.ts`, `exam.ai.service.ts`, `gemini.ts`, `prisma.ts`, `queryClient.ts`, `validations.ts`
+  - `middleware/` - middleware phía server
+    - `auth.ts`, `rateLimit.ts`, `security.ts`
+  - `sections/` - section trang landing và feature
+    - `AiChatSection.tsx`, `ComparisonSection.tsx`, `HeroSection.tsx`
+  - `services/` - business logic
+    - `aiService.ts`, `assignmentService.ts`, `conversationService.ts`, `courseService.ts`, `examService.ts`, `notificationService.ts`, `rewardService.ts`, `teacherService.ts`, `userService.ts`
+  - `utils/` - helper chung
+    - `errorHandler.ts`, `format.ts`
+  - `views/` - page-level screens
+    - `AiChat.tsx`, `AssignmentDetail.tsx`, `Assignments.tsx`, `CourseDetail.tsx`, `Courses.tsx`, `Dashboard.tsx`, `EvaluationHub.tsx`, `ExamGenerator.tsx`, `ExamList.tsx`, `ExamTaking.tsx`, `ExamViewer.tsx`, `Inbox.tsx`, `Login.tsx`, `Notifications.tsx`, `Profile.tsx`, `Rewards.tsx`, `Students.tsx`
+  - `types/` - định nghĩa kiểu TypeScript (`index.ts`)
+
+- `prisma/`
+  - `schema.prisma` - định nghĩa database schema
+  - `migrations/` - migration history
+  - `seed.ts` - seed dữ liệu mẫu
+
+- `public/`
+  - `textbooks/` - sách giáo khoa mẫu
+  - `uploads/` - file được upload
+  - `test-email.html`
+
+- `scripts/`
+  - `cleanup-courses.ts`
+  - `create-missing-course.ts`
+  - `sync-teacher-courses.ts`
+
+- `CanvasLMS_Postman_Collection.json` - bộ sưu tập Postman
 
 ---
 
-## 🛠️ Essential Scripts
+## 🧩 Các tính năng chính
+
+- Quản lý khóa học, assignment, đề thi, học sinh và giáo viên
+- Authentication JWT, phân quyền người dùng
+- Gửi email qua Resend
+- AI: tạo đề thi, chat AI, chấm bài
+- Next.js App Router + React 19 + Tailwind CSS
+- Prisma ORM + PostgreSQL
+
+---
+
+## 🛠️ Lệnh thường dùng
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run lint         # Run ESLint
-npm run type-check   # Check TypeScript types
-npm run db:generate  # Generate Prisma client
-npm run db:migrate   # Apply database migrations
-npm run db:seed      # Seed test accounts
+npm install
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run lint:fix
+npm run test
+npm run test:watch
+npm run type-check
+npm run db:generate
+npm run db:migrate
+npm run db:deploy
+npm run db:seed
+npm run db:studio
+npm run db:reset
 ```
 
-*For more details, refer to the source code directly.*
+---
+
+## 🔧 Biến môi trường quan trọng
+
+Điền các biến sau vào file `.env`:
+
+- `DATABASE_URL`
+- `DATABASE_POOL_SIZE`
+- `JWT_SECRET`
+- `GEMINI_API_KEY`
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+- `RESEND_VERIFIED_EMAIL`
+- `NODE_ENV`
+- `FRONTEND_URL`
+- `LOG_LEVEL`
+- `RATE_LIMIT_MAX`
+- `RATE_LIMIT_WINDOW`
+
+---
+
+## 📌 Ghi chú
+
+- Dự án sử dụng `next dev` cho môi trường development và `next start` cho production.
+- `prisma generate` tự động chạy sau khi cài đặt và khi build.
+- API route được đặt trong `app/api` theo Next.js App Router.
+

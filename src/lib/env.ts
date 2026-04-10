@@ -50,7 +50,6 @@ export function validateEnv(): Env {
       RATE_LIMIT_WINDOW: process.env.RATE_LIMIT_WINDOW,
     });
 
-    console.log('✅ Environment variables validated successfully');
     return validatedEnv;
   } catch (error) {
     console.error('❌ Environment validation failed:');
