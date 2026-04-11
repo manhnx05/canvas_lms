@@ -49,7 +49,9 @@ export const assignmentService = {
     if (answers) {
       try {
         updatedAnswers = typeof answers === 'string' ? JSON.parse(answers) : answers;
-      } catch(e) {}
+      } catch (e) {
+        console.warn('Invalid answers format', e);
+      }
     }
     if (fileUrl) {
       updatedAnswers = { ...updatedAnswers, fileUrl };

@@ -73,7 +73,7 @@ export function AssignmentDetail({ role }: { role: Role }) {
       
       // 2. Tính điểm tự động dựa trên số câu đúng
       let correctCount = 0;
-      let totalQs = assignment.questions?.length || 1;
+      const totalQs = assignment.questions?.length || 1;
       assignment.questions?.forEach((q: any) => {
          const correctOpt = q.answer || q.correctOptionId;
          if (sub.answers && sub.answers[q.id] === correctOpt) correctCount++;
@@ -83,7 +83,8 @@ export function AssignmentDetail({ role }: { role: Role }) {
   
       // 3. Ghi vào Database
       await apiClient.post(`/assignments/${id}/grade`, { stars: finalScore, submissionId: sub.id, feedback: aiData.feedback });
-    } catch (e) {
+    } catch (error) {
+      console.error(error);
       alert("Đã xảy ra lỗi hệ thống chấm điểm!");
     }
     setEvaluatingSubId(null);

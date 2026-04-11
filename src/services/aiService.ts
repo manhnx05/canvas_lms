@@ -40,9 +40,9 @@ export const aiService = {
             if (Array.isArray(q.options)) {
                q.options = q.options.map((opt: any) => {
                   if (typeof opt === 'string') {
-                     return opt.replace(/^[A-D][\.\:\)]\s*/i, '');
+                     return opt.replace(/^[A-D][.:)]\s*/i, '');
                   } else if (opt && typeof opt.text === 'string') {
-                     opt.text = opt.text.replace(/^[A-D][\.\:\)]\s*/i, '');
+                     opt.text = opt.text.replace(/^[A-D][.:)]\s*/i, '');
                      return opt;
                   }
                   return opt;

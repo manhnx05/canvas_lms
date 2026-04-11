@@ -34,7 +34,7 @@ export function QuizUploadModal({ isOpen, onClose, onQuestionsLoaded }: QuizUplo
     const reader = new FileReader();
     reader.onload = e => {
       try {
-        let content = e.target?.result as string;
+        const content = e.target?.result as string;
         let questions: any[];
         
         if (file.name.endsWith('.json')) {
