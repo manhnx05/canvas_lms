@@ -58,12 +58,12 @@ export const ExamTaking = () => {
     if (timeLeft > 0 && attempt && attempt.status !== 'completed') {
       const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timerId);
-    } else if (timeLeft === 0 && attempt && attempt.status !== 'completed' && !loading) {
+    } else if (timeLeft === 0 && attempt && attempt.status !== 'completed' && !loading && !submitting) {
       void autoSubmit();
     }
     return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLeft, attempt, loading]);
+  }, [timeLeft, attempt, loading, submitting]);
 
   const handleRetry = async () => {
     if (!window.confirm(`Bạn muốn làm lại bài thi này? (Còn ${maxAttempts - attemptsCount} lượt)`)) return;
