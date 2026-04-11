@@ -299,7 +299,7 @@ describe('[REGRESSION] Bug fixes không tái xuất hiện', () => {
     );
 
     const result = await examService.submitExamAttempt('r2', 'u1', []);
-    expect(isNaN(result.score)).toBe(false);
+    expect(isNaN(result.score as number)).toBe(false);
     expect(result.score).toBe(0);
   });
 

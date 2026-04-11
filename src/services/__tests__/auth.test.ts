@@ -4,7 +4,7 @@
  * UNIT TESTS — Auth Middleware (src/middleware/auth.ts)
  * Coverage: verifyToken, extractTokenFromRequest, generateToken, refreshToken, requireAuth
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import jwt from 'jsonwebtoken';
 
 // ── Mock env before importing module ──────────────────────────────────────────
@@ -70,7 +70,7 @@ describe('[UNIT] generateToken', () => {
   });
 
   it('TC-AUTH-007: token sinh ra có thể verify lại thành công', () => {
-    const token = generateToken({ id: 'admin-1', role: 'admin' });
+    const token = generateToken({ id: 'admin-1', role: 'teacher' });
     expect(verifyToken(token)).not.toBeNull();
   });
 });
