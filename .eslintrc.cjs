@@ -6,20 +6,16 @@ module.exports = {
     project: './tsconfig.json',
     tsconfigRootDir: __dirname,
   },
-  env: {
-    browser: true,
-    node: true,
-    es2024: true,
-  },
   settings: {
     react: {
       version: 'detect',
     },
   },
-  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
-  plugins: ['@typescript-eslint'],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:react-hooks/recommended'],
+  plugins: ['@typescript-eslint', 'react-hooks'],
   rules: {
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-    'react/react-in-jsx-scope': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-require-imports': 'off',
   },
 };
