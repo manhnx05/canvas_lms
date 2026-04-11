@@ -275,8 +275,8 @@ export const examService = {
 
     for (const ans of answers) {
       const q = examQuestions.find((qx: any) => qx.id === ans.questionId);
-      // AI returns Correct option in `q.answer` (e.g. 'A', 'B')
-      const isCorrect = q ? q.answer === ans.optionId : false;
+      // AI returns Correct option in `q.answer` or `q.correctOptionId` (e.g. 'A', 'B')
+      const isCorrect = q ? (q.answer === ans.optionId || q.correctOptionId === ans.optionId) : false;
       if (isCorrect) correctCount++;
 
       answerRecords.push({
