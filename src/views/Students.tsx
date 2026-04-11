@@ -315,12 +315,12 @@ export function Students({ role }: { role: Role }) {
               
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">Họ và Tên</label>
-                <input required type="text" value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-sky-500 outline-none" placeholder="VD: Nguyễn Văn A" />
+                <input required type="text" value={name} onChange={(e: any)=>setName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-sky-500 outline-none" placeholder="VD: Nguyễn Văn A" />
               </div>
               
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">Tài khoản Email</label>
-                <input required type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-sky-500 outline-none" placeholder="VD: hs1@school.edu.vn" />
+                <input required type="email" value={email} onChange={(e: any)=>setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-sky-500 outline-none" placeholder="VD: hs1@school.edu.vn" />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -331,7 +331,7 @@ export function Students({ role }: { role: Role }) {
                     type="text"
                     list="class-list"
                     value={className}
-                    onChange={e => setClassName(e.target.value)}
+                    onChange={(e: any) => setClassName(e.target.value)}
                     className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-sky-500 outline-none"
                     placeholder="Tham chiếu hoặc nhập tên lớp..."
                   />
@@ -343,7 +343,7 @@ export function Students({ role }: { role: Role }) {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Link Ảnh Đại Diện</label>
-                  <input type="text" value={avatar} onChange={e=>setAvatar(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-sky-500 outline-none" placeholder="https://..." />
+                  <input type="text" value={avatar} onChange={(e: any)=>setAvatar(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-sky-500 outline-none" placeholder="https://..." />
                 </div>
               </div>
 
