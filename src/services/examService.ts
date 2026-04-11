@@ -211,9 +211,19 @@ export const examService = {
     return { exam, questions };
   },
 
-  startExamAttempt: async (examId: string, userId: string) => {
+  startExamAttempt: async (examId: string, userId: string, userRole = 'student') => {
     const exam = await prisma.exam.findUnique({ where: { id: examId } });
     if (!exam) throw new HttpError(404, 'Không tìm thấy đề thi');
+
+    // Kiểm tra deadline (bựa qua cho giáo viên)
+    if (userRole !== 'teacher' && exam.deadline && new Date() > new Date(exam.deadline)) {
+      throw new HttpError(403, 'Bài thi đã hết hạn, không thể bắt đầu');
+    }
+
+    // Kiểm tra trạng thái published (bựa qua cho giáo viên)
+    if (userRole !== 'teacher' && exam.status !== 'published') {
+      throw new HttpError(403, 'Bài thi chưa được công khai');
+    }
 
     let attempt = await prisma.examAttempt.findFirst({
       where: { examId, userId },
@@ -221,14 +231,19 @@ export const examService = {
       include: { answers: true }
     });
 
+    const count = await prisma.examAttempt.count({ where: { examId, userId } });
+
+    // Nếu chưa có attempt nào → tạo mới
     if (!attempt) {
       attempt = await prisma.examAttempt.create({
         data: { examId, userId, attemptNumber: 1 },
         include: { answers: true }
       });
+    } else if (attempt.status === 'completed' && count >= exam.maxAttempts) {
+      // Đã làm xong và hết lượt → trả về attempt cuối cùng để xem kết quả
+      return { ...attempt, maxAttempts: exam.maxAttempts, attemptsCount: count };
     }
 
-    const count = await prisma.examAttempt.count({ where: { examId, userId } });
     return { ...attempt, maxAttempts: exam.maxAttempts, attemptsCount: count };
   },
 
