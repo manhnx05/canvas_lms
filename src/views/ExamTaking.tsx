@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, CheckCircle } from 'lucide-react';
 import apiClient from '@/src/lib/apiClient';
@@ -19,23 +19,7 @@ export const ExamTaking = () => {
 
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
 
-  useEffect(() => {
-    void startExam();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  useEffect(() => {
-    if (timeLeft > 0 && attempt && attempt.status !== 'completed') {
-      const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timerId);
-    } else if (timeLeft === 0 && attempt && attempt.status !== 'completed' && !loading) {
-      void autoSubmit();
-    }
-    return undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLeft, attempt, loading]);
-
-  const startExam = async () => {
+  const startExam = useCallback(async () => {
     try {
       const examRes = await apiClient.get(`/exams/${id}`);
       setExam(examRes.data);
@@ -64,7 +48,22 @@ export const ExamTaking = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user.id, navigate]);
+
+  useEffect(() => {
+    void startExam();
+  }, [id, startExam]);
+
+  useEffect(() => {
+    if (timeLeft > 0 && attempt && attempt.status !== 'completed') {
+      const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timerId);
+    } else if (timeLeft === 0 && attempt && attempt.status !== 'completed' && !loading) {
+      void autoSubmit();
+    }
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, attempt, loading]);
 
   const handleRetry = async () => {
     if (!window.confirm(`Bạn muốn làm lại bài thi này? (Còn ${maxAttempts - attemptsCount} lượt)`)) return;
@@ -211,7 +210,7 @@ export const ExamTaking = () => {
       <div className="space-y-6">
         {exam.questions.map((q: any, i: number) => {
           const selectedOption = answers.find(a => a.questionId === q.id)?.optionId;
-          const isCorrect = q.answer === selectedOption;
+          const isCorrect = (q.answer || q.correctOptionId) === selectedOption;
           
           return (
             <div key={q.id} className={`bg-white rounded-xl shadow-sm border p-6 ${isCompleted && isCorrect ? 'border-green-300 bg-green-50' : isCompleted && !isCorrect ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
