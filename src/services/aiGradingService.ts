@@ -10,9 +10,6 @@ export const aiGradingService = {
       throw new HttpError(500, 'Hệ thống chưa cấu hình GEMINI_API_KEY');
     }
 
-    // Use gemini-1.5-flash-latest for stability
-    const model = getGeminiModel('gemini-1.5-flash-latest');
-    
     const systemPrompt = `Bạn là một giáo viên chuyên chấm bài. Nhiệm vụ của bạn là đọc hình ảnh phiếu bài tập của học sinh, trích xuất thông tin cá nhân và chấm điểm bài làm. Đặc biệt, hãy đánh giá bài làm dựa trên KHUNG NĂNG LỰC KHOA HỌC dưới đây.
 
 *** KHUNG NĂNG LỰC KHOA HỌC ***
@@ -58,116 +55,102 @@ Lưu ý:
 - Bám sát định mức 3 Mức độ (1,2,3) cho từng biểu hiện của Khung năng lực khoa học trong phần nhận xét (evaluation).
 - Đầu ra CHỈ gồm JSON, không bình luận thêm.`;
 
-    try {
-      // Build content parts for Gemini
-      const contentParts: any[] = [
-        { text: systemPrompt + "\n\nNội dung nhắc nhở thêm: " + prompt }
-      ];
+    const contentParts: any[] = [
+      { text: systemPrompt + "\n\nNội dung nhắc nhở thêm: " + prompt }
+    ];
 
-      // Add all images
-      for (const img of imageParts) {
-        contentParts.push({
-          inlineData: {
-            data: img.base64Data,
-            mimeType: img.mimeType,
-          },
-        });
-      }
-
-      console.log('[AI Grading Service] Calling Gemini with', imageParts.length, 'images');
-      console.log('[AI Grading Service] Image sizes:', imageParts.map(i => i.base64Data.length));
-
-      const result = await model.generateContent(contentParts);
-      
-      // Check if response was blocked
-      if (!result.response) {
-        console.error('[AI Grading Service] No response from Gemini');
-        throw new HttpError(500, 'AI không thể phân tích ảnh này. Vui lòng thử ảnh khác hoặc liên hệ admin.');
-      }
-
-      const response = result.response;
-      
-      // Check for safety blocks
-      if (response.promptFeedback?.blockReason) {
-        console.error('[AI Grading Service] Blocked by safety:', response.promptFeedback.blockReason);
-        throw new HttpError(400, 'Ảnh bị từ chối do vi phạm chính sách an toàn của AI. Vui lòng thử ảnh khác.');
-      }
-
-      let text = response.text();
-      
-      console.log('[AI Grading Service] Raw Gemini response:', text.substring(0, 200));
-      
-      text = text.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
-      
-      console.log('[AI Grading Service] Cleaned response:', text.substring(0, 200));
-      
-      const parsedData = JSON.parse(text);
-      
-      console.log('[AI Grading Service] Parsed data:', parsedData);
-      
-      return parsedData;
-    } catch (error: any) {
-      console.error('[AI Grading Service] Error details:', error);
-      console.error('[AI Grading Service] Error message:', error.message);
-      console.error('[AI Grading Service] Error status:', error.status || error.statusCode);
-      
-      // If it's already an HttpError, rethrow it directly
-      if (error instanceof HttpError) {
-        throw error;
-      }
-      
-      const msg: string = error.message || '';
-      
-      if (msg.includes('API_KEY') || msg.includes('API key') || msg.includes('invalid') && msg.includes('key')) {
-        throw new HttpError(500, 'Lỗi API key. Vui lòng kiểm tra lại GEMINI_API_KEY.');
-      }
-      
-      // Only trigger quota error on definitive rate-limit signals
-      if (msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota exceeded') || (msg.includes('429') )) {
-        throw new HttpError(429, `API đã hết quota. Nguyên nhân gốc: ${msg}`);
-      }
-      
-      if (msg.includes('SAFETY') || msg.includes('safety')) {
-        throw new HttpError(400, 'Ảnh bị từ chối do vi phạm chính sách an toàn. Vui lòng thử ảnh khác.');
-      }
-      
-      if (msg.includes('404') || msg.includes('not found')) {
-        throw new HttpError(500, 'Model AI không tồn tại. Vui lòng liên hệ admin.');
-      }
-      
-      // SyntaxError from JSON.parse
-      if (error instanceof SyntaxError || error.name === 'SyntaxError') {
-        throw new HttpError(500, 'AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.');
-      }
-      
-      // Temporarily expose raw error message always for debugging
-      throw new HttpError(500, `Lỗi AI: ${msg}`);
+    for (const img of imageParts) {
+      contentParts.push({
+        inlineData: { data: img.base64Data, mimeType: img.mimeType },
+      });
     }
+
+    // Auto-fallback mechanism across most stable available Gemini versions
+    const FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash'];
+    let lastErrorMsg = '';
+
+    for (const modelName of FALLBACK_MODELS) {
+      try {
+        console.log(`[AI Grading Service] Trying model: ${modelName} with`, imageParts.length, 'images');
+        const model = getGeminiModel(modelName);
+        const result = await model.generateContent(contentParts);
+
+        if (!result.response) {
+          throw new HttpError(500, 'AI không thể phân tích ảnh này.');
+        }
+
+        const response = result.response;
+        if (response.promptFeedback?.blockReason) {
+          throw new HttpError(400, 'Ảnh bị từ chối do vi phạm chính sách an toàn của AI.');
+        }
+
+        let text = response.text().replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
+        return JSON.parse(text);
+      } catch (error: any) {
+        console.warn(`[AI Grading Service] Model ${modelName} failed:`, error.message);
+        
+        // Immediately forward specific explicit errors (like syntax or safety blocks)
+        if (error instanceof HttpError) throw error;
+        if (error instanceof SyntaxError || error.name === 'SyntaxError') {
+          throw new HttpError(500, 'AI trả về dữ liệu không hợp lệ. Vui lòng thử hình ảnh khác.');
+        }
+
+        const msg = (error.message || '').toLowerCase();
+        lastErrorMsg = msg;
+
+        if (msg.includes('api_key') || msg.includes('api key') || (msg.includes('invalid') && msg.includes('key'))) {
+          throw new HttpError(500, 'Lỗi cấu hình API key. Vui lòng kiểm tra lại biến môi trường GEMINI_API_KEY.');
+        }
+        
+        // If it's a quota limit (429) OR model not found (404), fall back to the next model in the loop!
+        if (msg.includes('404') || msg.includes('not found') || msg.includes('resource_exhausted') || msg.includes('quota exceeded') || msg.includes('429')) {
+          continue; 
+        }
+
+        // Unhandled errors (e.g. timeout / disconnected) throw explicitly
+        throw new HttpError(500, `Lỗi AI (${modelName}): ${error.message}`);
+      }
+    }
+
+    // Exhausted all models
+    throw new HttpError(429, `Tất cả các Model đều quá tải hoặc bị chặn. Lỗi gần nhất: ${lastErrorMsg}`);
   },
 
   chatWithContext: async (history: any[], message: string) => {
     if (!process.env.GEMINI_API_KEY) {
       throw new HttpError(500, 'Hệ thống chưa cấu hình GEMINI_API_KEY');
     }
-    const model = getGeminiModel('gemini-1.5-flash-latest');
-    
-    // We construct the chat history
-    // History should have user and model roles.
-    const chat = model.startChat({
-      history: history.map(h => ({
-        role: h.role,
-        parts: h.imageUrl 
-          ? [{ text: h.content }]  // We omit vision part in history to save tokens if we want, but ideally we should include it if needed. However, since the model maintains context, we can just pass text for history, or we start fresh if we don't have base64. 
-          : [{ text: h.content }]
-      }))
-    });
+    const FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash'];
+    let lastErrorMsg = '';
 
-    try {
-      const result = await chat.sendMessage(message);
-      return result.response.text();
-    } catch (error: any) {
-      console.error('AI chatWithContext error:', error);
-      throw new HttpError(500, `Gemini API: ${error.message || 'Lỗi không xác định'}`);
+    for (const modelName of FALLBACK_MODELS) {
+      try {
+        console.log(`[AI Chat] Trying model: ${modelName}`);
+        const model = getGeminiModel(modelName);
+        
+        const chat = model.startChat({
+          history: history.map(h => ({
+            role: h.role,
+            parts: [{ text: h.content }]
+          }))
+        });
+
+        const result = await chat.sendMessage(message);
+        return result.response.text();
+      } catch (error: any) {
+        console.warn(`[AI Chat] Model ${modelName} failed:`, error.message);
+        
+        const msg = (error.message || '').toLowerCase();
+        lastErrorMsg = msg;
+        
+        if (msg.includes('404') || msg.includes('not found') || msg.includes('resource_exhausted') || msg.includes('quota exceeded') || msg.includes('429')) {
+          continue; 
+        }
+
+        throw new HttpError(500, `Gemini API: ${error.message || 'Lỗi không xác định'}`);
+      }
     }
+
+    throw new HttpError(429, `Tất cả Model đều từ chối yêu cầu. Lỗi gần nhất: ${lastErrorMsg}`);
   }
 };
