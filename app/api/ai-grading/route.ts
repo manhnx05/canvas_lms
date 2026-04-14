@@ -9,6 +9,10 @@ const prisma = new PrismaClient();
 export const POST = withErrorHandler(async (req: Request) => {
   const user = await requireAuth(req);
 
+  // Diagnostic: confirm API key is loaded (show last 4 chars only for security)
+  const apiKey = process.env.GEMINI_API_KEY || '';
+  console.log('[AI Grading] GEMINI_API_KEY present:', !!apiKey, '| last 4 chars:', apiKey.slice(-4) || 'NONE');
+
   try {
     const formData = await req.formData();
     let files: File[] = [];
