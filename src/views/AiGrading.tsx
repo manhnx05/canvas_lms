@@ -127,7 +127,7 @@ export function AIGrading() {
 
             console.log('[AI Grading Frontend] Sending', selectedFiles.length, 'files');
 
-            setMessages([{ role: 'user', content: input || 'Gửi phiếu bài tập...', imageUrl: filePreviews.join(',') }]);
+            setMessages([{ role: 'user', content: input || 'Gửi phiếu bài tập...', imageUrl: filePreviews.join('|||') }]);
             setInput('');
             setSelectedFiles([]);
             setFilePreviews([]);
@@ -149,8 +149,8 @@ export function AIGrading() {
                fetchSessions();
                toast.success("Đã chấm điểm xong!");
             } else {
-               const errorMsg = data.error || data.message || "Có lỗi xảy ra";
-               console.error('[AI Grading Frontend] Error:', errorMsg);
+               const errorMsg = data.message || data.error || "Có lỗi xảy ra";
+               console.error('[AI Grading Frontend] Error:', data);
                toast.error(errorMsg);
                setMessages([]);
             }
@@ -244,7 +244,7 @@ export function AIGrading() {
                         <div className={`flex flex-col ${msg.role === 'user' ? 'last:items-end' : ''}`}>
                            {msg.imageUrl && (
                               <div className="flex flex-wrap gap-2 justify-end mb-2">
-                                 {msg.imageUrl.split(',').map((url: string, idx: number) => (
+                                 {msg.imageUrl.split('|||').map((url: string, idx: number) => (
                                     <img key={idx} src={url} alt="Uploaded worksheet" className="w-64 max-h-96 rounded-2xl border-4 border-white shadow-md object-cover object-top" />
                                  ))}
                               </div>

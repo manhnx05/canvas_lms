@@ -3,8 +3,6 @@ import { PrismaClient } from '@prisma/client';
 import { aiGradingService } from '@/src/services/aiGradingService';
 import { requireAuth } from '@/src/middleware/auth';
 import { withErrorHandler, HttpError } from '@/src/utils/errorHandler';
-import fs from 'fs';
-import path from 'path';
 
 const prisma = new PrismaClient();
 

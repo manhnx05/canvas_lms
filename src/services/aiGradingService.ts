@@ -110,26 +110,27 @@ Lưu ý:
       console.error('[AI Grading Service] Error details:', error);
       console.error('[AI Grading Service] Error message:', error.message);
       
-      // If it's already an HttpError, rethrow it
-      if (error.statusCode) {
+      // If it's already an HttpError, rethrow it directly
+      if (error instanceof HttpError) {
         throw error;
       }
       
       // Handle specific Gemini errors
-      if (error.message?.includes('API key')) {
+      if (error.message?.includes('API key') || error.message?.includes('API_KEY')) {
         throw new HttpError(500, 'Lỗi cấu hình API key. Vui lòng liên hệ admin.');
       }
       
-      if (error.message?.includes('quota') || error.message?.includes('limit')) {
+      if (error.message?.includes('quota') || error.message?.includes('limit') || error.message?.includes('RESOURCE_EXHAUSTED')) {
         throw new HttpError(429, 'Đã vượt quá giới hạn sử dụng API. Vui lòng thử lại sau.');
       }
       
-      if (error.message?.includes('JSON')) {
-        throw new HttpError(500, 'Lỗi phân tích phản hồi từ AI. Vui lòng thử lại.');
+      if (error.message?.includes('SAFETY') || error.message?.includes('safety')) {
+        throw new HttpError(400, 'Ảnh bị từ chối do vi phạm chính sách an toàn. Vui lòng thử ảnh khác.');
       }
       
-      if (error.message?.includes('SAFETY')) {
-        throw new HttpError(400, 'Ảnh bị từ chối do vi phạm chính sách an toàn. Vui lòng thử ảnh khác.');
+      // SyntaxError from JSON.parse
+      if (error instanceof SyntaxError || error.name === 'SyntaxError') {
+        throw new HttpError(500, 'AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.');
       }
       
       throw new HttpError(500, `Lỗi AI: ${error.message || 'Không thể phân tích ảnh'}`);
