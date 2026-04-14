@@ -10,8 +10,8 @@ export const aiGradingService = {
       throw new HttpError(500, 'Hệ thống chưa cấu hình GEMINI_API_KEY');
     }
 
-    // gemini-2.0-flash supports vision and is widely available
-    const model = getGeminiModel('gemini-2.0-flash');
+    // Use gemini-1.5-flash for stability
+    const model = getGeminiModel('gemini-1.5-flash');
     
     const systemPrompt = `Bạn là một giáo viên chuyên chấm bài. Nhiệm vụ của bạn là đọc hình ảnh phiếu bài tập của học sinh, trích xuất thông tin cá nhân và chấm điểm bài làm. Đặc biệt, hãy đánh giá bài làm dựa trên KHUNG NĂNG LỰC KHOA HỌC dưới đây.
 
@@ -149,7 +149,7 @@ Lưu ý:
     if (!process.env.GEMINI_API_KEY) {
       throw new HttpError(500, 'Hệ thống chưa cấu hình GEMINI_API_KEY');
     }
-    const model = getGeminiModel('gemini-2.0-flash');
+    const model = getGeminiModel('gemini-1.5-flash');
     
     // We construct the chat history
     // History should have user and model roles.
