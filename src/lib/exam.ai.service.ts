@@ -4,20 +4,10 @@ import * as path from 'path';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-/** Try gemini-2.5-flash first; fall back to gemini-1.5-flash if unavailable */
+/** Use gemini-2.0-flash - stable vision model */
 async function getModel() {
-  const preferredModels = ['gemini-2.5-flash', 'gemini-1.5-flash'];
-  for (const modelName of preferredModels) {
-    try {
-      const model = genAI.getGenerativeModel({ model: modelName });
-      // Quick probe: list models gracefully — just return the model object
-      return { model, modelName };
-    } catch {
-      // continue to next
-    }
-  }
-  // Final fallback — return 1.5-flash unconditionally
-  return { model: genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }), modelName: 'gemini-1.5-flash' };
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  return { model, modelName: 'gemini-2.0-flash' };
 }
 
 export interface ExamQuestion {
@@ -154,9 +144,7 @@ Chỉ trả về JSON array, không có bất kỳ text nào khác.`;
     } catch (error: any) {
       // If this is the preferred model failing, retry with fallback
       if (!retryModel) {
-        console.warn('gemini-2.5-flash failed, falling back to gemini-1.5-flash:', error.message);
-        const fallback = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        return tryGenerate(fallback);
+        console.warn('Primary model call failed, no retry available:', error.message);
       }
       console.error('AI generation error:', error);
       const userMsg = error.message?.includes('API key') ? 'GEMINI_API_KEY không hợp lệ hoặc chưa được cấu hình'

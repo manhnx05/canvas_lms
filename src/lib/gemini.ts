@@ -9,6 +9,6 @@ const getGenAI = () => {
   return new GoogleGenerativeAI(key);
 };
 
-export const getGeminiModel = (modelName = 'gemini-2.5-flash') => {
+export const getGeminiModel = (modelName = 'gemini-2.0-flash') => {
   return getGenAI().getGenerativeModel({ model: modelName });
 };
