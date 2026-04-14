@@ -23,7 +23,7 @@ export function Layout({ role, onLogout, children }: { role: Role, onLogout: () 
     { icon: Home, label: 'Tổng quan', path: '/' },
     { icon: BookOpen, label: 'Lớp học', path: '/courses' },
     { icon: Users, label: 'Quản lý Học Sinh', path: '/students' },
-    { icon: FileText, label: 'Ra đề thi', path: '/exams' },
+    { icon: FileText, label: 'Ra đề thi AI', path: '/exams' },
     { icon: Bot, label: 'Chấm bài AI ', path: '/ai-grading' },
     { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
     { icon: MessageCircle, label: 'Hỏi AI', path: '/ai-chat' },

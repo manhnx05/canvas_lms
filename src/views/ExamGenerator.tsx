@@ -187,7 +187,7 @@ export const ExamGenerator: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-8">
-        Ra Đề Thi Thông Minh (AI)
+        Ra Đề Thi AI
       </h1>
 
       {/* Stepper */}
