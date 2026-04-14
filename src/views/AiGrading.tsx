@@ -125,6 +125,8 @@ export function AIGrading() {
             formData.append('fileCount', selectedFiles.length.toString());
             if (input) formData.append('message', input);
 
+            console.log('[AI Grading Frontend] Sending', selectedFiles.length, 'files');
+
             setMessages([{ role: 'user', content: input || 'Gửi phiếu bài tập...', imageUrl: filePreviews.join(',') }]);
             setInput('');
             setSelectedFiles([]);
@@ -137,13 +139,19 @@ export function AIGrading() {
             });
 
             const data = await res.json();
+            
+            console.log('[AI Grading Frontend] Response status:', res.status);
+            console.log('[AI Grading Frontend] Response data:', data);
+            
             if (res.ok) {
                setCurrentSession(data.session);
                setMessages(data.session.messages);
                fetchSessions();
                toast.success("Đã chấm điểm xong!");
             } else {
-               toast.error(data.error || "Có lỗi xảy ra");
+               const errorMsg = data.error || data.message || "Có lỗi xảy ra";
+               console.error('[AI Grading Frontend] Error:', errorMsg);
+               toast.error(errorMsg);
                setMessages([]);
             }
          } else {
@@ -169,6 +177,7 @@ export function AIGrading() {
             }
          }
       } catch (err: any) {
+         console.error('[AI Grading Frontend] Exception:', err);
          toast.error(err.message || 'Lỗi hệ thống');
       } finally {
          setIsProcessing(false);
