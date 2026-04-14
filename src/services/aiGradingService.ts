@@ -74,15 +74,32 @@ Lưu ý:
         });
       }
 
+      console.log('[AI Grading Service] Calling Gemini with', imageParts.length, 'images');
+
       const result = await model.generateContent(contentParts);
       
       let text = result.response.text();
+      
+      console.log('[AI Grading Service] Raw Gemini response:', text.substring(0, 200));
+      
       text = text.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
       
+      console.log('[AI Grading Service] Cleaned response:', text.substring(0, 200));
+      
       const parsedData = JSON.parse(text);
+      
+      console.log('[AI Grading Service] Parsed data:', parsedData);
+      
       return parsedData;
     } catch (error: any) {
-      console.error('AI analyzeWorksheet error details:', error);
+      console.error('[AI Grading Service] Error details:', error);
+      console.error('[AI Grading Service] Error message:', error.message);
+      console.error('[AI Grading Service] Error stack:', error.stack);
+      
+      if (error.message?.includes('JSON')) {
+        throw new HttpError(500, `Lỗi phân tích phản hồi từ AI. Vui lòng thử lại.`);
+      }
+      
       throw new HttpError(500, `Gemini API: ${error.message || 'Lỗi nhận dạng ảnh'}`);
     }
   },
