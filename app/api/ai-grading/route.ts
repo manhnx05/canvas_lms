@@ -18,90 +18,75 @@ export const POST = withErrorHandler(async (req: Request) => {
   if (fileCountStr) {
     const count = parseInt(fileCountStr, 10);
     for (let i = 0; i < count; i++) {
-        const f = formData.get(`file_${i}`);
-        if (f) files.push(f as File);
+      const f = formData.get(`file_${i}`);
+      if (f && typeof f !== 'string') files.push(f as File);
     }
-  } else {
-    // fallback
-    files = formData.getAll('files') as File[];
   }
   
+  if (files.length === 0) {
+    const fallback = formData.getAll('files') as File[];
+    if (fallback.length > 0) files = fallback;
+  }
+  
+  if (files.length === 0) {
+    const single = formData.get('file');
+    if (single && typeof single !== 'string') files = [single as File];
+  }
+  
+  if (files.length === 0) {
+    throw new HttpError(400, 'Không tìm thấy ảnh phiếu bài tập nào được tải lên');
+  }
+
   const message = (formData.get('message') as string) || '';
 
-  if (!files || files.length === 0) {
-    const singleFile = formData.get('file') as File;
-    if (singleFile) {
-      files = [singleFile];
-    } else {
-      throw new HttpError(400, 'Không tìm thấy ảnh phiếu bài tập nào được tải lên');
-    }
-  }
-
-  // 1. Process Uploads
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  const imageUrls: string[] = [];
+  // Process images - build base64 parts for Gemini and data URLs for storage
+  const imageDataUrls: string[] = [];
   const imageParts: Array<{ base64Data: string; mimeType: string }> = [];
 
   for (const file of files) {
     if (!file || typeof file === 'string') continue;
     const buffer = Buffer.from(await file.arrayBuffer());
+    const mimeType = file.type || 'image/jpeg';
+    const base64Data = buffer.toString('base64');
     
-    const safeName = file.name ? file.name.replace(/[^a-zA-Z0-9.-]/g, '_') : 'image.jpg';
-    const uniqueId = Math.random().toString(36).substring(2, 10);
-    const filename = `${Date.now()}-${uniqueId}-aigrading-${safeName}`;
-    const filePath = path.join(uploadDir, filename);
-    fs.writeFileSync(filePath, buffer);
-    
-    imageUrls.push(`/uploads/${filename}`);
-    imageParts.push({
-      base64Data: buffer.toString('base64'),
-      mimeType: file.type
-    });
+    imageDataUrls.push(`data:${mimeType};base64,${base64Data}`);
+    imageParts.push({ base64Data, mimeType });
   }
 
   if (imageParts.length === 0) {
-    throw new HttpError(400, 'File tải lên không hợp lệ');
+    throw new HttpError(400, 'File tải lên không hợp lệ hoặc bị rỗng');
   }
 
-  // 2. Extract Data via Gemini Vision
+  // Call Gemini Vision
   const result = await aiGradingService.analyzeWorksheet(imageParts, message);
 
-  // 3. Save to Database
+  // Save to Database
   const session = await prisma.aIGradingSession.create({
     data: {
       teacherId: user.id,
       studentName: result.studentName || null,
       studentClass: result.studentClass || null,
       studentDob: result.studentDob || null,
-      score: result.score !== null && result.score !== undefined ? parseFloat(result.score) : null,
+      score: result.score !== null && result.score !== undefined ? parseFloat(String(result.score)) : null,
       feedback: result.evaluation || '',
       messages: {
         create: [
           {
-             role: 'user',
-             content: message || 'Hãy chấm phiếu bài tập này.',
-             imageUrl: imageUrls.join(',')
+            role: 'user',
+            content: message || 'Hãy chấm phiếu bài tập này.',
+            imageUrl: imageDataUrls.join('|||')
           },
           {
-             role: 'model',
-             content: result.chatResponse || result.evaluation || 'Đã phân tích xong.'
+            role: 'model',
+            content: result.chatResponse || result.evaluation || 'Đã phân tích xong.'
           }
         ]
       }
     },
-    include: {
-      messages: true
-    }
+    include: { messages: true }
   });
 
-  return NextResponse.json({
-    session: session,
-    analysis: result 
-  }, { status: 201 });
+  return NextResponse.json({ session, analysis: result }, { status: 201 });
 });
 
 export const GET = withErrorHandler(async (req: Request) => {
