@@ -203,3 +203,51 @@ describe('examService.startExamAttempt', () => {
     ).rejects.toThrow('Bài thi đã hết hạn');
   });
 });
+
+// ────────────────────────────────────────
+// retryExamAttempt
+// ────────────────────────────────────────
+describe('examService.retryExamAttempt', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const mockExam = {
+    id: 'exam-1',
+    status: 'published',
+    deadline: null,
+    maxAttempts: 2,
+    questions: []
+  };
+
+  it('phải từ chối học sinh làm lại bài thi khi đề thi là draft', async () => {
+    (prisma.exam.findUnique as any).mockResolvedValue({ ...mockExam, status: 'draft' });
+    
+    // Bug 001: Hiện tại hệ thống chưa block error này
+    await expect(
+      (examService as any).retryExamAttempt('exam-1', 'u-1', 'student')
+    ).rejects.toThrow('Bài thi chưa được công khai');
+  });
+
+  it('phải từ chối học sinh làm lại bài thi khi đề thi đã quá hạn', async () => {
+    const pastDeadline = new Date(Date.now() - 60_000).toISOString();
+    (prisma.exam.findUnique as any).mockResolvedValue({ ...mockExam, deadline: pastDeadline });
+
+    // Bug 001: Hiện tại hệ thống chưa block error này
+    await expect(
+      (examService as any).retryExamAttempt('exam-1', 'u-1', 'student')
+    ).rejects.toThrow('Bài thi đã hết hạn, không thể bắt đầu');
+  });
+
+  it('phải cho phép giáo viên làm lại bài thi draft', async () => {
+    (prisma.exam.findUnique as any).mockResolvedValue({ ...mockExam, status: 'draft' });
+    (prisma.examAttempt.count as any).mockResolvedValue(0);
+    (prisma.examAttempt.findFirst as any).mockResolvedValue(null);
+    (prisma.examAttempt.create as any).mockResolvedValue({
+      id: 'at-retry', examId: 'exam-1', userId: 'teacher-1', status: 'in_progress', answers: []
+    });
+
+    const result = await (examService as any).retryExamAttempt('exam-1', 'teacher-1', 'teacher');
+    expect(result).toBeDefined();
+  });
+});
