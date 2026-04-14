@@ -30,14 +30,14 @@ export const ExamViewer: React.FC = () => {
   useEffect(() => {
     const fetchExam = async () => {
       try {
-        const res = await fetch(`/api/exams/${id}`);
-        const data = await res.json();
-        setExam(data);
+        const res = await apiClient.get(`/exams/${id}`);
+        setExam(res.data);
         // Pre-select lớp nếu đề đã được giao
-        if (data.courseId) setSelectedCourseId(data.courseId);
-        if (data.deadline) setDeadline(new Date(data.deadline).toISOString().slice(0,16));
-      } catch (err) {
-        console.error(err);
+        if (res.data.courseId) setSelectedCourseId(res.data.courseId);
+        if (res.data.deadline) setDeadline(new Date(res.data.deadline).toISOString().slice(0,16));
+      } catch (err: any) {
+        console.error('Error fetching exam:', err);
+        alert(err.message || 'Không thể tải đề thi. Vui lòng thử lại.');
       } finally {
         setLoading(false);
       }
@@ -146,7 +146,17 @@ export const ExamViewer: React.FC = () => {
   };
 
   if (loading) return <div className="p-8 text-center text-gray-500">Đang tải đề thi...</div>;
-  if (!exam) return <div className="p-8 text-center text-red-500">Không tìm thấy đề thi.</div>;
+  if (!exam) return (
+    <div className="p-8 text-center">
+      <div className="text-red-500 text-xl font-bold mb-4">Không tìm thấy đề thi.</div>
+      <button 
+        onClick={() => navigate('/exams')} 
+        className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+      >
+        Quay lại danh sách
+      </button>
+    </div>
+  );
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-4 print:p-0 print:max-w-none">
@@ -345,7 +355,12 @@ export const ExamViewer: React.FC = () => {
 
         {/* Danh sách câu hỏi */}
         <div className="space-y-8 print:text-sm">
-          {exam.questions.map((q: any, idx: number) => (
+          {(!exam.questions || exam.questions.length === 0) ? (
+            <div className="text-center py-12 text-gray-500">
+              <p className="text-lg font-medium">Đề thi chưa có câu hỏi nào.</p>
+            </div>
+          ) : (
+            exam.questions.map((q: any, idx: number) => (
             <div key={idx} className="break-inside-avoid text-gray-900">
               <div className="flex gap-2 font-medium mb-3">
                 <span className="whitespace-nowrap font-bold">Câu {idx + 1}:</span>
@@ -375,7 +390,8 @@ export const ExamViewer: React.FC = () => {
                 </div>
               )}
             </div>
-          ))}
+          ))
+          )}
         </div>
 
       </div>
