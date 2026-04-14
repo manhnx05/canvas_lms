@@ -20,12 +20,13 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  conversations Participant[]
-  messages      Message[]
-  enrollments   Enrollment[]
-  notifications Notification[]
-  submissions   Submission[]
-  examAttempts  ExamAttempt[]
+  conversations    Participant[]
+  messages         Message[]
+  enrollments      Enrollment[]
+  notifications    Notification[]
+  submissions      Submission[]
+  examAttempts     ExamAttempt[]
+  aiGradingSessions AIGradingSession[]
 
   @@index([email])
   @@index([role])
@@ -305,4 +306,36 @@ model ExamAnswer {
 
   @@unique([attemptId, questionId])
   @@index([attemptId])
+}
+
+model AIGradingSession {
+  id            String   @id @default(uuid())
+  teacherId     String
+  studentName   String?
+  studentClass  String?
+  studentDob    String?
+  score         Float?
+  feedback      String?
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  teacher       User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  messages      AIGradingMessage[]
+
+  @@index([teacherId])
+  @@index([createdAt])
+}
+
+model AIGradingMessage {
+  id            String   @id @default(uuid())
+  sessionId     String
+  role          String   // 'user' | 'model'
+  content       String   
+  imageUrl      String?
+  createdAt     DateTime @default(now())
+
+  session       AIGradingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
 }

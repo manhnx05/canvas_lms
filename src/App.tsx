@@ -22,6 +22,7 @@ import { ExamList } from './views/ExamList';
 import { ExamGenerator } from './views/ExamGenerator';
 import { ExamViewer } from './views/ExamViewer';
 import { ExamTaking } from './views/ExamTaking';
+import { AIGrading } from './views/AIGrading';
 import { Role } from '@/src/types';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 
@@ -55,6 +56,7 @@ function AppContent() {
               <Route path="/courses" element={<Courses role={role} />} />
               <Route path="/courses/:id" element={<CourseDetail role={role} />} />
               <Route path="/assignments" element={<Assignments role={role} />} />
+              <Route path="/ai-grading" element={<AIGrading />} />
               <Route path="/assignments/:id" element={<AssignmentDetail role={role} />} />
               <Route path="/inbox" element={<Inbox />} />
               <Route path="/ai-chat" element={<AiChat />} />
