@@ -22,7 +22,7 @@ import { ExamList } from './views/ExamList';
 import { ExamGenerator } from './views/ExamGenerator';
 import { ExamViewer } from './views/ExamViewer';
 import { ExamTaking } from './views/ExamTaking';
-import { AIGrading } from './views/AIGrading';
+import { AIGrading } from './views/AiGrading';
 import { Role } from '@/src/types';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 
