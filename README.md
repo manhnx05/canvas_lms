@@ -100,6 +100,171 @@ AI-powered Learning Management System inspired by Canvas. Kết hợp UI hiện 
 
 ---
 
+## 🤖 Module Chấm Bài AI
+
+### Tổng Quan
+Module **Chấm Bài AI** sử dụng Google Gemini Vision AI để tự động chấm điểm phiếu bài tập của học sinh. Dành riêng cho giáo viên với giao diện chat hiện đại.
+
+### Chức Năng Chính
+
+#### 1. Tải Lên và Phân Tích Phiếu Bài Tập
+- Upload ảnh hoặc chụp trực tiếp từ camera
+- Hỗ trợ tất cả định dạng ảnh phổ biến (JPG, PNG, HEIC)
+- Xem trước ảnh trước khi gửi
+
+#### 2. Trích Xuất Thông Tin Tự Động
+AI tự động đọc từ phiếu bài tập:
+- Tên học sinh (nhận dạng chữ viết tay)
+- Lớp học
+- Ngày sinh (nếu có)
+- Nội dung bài làm
+
+#### 3. Chấm Điểm Thông Minh
+- **Thang điểm 10**: Tự động chấm theo thang điểm 10
+- **Dựa trên Khung Năng Lực Khoa Học**:
+  - Nhận thức khoa học (1.1-1.4)
+  - Tìm hiểu môi trường tự nhiên & xã hội (2.5-2.7)
+  - Vận dụng kiến thức, kĩ năng (3.8-3.10)
+- **3 Mức độ đánh giá**:
+  - Mức 1 (1 điểm): Chưa đạt
+  - Mức 2 (2 điểm): Đạt nhưng chưa hoàn thiện
+  - Mức 3 (3 điểm): Đạt hoàn toàn
+
+#### 4. Nhận Xét Chi Tiết
+- Phân tích từng năng lực (Mức 1, 2, 3)
+- Giải thích đúng/sai
+- Lời khuyên cụ thể để cải thiện
+- Định dạng Markdown đẹp mắt
+
+#### 5. Quản Lý Phiên Chấm Bài
+- Lưu trữ tự động mỗi lần chấm
+- Sidebar hiển thị danh sách phiên với tên, ngày, điểm
+- Truy cập nhanh các phiên đã chấm
+
+#### 6. Chat với AI
+- Hỏi đáp về bài làm sau khi chấm
+- AI nhớ toàn bộ ngữ cảnh
+- Ví dụ câu hỏi:
+  - "Giải thích thêm về câu 3"
+  - "Đề xuất bài tập bổ sung"
+  - "Phân tích sâu hơn về năng lực"
+
+### Giao Diện
+
+**Sidebar (Trái)**
+- Nút "Chấm bài mới"
+- Danh sách phiên đã chấm (sắp xếp theo thời gian)
+- Highlight phiên hiện tại
+
+**Khu vực Chat (Giữa)**
+- Header: Tên, lớp, điểm học sinh
+- Tin nhắn người dùng (phải, màu xanh)
+- Tin nhắn AI (trái, màu xám, icon robot)
+- Hiển thị ảnh phiếu bài tập
+- Markdown support
+
+**Khu vực Input (Dưới)**
+- Nút upload ảnh
+- Ô nhập tin nhắn
+- Nút gửi
+- Preview ảnh đã chọn
+
+### Luồng Hoạt Động
+
+**Chấm Bài Mới:**
+1. Click "Chấm bài mới"
+2. Upload/chụp ảnh phiếu bài tập
+3. (Tùy chọn) Nhập ghi chú
+4. Click "Gửi"
+5. AI phân tích (5-10 giây)
+6. Hiển thị: tên, lớp, điểm, nhận xét
+7. Phiên mới lưu vào sidebar
+
+**Chat về Bài Đã Chấm:**
+1. Chọn phiên từ sidebar
+2. Xem lại thông tin
+3. Nhập câu hỏi
+4. AI trả lời dựa trên ngữ cảnh
+5. Hỏi nhiều câu liên tiếp
+
+### API Endpoints
+
+**POST /api/ai-grading**
+- Tạo phiên chấm bài mới
+- Input: multipart/form-data (file + message)
+- Output: session + analysis
+
+**GET /api/ai-grading**
+- Lấy danh sách tất cả phiên chấm bài
+- Output: sessions[]
+
+**POST /api/ai-grading/[sessionId]**
+- Chat trong phiên đã tồn tại
+- Input: { message }
+- Output: { reply }
+
+### Công Nghệ
+
+**Frontend:** React, TypeScript, Tailwind CSS, Lucide Icons, React Markdown, React Hot Toast
+
+**Backend:** Next.js API Routes, Prisma ORM, Google Gemini 1.5 Pro, JWT Authentication
+
+**Database Schema:**
+```prisma
+model AIGradingSession {
+  id            String
+  teacherId     String
+  studentName   String?
+  studentClass  String?
+  studentDob    String?
+  score         Float?
+  feedback      String
+  messages      AIGradingMessage[]
+  createdAt     DateTime
+  updatedAt     DateTime
+}
+
+model AIGradingMessage {
+  id        String
+  sessionId String
+  role      String  // 'user' hoặc 'model'
+  content   String
+  imageUrl  String?
+  createdAt DateTime
+}
+```
+
+### Bảo Mật
+- ✅ Yêu cầu JWT authentication
+- ✅ Chỉ giáo viên truy cập
+- ✅ Giáo viên chỉ xem phiên của mình
+- ✅ Validation đầu vào
+- ✅ Error handling toàn diện
+
+### Ưu Điểm
+- Tiết kiệm thời gian (chấm trong vài giây)
+- Nhất quán theo tiêu chuẩn khoa học
+- Nhận xét chi tiết từng năng lực
+- Tương tác qua chat
+- Lưu trữ và quản lý phiên
+- Responsive (mobile + desktop)
+
+### Hạn Chế
+- Yêu cầu ảnh rõ nét
+- Hiện chỉ hỗ trợ môn Tự nhiên và Xã hội lớp 3
+- Cần kết nối internet
+- Phụ thuộc chất lượng chữ viết tay
+
+### Kế Hoạch Phát Triển
+- [ ] Hỗ trợ nhiều môn học và lớp
+- [ ] Export PDF
+- [ ] Thống kê năng lực theo thời gian
+- [ ] Tích hợp module Assignment
+- [ ] Chấm bài hàng loạt
+- [ ] So sánh năng lực học sinh
+
+---
+
 ## 🛠️ Lệnh thường dùng
 
 ```bash
