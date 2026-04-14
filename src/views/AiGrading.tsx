@@ -3,6 +3,38 @@ import { Camera, Send, FileImage, Loader2, Bot, User as UserIcon, Plus } from 'l
 import ReactMarkdown from 'react-markdown';
 import toast from 'react-hot-toast';
 
+const compressImage = async (file: File): Promise<File> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 1200;
+      let width = img.width;
+      let height = img.height;
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width);
+        width = MAX_WIDTH;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+        } else {
+          resolve(file);
+        }
+      }, 'image/jpeg', 0.8);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      resolve(file);
+    };
+  });
+};
 export function AIGrading() {
    const [sessions, setSessions] = useState<any[]>([]);
    const [currentSession, setCurrentSession] = useState<any>(null);
@@ -11,6 +43,7 @@ export function AIGrading() {
    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
    const [filePreviews, setFilePreviews] = useState<string[]>([]);
    const [isProcessing, setIsProcessing] = useState(false);
+   const [isCompressing, setIsCompressing] = useState(false);
    
    const fileInputRef = useRef<HTMLInputElement>(null);
    const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -40,17 +73,18 @@ export function AIGrading() {
       }, 100);
    }, [messages]);
 
-   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files.length > 0) {
          const files = Array.from(e.target.files);
-         setSelectedFiles(prev => [...prev, ...files]);
-         files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-               setFilePreviews(prev => [...prev, ev.target?.result as string]);
-            };
-            reader.readAsDataURL(file);
-         });
+         setIsCompressing(true);
+         
+         const newPreviews = files.map(file => URL.createObjectURL(file));
+         setFilePreviews(prev => [...prev, ...newPreviews]);
+         
+         const compressedFiles = await Promise.all(files.map(f => compressImage(f)));
+         setSelectedFiles(prev => [...prev, ...compressedFiles]);
+         
+         setIsCompressing(false);
          // Reset input value so same files can be selected again if needed
          if (fileInputRef.current) fileInputRef.current.value = '';
       }
@@ -273,11 +307,11 @@ export function AIGrading() {
                   />
                   <button 
                      onClick={handleSend}
-                     disabled={isProcessing || (!input.trim() && filePreviews.length === 0)}
+                     disabled={isProcessing || isCompressing || (!input.trim() && filePreviews.length === 0)}
                      className="px-6 py-3 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 disabled:hover:bg-sky-500 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
                   >
                      <Send className="w-5 h-5" />
-                     <span className="hidden md:inline">Gửi</span>
+                     <span className="hidden md:inline">{isCompressing ? 'Đang nén...' : 'Gửi'}</span>
                   </button>
                </div>
             </div>
