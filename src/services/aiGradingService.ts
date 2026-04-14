@@ -109,23 +109,30 @@ Lưu ý:
     } catch (error: any) {
       console.error('[AI Grading Service] Error details:', error);
       console.error('[AI Grading Service] Error message:', error.message);
+      console.error('[AI Grading Service] Error status:', error.status || error.statusCode);
       
       // If it's already an HttpError, rethrow it directly
       if (error instanceof HttpError) {
         throw error;
       }
       
-      // Handle specific Gemini errors
-      if (error.message?.includes('API key') || error.message?.includes('API_KEY')) {
-        throw new HttpError(500, 'Lỗi cấu hình API key. Vui lòng liên hệ admin.');
+      const msg: string = error.message || '';
+      
+      if (msg.includes('API_KEY') || msg.includes('API key') || msg.includes('invalid') && msg.includes('key')) {
+        throw new HttpError(500, 'Lỗi API key. Vui lòng kiểm tra lại GEMINI_API_KEY.');
       }
       
-      if (error.message?.includes('quota') || error.message?.includes('limit') || error.message?.includes('RESOURCE_EXHAUSTED')) {
-        throw new HttpError(429, 'Đã vượt quá giới hạn sử dụng API. Vui lòng thử lại sau.');
+      // Only trigger quota error on definitive rate-limit signals
+      if (msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota exceeded') || (msg.includes('429') )) {
+        throw new HttpError(429, 'API đã hết quota. Vui lòng kiểm tra Google AI Studio và thử lại sau.');
       }
       
-      if (error.message?.includes('SAFETY') || error.message?.includes('safety')) {
+      if (msg.includes('SAFETY') || msg.includes('safety')) {
         throw new HttpError(400, 'Ảnh bị từ chối do vi phạm chính sách an toàn. Vui lòng thử ảnh khác.');
+      }
+      
+      if (msg.includes('404') || msg.includes('not found')) {
+        throw new HttpError(500, 'Model AI không tồn tại. Vui lòng liên hệ admin.');
       }
       
       // SyntaxError from JSON.parse
@@ -133,7 +140,9 @@ Lưu ý:
         throw new HttpError(500, 'AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.');
       }
       
-      throw new HttpError(500, `Lỗi AI: ${error.message || 'Không thể phân tích ảnh'}`);
+      // Expose raw error message in non-production for debugging
+      const debugMsg = process.env.NODE_ENV !== 'production' ? `: ${msg}` : '';
+      throw new HttpError(500, `Lỗi AI${debugMsg}`);
     }
   },
 
