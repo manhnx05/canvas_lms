@@ -112,7 +112,7 @@ Trả về JSON array với format:
   let questions;
   try {
     questions = JSON.parse(jsonMatch[0]);
-  } catch (error) {
+  } catch {
     throw new Error('Dữ liệu trả về từ AI không hợp lệ. Vui lòng thử lại.');
   }
   

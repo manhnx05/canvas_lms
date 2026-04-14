@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Bell, Check, Clock, AlertCircle } from 'lucide-react';
 import { Notification } from '@/src/types';
 
@@ -7,7 +7,7 @@ export function Notifications() {
   const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       const res = await fetch(`/api/notifications?userId=${user.id}`);
       const data = await res.json();
@@ -17,11 +17,11 @@ export function Notifications() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id]);
 
   useEffect(() => {
     fetchNotifications();
-  }, [user.id]);
+  }, [fetchNotifications]);
 
   const markAsRead = async (id: string) => {
     try {

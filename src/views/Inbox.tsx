@@ -128,7 +128,7 @@ export function Inbox() {
 
     const msgPollTimer = setInterval(fetchMessages, 10000);
     return () => clearInterval(msgPollTimer);
-  }, [activeConv?.id]);
+  }, [activeConv]);
 
   // ── Fetch course members on courseId change ───────────
   useEffect(() => {
@@ -141,7 +141,7 @@ export function Inbox() {
         .then(r => r.data)
         .then(data => setCourseMembers(Array.isArray(data) ? data : []));
     }
-  }, [compose.courseId]);
+  }, [compose.courseId, currentUser.id]);
 
   // ── Handlers ─────────────────────────────────────────
   const handleSend = async () => {

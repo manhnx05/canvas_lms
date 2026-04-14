@@ -27,7 +27,6 @@ export function Students({ role }: { role: Role }) {
   const [formError, setFormError] = useState('');
 
   const fetchStudents = () => {
-    setLoading(true);
     apiClient.get('/users?role=student')
       .then(res => res.data)
       .then(data => {
