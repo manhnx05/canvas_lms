@@ -92,7 +92,7 @@ export const POST = withErrorHandler(async (req: Request) => {
             },
             {
               role: 'model',
-              content: result.chatResponse || result.evaluation || 'Đã phân tích xong.'
+              content: result.evaluation || result.chatResponse || 'Đã phân tích xong.'
             }
           ]
         }
