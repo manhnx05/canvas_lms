@@ -102,8 +102,8 @@ Lưu ý:
           throw new HttpError(500, 'Lỗi cấu hình API key. Vui lòng kiểm tra lại biến môi trường GEMINI_API_KEY.');
         }
         
-        // If it's a quota limit (429) OR model not found (404), fall back to the next model in the loop!
-        if (msg.includes('404') || msg.includes('not found') || msg.includes('resource_exhausted') || msg.includes('quota exceeded') || msg.includes('429')) {
+        // If it's a quota limit (429), model not found (404), or server overload (503), fall back to the next model in the loop!
+        if (msg.includes('404') || msg.includes('not found') || msg.includes('resource_exhausted') || msg.includes('quota exceeded') || msg.includes('429') || msg.includes('503') || msg.includes('service unavailable')) {
           continue; 
         }
 
@@ -143,7 +143,7 @@ Lưu ý:
         const msg = (error.message || '').toLowerCase();
         lastErrorMsg = msg;
         
-        if (msg.includes('404') || msg.includes('not found') || msg.includes('resource_exhausted') || msg.includes('quota exceeded') || msg.includes('429')) {
+        if (msg.includes('404') || msg.includes('not found') || msg.includes('resource_exhausted') || msg.includes('quota exceeded') || msg.includes('429') || msg.includes('503') || msg.includes('service unavailable')) {
           continue; 
         }
 
