@@ -12,29 +12,48 @@ export const POST = withErrorHandler(async (req: Request) => {
   const user = await requireAuth(req);
 
   const formData = await req.formData();
-  const file = formData.get('file') as File;
+  let files = formData.getAll('files') as File[];
   const message = (formData.get('message') as string) || '';
 
-  if (!file) {
-    throw new HttpError(400, 'Không tìm thấy ảnh phiếu bài tập');
+  if (!files || files.length === 0) {
+    const singleFile = formData.get('file') as File;
+    if (singleFile) {
+      files = [singleFile];
+    } else {
+      throw new HttpError(400, 'Không tìm thấy ảnh phiếu bài tập nào được tải lên');
+    }
   }
 
-  // 1. Process Upload
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const mimeType = file.type;
-  
+  // 1. Process Uploads
   const uploadDir = path.join(process.cwd(), 'public', 'uploads');
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
-  const filename = `${Date.now()}-aigrading-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-  const filePath = path.join(uploadDir, filename);
-  fs.writeFileSync(filePath, buffer);
-  const imageUrl = `/uploads/${filename}`;
+
+  const imageUrls: string[] = [];
+  const imageParts: Array<{ base64Data: string; mimeType: string }> = [];
+
+  for (const file of files) {
+    if (!file || typeof file === 'string') continue;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    
+    const filename = `${Date.now()}-${Math.floor(Math.random()*1000)}-aigrading-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const filePath = path.join(uploadDir, filename);
+    fs.writeFileSync(filePath, buffer);
+    
+    imageUrls.push(`/uploads/${filename}`);
+    imageParts.push({
+      base64Data: buffer.toString('base64'),
+      mimeType: file.type
+    });
+  }
+
+  if (imageParts.length === 0) {
+    throw new HttpError(400, 'File tải lên không hợp lệ');
+  }
 
   // 2. Extract Data via Gemini Vision
-  const base64Image = buffer.toString('base64');
-  const result = await aiGradingService.analyzeWorksheet(base64Image, mimeType, message);
+  const result = await aiGradingService.analyzeWorksheet(imageParts, message);
 
   // 3. Save to Database
   const session = await prisma.aIGradingSession.create({
@@ -43,14 +62,14 @@ export const POST = withErrorHandler(async (req: Request) => {
       studentName: result.studentName || null,
       studentClass: result.studentClass || null,
       studentDob: result.studentDob || null,
-      score: result.score ? parseFloat(result.score) : null,
+      score: result.score !== null && result.score !== undefined ? parseFloat(result.score) : null,
       feedback: result.evaluation || '',
       messages: {
         create: [
           {
              role: 'user',
              content: message || 'Hãy chấm phiếu bài tập này.',
-             imageUrl: imageUrl
+             imageUrl: imageUrls.join(',')
           },
           {
              role: 'model',

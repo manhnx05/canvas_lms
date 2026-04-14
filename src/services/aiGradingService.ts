@@ -3,12 +3,14 @@ import { HttpError } from '@/src/utils/errorHandler';
 
 export const aiGradingService = {
   analyzeWorksheet: async (
-    base64Image: string,
-    mimeType: string,
+    images: Array<{ base64Data: string; mimeType: string }>,
     prompt: string = "Hãy phân tích phiếu bài tập sau."
   ) => {
     if (!process.env.GEMINI_API_KEY) {
       throw new HttpError(500, 'Hệ thống chưa cấu hình GEMINI_API_KEY');
+    }
+    if (!images || images.length === 0) {
+      throw new HttpError(400, 'Dữ liệu ảnh trống.');
     }
 
     // Must use a model that supports vision
@@ -178,14 +180,16 @@ Lưu ý:
 - Đầu ra CHỈ gồm đối tượng JSON của bạn, không thêm bình luận nào khác.`;
 
     try {
+      const imageParts = images.map(img => ({
+        inlineData: {
+          data: img.base64Data,
+          mimeType: img.mimeType
+        }
+      }));
+
       const result = await model.generateContent([
         systemPrompt + "\n\nNội dung nhắc nhở thêm: " + prompt,
-        {
-          inlineData: {
-            data: base64Image,
-            mimeType: mimeType,
-          },
-        },
+        ...imageParts
       ]);
       
       let text = result.response.text();

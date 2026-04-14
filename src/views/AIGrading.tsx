@@ -8,8 +8,8 @@ export function AIGrading() {
    const [currentSession, setCurrentSession] = useState<any>(null);
    const [messages, setMessages] = useState<any[]>([]);
    const [input, setInput] = useState('');
-   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-   const [filePreview, setFilePreview] = useState<string | null>(null);
+   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+   const [filePreviews, setFilePreviews] = useState<string[]>([]);
    const [isProcessing, setIsProcessing] = useState(false);
    
    const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,35 +41,39 @@ export function AIGrading() {
    }, [messages]);
 
    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files[0]) {
-         const file = e.target.files[0];
-         setSelectedFile(file);
-         const reader = new FileReader();
-         reader.onload = (ev) => {
-            setFilePreview(ev.target?.result as string);
-         };
-         reader.readAsDataURL(file);
+      if (e.target.files && e.target.files.length > 0) {
+         const files = Array.from(e.target.files);
+         setSelectedFiles(prev => [...prev, ...files]);
+         files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+               setFilePreviews(prev => [...prev, ev.target?.result as string]);
+            };
+            reader.readAsDataURL(file);
+         });
+         // Reset input value so same files can be selected again if needed
+         if (fileInputRef.current) fileInputRef.current.value = '';
       }
    };
 
    const startNewSession = () => {
       setCurrentSession(null);
       setMessages([]);
-      setSelectedFile(null);
-      setFilePreview(null);
+      setSelectedFiles([]);
+      setFilePreviews([]);
       setInput('');
    };
 
    const selectSession = (session: any) => {
       setCurrentSession(session);
       setMessages(session.messages || []);
-      setSelectedFile(null);
-      setFilePreview(null);
+      setSelectedFiles([]);
+      setFilePreviews([]);
    };
 
    const handleSend = async () => {
-      if (!input.trim() && !selectedFile) return;
-      if (!currentSession && !selectedFile) {
+      if (!input.trim() && selectedFiles.length === 0) return;
+      if (!currentSession && selectedFiles.length === 0) {
          toast.error("Phiên chấm mới yêu cầu tải lên ảnh phiếu bài tập.");
          return;
       }
@@ -81,13 +85,13 @@ export function AIGrading() {
          if (!currentSession) {
             // New Session via Image Upload
             const formData = new FormData();
-            formData.append('file', selectedFile!);
+            selectedFiles.forEach(f => formData.append('files', f));
             if (input) formData.append('message', input);
 
-            setMessages([{ role: 'user', content: input || 'Gửi phiếu bài tập...', imageUrl: filePreview }]);
+            setMessages([{ role: 'user', content: input || 'Gửi phiếu bài tập...', imageUrl: filePreviews.join(',') }]);
             setInput('');
-            setSelectedFile(null);
-            setFilePreview(null);
+            setSelectedFiles([]);
+            setFilePreviews([]);
 
             const res = await fetch('/api/ai-grading', {
                method: 'POST',
@@ -193,7 +197,11 @@ export function AIGrading() {
                         )}
                         <div className={`flex flex-col ${msg.role === 'user' ? 'last:items-end' : ''}`}>
                            {msg.imageUrl && (
-                              <img src={msg.imageUrl} alt="Uploaded worksheet" className="w-64 rounded-2xl border-4 border-white shadow-md mb-2 object-cover object-top" />
+                              <div className="flex flex-wrap gap-2 justify-end mb-2">
+                                 {msg.imageUrl.split(',').map((url: string, idx: number) => (
+                                    <img key={idx} src={url} alt="Uploaded worksheet" className="w-64 max-h-96 rounded-2xl border-4 border-white shadow-md object-cover object-top" />
+                                 ))}
+                              </div>
                            )}
                            <div className={`px-5 py-3.5 rounded-2xl ${msg.role === 'user' ? 'bg-sky-500 text-white rounded-tr-sm' : 'bg-slate-50 border border-slate-100 text-slate-700 rounded-tl-sm shadow-sm'}`}>
                               <div className="prose prose-sm prose-p:leading-relaxed max-w-none break-words">
@@ -225,10 +233,17 @@ export function AIGrading() {
 
             {/* Input area */}
             <div className="p-4 border-t border-sky-100 bg-slate-50/50">
-               {filePreview && (
-                  <div className="mb-3 relative inline-block">
-                     <img src={filePreview} alt="Preview" className="h-20 rounded-lg shadow-sm border-2 border-sky-200" />
-                     <button onClick={() => { setFilePreview(null); setSelectedFile(null); }} className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-sm hover:scale-110 transition-transform">✕</button>
+               {filePreviews.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-2">
+                     {filePreviews.map((preview, idx) => (
+                        <div key={idx} className="relative inline-block">
+                           <img src={preview} alt="Preview" className="h-20 w-auto rounded-lg shadow-sm border-2 border-sky-200 object-cover" />
+                           <button onClick={() => {
+                              setFilePreviews(prev => prev.filter((_, i) => i !== idx));
+                              setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
+                           }} className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-sm hover:scale-110 transition-transform">✕</button>
+                        </div>
+                     ))}
                   </div>
                )}
                <div className="flex gap-3 bg-white p-2 rounded-2xl border border-sky-200 shadow-sm">
@@ -246,6 +261,7 @@ export function AIGrading() {
                      ref={fileInputRef} 
                      onChange={handleFileChange} 
                      accept="image/*"
+                     multiple
                   />
                   <input 
                      type="text"
@@ -257,7 +273,7 @@ export function AIGrading() {
                   />
                   <button 
                      onClick={handleSend}
-                     disabled={isProcessing || (!input.trim() && !filePreview)}
+                     disabled={isProcessing || (!input.trim() && filePreviews.length === 0)}
                      className="px-6 py-3 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 disabled:hover:bg-sky-500 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
                   >
                      <Send className="w-5 h-5" />
