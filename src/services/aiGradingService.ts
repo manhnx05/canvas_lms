@@ -66,7 +66,7 @@ Lưu ý:
     }
 
     // Auto-fallback mechanism across most stable available Gemini versions
-    const FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash'];
+    const FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash'];
     let lastErrorMsg = '';
 
     for (const modelName of FALLBACK_MODELS) {
@@ -120,7 +120,7 @@ Lưu ý:
     if (!process.env.GEMINI_API_KEY) {
       throw new HttpError(500, 'Hệ thống chưa cấu hình GEMINI_API_KEY');
     }
-    const FALLBACK_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash'];
+    const FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash'];
     let lastErrorMsg = '';
 
     for (const modelName of FALLBACK_MODELS) {

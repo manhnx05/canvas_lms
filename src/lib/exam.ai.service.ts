@@ -4,10 +4,10 @@ import * as path from 'path';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-/** Use gemini-1.5-flash-latest - stable vision model with better quota */
+/** Use gemini-2.5-flash - stable vision model */
 async function getModel() {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
-  return { model, modelName: 'gemini-1.5-flash-latest' };
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  return { model, modelName: 'gemini-2.5-flash' };
 }
 
 export interface ExamQuestion {
