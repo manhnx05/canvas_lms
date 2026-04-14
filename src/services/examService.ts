@@ -247,9 +247,19 @@ export const examService = {
     return { ...attempt, maxAttempts: exam.maxAttempts, attemptsCount: count };
   },
 
-  retryExamAttempt: async (examId: string, userId: string) => {
+  retryExamAttempt: async (examId: string, userId: string, userRole = 'student') => {
     const exam = await prisma.exam.findUnique({ where: { id: examId } });
     if (!exam) throw new HttpError(404, 'Không tìm thấy đề thi');
+
+    // Kiểm tra deadline (bỏ qua cho giáo viên)
+    if (userRole !== 'teacher' && exam.deadline && new Date() > new Date(exam.deadline)) {
+      throw new HttpError(403, 'Bài thi đã hết hạn, không thể bắt đầu');
+    }
+
+    // Kiểm tra trạng thái published (bỏ qua cho giáo viên)
+    if (userRole !== 'teacher' && exam.status !== 'published') {
+      throw new HttpError(403, 'Bài thi chưa được công khai');
+    }
 
     const count = await prisma.examAttempt.count({ where: { examId, userId } });
     if (count >= exam.maxAttempts) {
@@ -283,7 +293,7 @@ export const examService = {
     if (attempt.userId !== userId) throw new HttpError(403, 'Không có quyền nộp bài này');
     if (attempt.status === 'completed') throw new HttpError(400, 'Bài thi này đã được nộp');
 
-    const examQuestions = attempt.exam.questions as any[];
+    const examQuestions = (attempt.exam.questions as any[]) || [];
     let correctCount = 0;
     const answerRecords: any[] = [];
     const answersMap: Record<string, string> = {};
