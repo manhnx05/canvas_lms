@@ -10,8 +10,8 @@ export const aiGradingService = {
       throw new HttpError(500, 'Hệ thống chưa cấu hình GEMINI_API_KEY');
     }
 
-    // Must use a model that supports vision
-    const model = getGeminiModel('gemini-1.5-pro'); // 1.5 pro handles handwriting better
+    // Use gemini-1.5-flash for stability (gemini-2.5 may not be available yet)
+    const model = getGeminiModel('gemini-1.5-flash');
     
     const systemPrompt = `Bạn là một giáo viên chuyên chấm bài. Nhiệm vụ của bạn là đọc hình ảnh phiếu bài tập của học sinh, trích xuất thông tin cá nhân và chấm điểm bài làm. Đặc biệt, hãy đánh giá bài làm dựa trên KHUNG NĂNG LỰC KHOA HỌC dưới đây.
 
@@ -75,10 +75,25 @@ Lưu ý:
       }
 
       console.log('[AI Grading Service] Calling Gemini with', imageParts.length, 'images');
+      console.log('[AI Grading Service] Image sizes:', imageParts.map(i => i.base64Data.length));
 
       const result = await model.generateContent(contentParts);
       
-      let text = result.response.text();
+      // Check if response was blocked
+      if (!result.response) {
+        console.error('[AI Grading Service] No response from Gemini');
+        throw new HttpError(500, 'AI không thể phân tích ảnh này. Vui lòng thử ảnh khác hoặc liên hệ admin.');
+      }
+
+      const response = result.response;
+      
+      // Check for safety blocks
+      if (response.promptFeedback?.blockReason) {
+        console.error('[AI Grading Service] Blocked by safety:', response.promptFeedback.blockReason);
+        throw new HttpError(400, 'Ảnh bị từ chối do vi phạm chính sách an toàn của AI. Vui lòng thử ảnh khác.');
+      }
+
+      let text = response.text();
       
       console.log('[AI Grading Service] Raw Gemini response:', text.substring(0, 200));
       
@@ -94,13 +109,30 @@ Lưu ý:
     } catch (error: any) {
       console.error('[AI Grading Service] Error details:', error);
       console.error('[AI Grading Service] Error message:', error.message);
-      console.error('[AI Grading Service] Error stack:', error.stack);
       
-      if (error.message?.includes('JSON')) {
-        throw new HttpError(500, `Lỗi phân tích phản hồi từ AI. Vui lòng thử lại.`);
+      // If it's already an HttpError, rethrow it
+      if (error.statusCode) {
+        throw error;
       }
       
-      throw new HttpError(500, `Gemini API: ${error.message || 'Lỗi nhận dạng ảnh'}`);
+      // Handle specific Gemini errors
+      if (error.message?.includes('API key')) {
+        throw new HttpError(500, 'Lỗi cấu hình API key. Vui lòng liên hệ admin.');
+      }
+      
+      if (error.message?.includes('quota') || error.message?.includes('limit')) {
+        throw new HttpError(429, 'Đã vượt quá giới hạn sử dụng API. Vui lòng thử lại sau.');
+      }
+      
+      if (error.message?.includes('JSON')) {
+        throw new HttpError(500, 'Lỗi phân tích phản hồi từ AI. Vui lòng thử lại.');
+      }
+      
+      if (error.message?.includes('SAFETY')) {
+        throw new HttpError(400, 'Ảnh bị từ chối do vi phạm chính sách an toàn. Vui lòng thử ảnh khác.');
+      }
+      
+      throw new HttpError(500, `Lỗi AI: ${error.message || 'Không thể phân tích ảnh'}`);
     }
   },
 
