@@ -119,7 +119,10 @@ export function AIGrading() {
          if (!currentSession) {
             // New Session via Image Upload
             const formData = new FormData();
-            selectedFiles.forEach(f => formData.append('files', f));
+            selectedFiles.forEach((f, idx) => {
+               formData.append(`file_${idx}`, f);
+            });
+            formData.append('fileCount', selectedFiles.length.toString());
             if (input) formData.append('message', input);
 
             setMessages([{ role: 'user', content: input || 'Gửi phiếu bài tập...', imageUrl: filePreviews.join(',') }]);

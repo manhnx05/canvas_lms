@@ -12,7 +12,20 @@ export const POST = withErrorHandler(async (req: Request) => {
   const user = await requireAuth(req);
 
   const formData = await req.formData();
-  let files = formData.getAll('files') as File[];
+  let files: File[] = [];
+  const fileCountStr = formData.get('fileCount') as string;
+  
+  if (fileCountStr) {
+    const count = parseInt(fileCountStr, 10);
+    for (let i = 0; i < count; i++) {
+        const f = formData.get(`file_${i}`);
+        if (f) files.push(f as File);
+    }
+  } else {
+    // fallback
+    files = formData.getAll('files') as File[];
+  }
+  
   const message = (formData.get('message') as string) || '';
 
   if (!files || files.length === 0) {
@@ -37,7 +50,9 @@ export const POST = withErrorHandler(async (req: Request) => {
     if (!file || typeof file === 'string') continue;
     const buffer = Buffer.from(await file.arrayBuffer());
     
-    const filename = `${Date.now()}-${Math.floor(Math.random()*1000)}-aigrading-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const safeName = file.name ? file.name.replace(/[^a-zA-Z0-9.-]/g, '_') : 'image.jpg';
+    const uniqueId = Math.random().toString(36).substring(2, 10);
+    const filename = `${Date.now()}-${uniqueId}-aigrading-${safeName}`;
     const filePath = path.join(uploadDir, filename);
     fs.writeFileSync(filePath, buffer);
     
