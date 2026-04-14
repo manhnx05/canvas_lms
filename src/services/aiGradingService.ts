@@ -124,7 +124,7 @@ Lưu ý:
       
       // Only trigger quota error on definitive rate-limit signals
       if (msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota exceeded') || (msg.includes('429') )) {
-        throw new HttpError(429, 'API đã hết quota. Vui lòng kiểm tra Google AI Studio và thử lại sau.');
+        throw new HttpError(429, `API đã hết quota. Nguyên nhân gốc: ${msg}`);
       }
       
       if (msg.includes('SAFETY') || msg.includes('safety')) {
@@ -140,9 +140,8 @@ Lưu ý:
         throw new HttpError(500, 'AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.');
       }
       
-      // Expose raw error message in non-production for debugging
-      const debugMsg = process.env.NODE_ENV !== 'production' ? `: ${msg}` : '';
-      throw new HttpError(500, `Lỗi AI${debugMsg}`);
+      // Temporarily expose raw error message always for debugging
+      throw new HttpError(500, `Lỗi AI: ${msg}`);
     }
   },
 
