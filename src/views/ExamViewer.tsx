@@ -345,11 +345,11 @@ export const ExamViewer: React.FC = () => {
         
         {/* Header Đề thi */}
         <div className="text-center mb-10 pb-6 border-b-2 border-gray-800">
-          <h1 className="text-3xl font-bold uppercase mb-4 text-gray-900">{exam.title}</h1>
+          <h1 className="text-3xl font-bold uppercase mb-4 text-gray-900">{exam?.title || 'Đề thi chưa có tên'}</h1>
           <div className="flex justify-center gap-8 text-gray-700 font-medium text-lg">
-            <span>Môn: {exam.subject.toUpperCase()}</span>
-            <span>Lớp: {exam.grade}</span>
-            <span>Thời gian: {exam.duration} phút</span>
+            <span>Môn: {exam?.subject ? exam.subject.toUpperCase() : 'KHÔNG XÁC ĐỊNH'}</span>
+            <span>Lớp: {exam?.grade || 'Chưa phân lớp'}</span>
+            <span>Thời gian: {exam?.duration || 0} phút</span>
           </div>
         </div>
 
