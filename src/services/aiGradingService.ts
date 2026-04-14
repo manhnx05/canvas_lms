@@ -44,11 +44,20 @@ Cấu trúc JSON yêu cầu:
   "studentClass": "Lớp (trống nếu không thấy)",
   "score": Điểm số (kiểu số, thang điểm 10 - tổng hợp từ các mức độ NL đạt được),
   "evaluation": "Nội dung nhận xét bài làm bằng văn bản Markdown. BẮT BUỘC liệt kê rõ: Bé đạt cụ thể 'Mức 1, 2 hay 3' ở các biểu hiện năng lực nào có trong Bảng 2.2 của JSON. Phân tích cụ thể dựa trên đáp án đúng/sai của học sinh. Gạch đầu dòng rõ ràng để phụ huynh dễ theo dõi.",
-  "chatResponse": "Lời chào và tóm tắt cực ngắn gửi giáo viên (khoảng 3-4 câu). VD: Bài làm của Mạnh đạt điểm 8. Bé đạt Mức 3 ở kỹ năng nhận thức khoa học..."
+  "chatResponse": "Lời chào và tóm tắt cực ngắn gửi giáo viên (khoảng 3-4 câu). VD: Bài làm của Mạnh đạt điểm 8. Bé đạt Mức 3 ở kỹ năng nhận thức khoa học...",
+  "competencies": [
+    {
+      "id": "1.1",
+      "name": "Nêu, nhận biết sự vật, hiện tượng",
+      "level": 3,
+      "justification": "Lý do vì sao đạt mức này"
+    }
+  ]
 }
 
 Lưu ý:
 - Bám sát tiêu chí 3 Mức độ (1,2,3) từ 'cac_muc_do_tieu_chi_nang_luc_khoa_hoc_bang_2_2'.
+- Trường 'competencies' LÀ MẢNG BẮT BUỘC, đối chiếu chính xác các Mức độ đã đạt được trong bài làm.
 - Đầu ra CHỈ gồm JSON, không bình luận thêm.`;
 
     const contentParts: any[] = [

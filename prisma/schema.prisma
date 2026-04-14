@@ -316,6 +316,7 @@ model AIGradingSession {
   studentDob    String?
   score         Float?
   feedback      String?
+  competencies  Json?    // Array of parsed competency levels
   status        String   @default("active")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

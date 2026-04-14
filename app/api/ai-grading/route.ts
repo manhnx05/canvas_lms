@@ -83,6 +83,7 @@ export const POST = withErrorHandler(async (req: Request) => {
         studentDob: result.studentDob || null,
         score: result.score !== null && result.score !== undefined ? parseFloat(String(result.score)) : null,
         feedback: result.evaluation || '',
+        competencies: result.competencies && Array.isArray(result.competencies) ? result.competencies : null,
         messages: {
           create: [
             {
