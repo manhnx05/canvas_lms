@@ -108,9 +108,11 @@ Module **Chấm Bài AI** sử dụng Google Gemini Vision AI để tự động
 ### Chức Năng Chính
 
 #### 1. Tải Lên và Phân Tích Phiếu Bài Tập
-- Upload ảnh hoặc chụp trực tiếp từ camera
+- Upload nhiều ảnh cùng lúc hoặc chụp trực tiếp từ camera
 - Hỗ trợ tất cả định dạng ảnh phổ biến (JPG, PNG, HEIC)
-- Xem trước ảnh trước khi gửi
+- Tự động nén ảnh để tối ưu tốc độ xử lý
+- Xem trước tất cả ảnh trước khi gửi
+- AI phân tích toàn diện từ nhiều ảnh
 
 #### 2. Trích Xuất Thông Tin Tự Động
 AI tự động đọc từ phiếu bài tập:
@@ -248,6 +250,8 @@ model AIGradingMessage {
 - Tương tác qua chat
 - Lưu trữ và quản lý phiên
 - Responsive (mobile + desktop)
+- Hỗ trợ upload nhiều ảnh cùng lúc
+- Tự động nén ảnh tối ưu
 
 ### Hạn Chế
 - Yêu cầu ảnh rõ nét
