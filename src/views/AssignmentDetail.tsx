@@ -31,7 +31,10 @@ export function AssignmentDetail({ role }: { role: Role }) {
       });
   };
 
-  useEffect(() => { loadData(); }, [id]);
+  useEffect(() => { 
+    loadData(); 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleSubmitQuiz = async () => {
     if (assignment.questions && Object.keys(answers).length < assignment.questions.length) {

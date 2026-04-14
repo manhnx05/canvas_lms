@@ -89,9 +89,15 @@ export function Inbox() {
 
     // Auto-open compose from Students page (?compose=1&to=...)
     const params = new URLSearchParams(window.location.search);
-    if (params.get('compose') === '1' && params.get('to')) {
-      setCompose(prev => ({ ...prev, receiverId: params.get('to') || '' }));
-      setShowCompose(true);
+    const toParam = params.get('to');
+    const composeParam = params.get('compose');
+    
+    if (composeParam === '1' && toParam) {
+      // Use setTimeout to avoid setState during render
+      setTimeout(() => {
+        setCompose(prev => ({ ...prev, receiverId: toParam }));
+        setShowCompose(true);
+      }, 0);
     }
 
     // Poll conversations every 15 seconds to show new messages

@@ -47,7 +47,7 @@ export function Courses({ role }: { role: Role }) {
         await createCourse({ title, description, color, icon: 'BookOpen' });
       }
       closeModal();
-    } catch (err: any) {
+    } catch {
       // Errors are handled in the hook via toast
     }
   };
@@ -66,7 +66,7 @@ export function Courses({ role }: { role: Role }) {
 
     try {
       await deleteCourse(course.id);
-    } catch (err: any) {
+    } catch {
       // Toast error handled in hook
     }
   };
