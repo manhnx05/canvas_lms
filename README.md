@@ -269,6 +269,65 @@ model AIGradingMessage {
 
 ---
 
+## 🧪 Testing
+
+### Test Coverage
+
+Dự án có **198 unit tests** toàn diện với coverage cao cho tất cả các services và middleware:
+
+#### Services Tests (158 test cases)
+- ✅ **userService** (12 tests) - Quản lý người dùng, authentication
+- ✅ **courseService** (16 tests) - Quản lý khóa học, modules, announcements
+- ✅ **examService** (13 tests) - Tạo đề thi, làm bài, chấm điểm
+- ✅ **assignmentService** (tests) - Quản lý bài tập, nộp bài
+- ✅ **aiService** (tests) - AI chat, generate quiz, evaluate submission
+- ✅ **notificationService** (7 tests) - Thông báo người dùng
+- ✅ **conversationService** (19 tests) - Chat, tin nhắn, conversations
+- ✅ **rewardService** (6 tests) - Phần thưởng, điểm thưởng
+- ✅ **teacherService** (13 tests) - Thống kê giáo viên, học sinh
+- ✅ **aiGradingService** (13 tests) - Chấm bài AI, phân tích worksheet
+
+#### Middleware Tests (22 test cases)
+- ✅ **auth middleware** (22 tests) - JWT verification, token management, authorization
+
+#### System Tests
+- ✅ **errorHandler** - Error handling và logging
+- ✅ **system** - Health checks và system status
+
+### Chạy Tests
+
+```bash
+# Chạy tất cả tests
+npm test
+
+# Chạy tests với watch mode (tự động chạy lại khi có thay đổi)
+npm run test:watch
+
+# Chạy tests cho một file cụ thể
+npm test -- src/services/__tests__/userService.test.ts
+
+# Chạy tests với coverage report
+npm test -- --coverage
+```
+
+### Test Structure
+
+Mỗi test file tuân theo cấu trúc:
+- **Test ID**: TC-[SERVICE]-[NUMBER] (ví dụ: TC-USER-001)
+- **Mô tả rõ ràng**: Mô tả chức năng được test
+- **Mock dependencies**: Mock Prisma, external APIs
+- **Edge cases**: Test các trường hợp biên, lỗi
+- **Logging**: Console logs để debug
+
+### Test Technologies
+
+- **Vitest** - Fast unit test framework
+- **@testing-library/react** - React component testing
+- **@testing-library/jest-dom** - Custom matchers
+- **jsdom** - DOM environment cho tests
+
+---
+
 ## 🛠️ Lệnh thường dùng
 
 ```bash
@@ -315,4 +374,31 @@ npm run db:reset
 - Dự án sử dụng `next dev` cho môi trường development và `next start` cho production.
 - `prisma generate` tự động chạy sau khi cài đặt và khi build.
 - API route được đặt trong `app/api` theo Next.js App Router.
+- **Test Coverage**: 198 unit tests covering services, middleware, và system components.
+- **Code Quality**: ESLint configured với TypeScript strict mode.
+- **Type Safety**: Full TypeScript support với strict type checking.
+
+---
+
+## 🎯 Quality Assurance
+
+### Testing Strategy
+- **Unit Tests**: Mỗi service và middleware có test coverage đầy đủ
+- **Mock Strategy**: Mock Prisma, external APIs (Gemini, Resend)
+- **Edge Cases**: Test các trường hợp lỗi, validation, authorization
+- **Continuous Testing**: Tests chạy tự động trước mỗi commit
+
+### Code Standards
+- TypeScript strict mode enabled
+- ESLint với rules chặt chẽ
+- Prettier cho code formatting
+- Conventional commits cho git messages
+
+### Security
+- JWT authentication với token expiration
+- Role-based access control (RBAC)
+- Rate limiting cho API endpoints
+- Input validation và sanitization
+- SQL injection prevention
+- XSS protection headers
 
