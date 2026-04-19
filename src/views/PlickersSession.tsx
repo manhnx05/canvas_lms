@@ -8,6 +8,7 @@ const FLASK_URL = 'http://localhost:5000';
 export function PlickersSession() {
   const { id } = useParams<{ id: string }>();
   const [session, setSession] = useState<PlickersSession | null>(null);
+  const [enrollments, setEnrollments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Thêm định kiểu để dễ đọc code
@@ -17,7 +18,14 @@ export function PlickersSession() {
     try {
       const res = await fetch(`/api/plickers/sessions/${id}`);
       const json = await res.json();
-      if (json.data) setSession(json.data);
+      if (json.data) {
+        setSession(json.data);
+        if (json.data.courseId) {
+          const eRes = await fetch(`/api/courses/${json.data.courseId}/enrollments`);
+          const eJson = await eRes.json();
+          if (eJson.data) setEnrollments(eJson.data);
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -52,6 +60,12 @@ export function PlickersSession() {
   const questions: FullQuestion[] = session.questions || [];
   const responses: PlickersResponse[] = session.responses || [];
   const totalStudents = new Set(responses.map(r => r.cardNumber)).size;
+
+  // Build mapping from cardNumber -> student info
+  const cardMap = new Map<number, typeof enrollments[0]>();
+  enrollments.forEach(e => {
+    if (e.plickerCardId) cardMap.set(e.plickerCardId, e);
+  });
 
   return (
     <div className="space-y-6">
@@ -156,6 +170,38 @@ export function PlickersSession() {
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Student List */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <h3 className="text-sm font-bold text-slate-600 mb-3">Học sinh đã trả lời ({total})</h3>
+                {qResponses.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {qResponses.map(r => {
+                      const studentInfo = cardMap.get(r.cardNumber);
+                      const isCorrect = q.correctAnswer === r.answer;
+                      return (
+                        <div key={r.id} className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-200">
+                          {studentInfo ? (
+                            <img src={studentInfo.user.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt="avt" className="w-8 h-8 rounded-full border border-slate-100" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">#{r.cardNumber}</div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 truncate" title={studentInfo?.user.name}>
+                              {studentInfo ? studentInfo.user.name : `Thẻ số ${r.cardNumber}`}
+                            </p>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isCorrect ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                              Đáp án: {r.answer}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">Chưa có phản hồi</p>
+                )}
               </div>
             </div>
           );

@@ -24,6 +24,24 @@ export async function POST(
       return NextResponse.json({ error: 'answer phải là A, B, C hoặc D' }, { status: 400 });
     }
 
+    let resolvedStudentId = studentId;
+
+    if (!resolvedStudentId) {
+      // Auto-resolve student based on card mapping
+      const session = await prisma.plickersSession.findUnique({
+        where: { id: params.id },
+        select: { courseId: true }
+      });
+      if (session?.courseId) {
+        const enrollment = await prisma.enrollment.findFirst({
+          where: { courseId: session.courseId, plickerCardId: Number(cardNumber) }
+        });
+        if (enrollment) {
+          resolvedStudentId = enrollment.userId;
+        }
+      }
+    }
+
     // Upsert — nếu thẻ đã quét cho câu này, cập nhật đáp án
     const response = await prisma.plickersResponse.upsert({
       where: {
@@ -34,7 +52,7 @@ export async function POST(
       },
       update: {
         answer: answer.toUpperCase(),
-        studentId: studentId || null,
+        studentId: resolvedStudentId || null,
         scannedAt: new Date(),
       },
       create: {
@@ -42,7 +60,7 @@ export async function POST(
         questionId,
         cardNumber: Number(cardNumber),
         answer: answer.toUpperCase(),
-        studentId: studentId || null,
+        studentId: resolvedStudentId || null,
       },
     });
 

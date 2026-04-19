@@ -102,13 +102,14 @@ model Announcement {
 }
 
 model Enrollment {
-  id        String   @id @default(uuid())
-  userId    String
-  courseId  String
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  userId        String
+  courseId      String
+  plickerCardId Int?     // Map student to physical Plickers card inside this course
+  createdAt     DateTime @default(now())
   
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
   @@index([userId])
