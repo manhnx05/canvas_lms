@@ -50,6 +50,7 @@ model Course {
   enrollments   Enrollment[]
   conversations Conversation[]
   exams         Exam[]
+  plickers      PlickersSession[]
 
   @@index([title])
 }
@@ -339,4 +340,56 @@ model AIGradingMessage {
   session       AIGradingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
+}
+
+// ─── Plickers Integration ─────────────────────────────────────────────────────
+
+model PlickersSession {
+  id          String   @id @default(uuid())
+  courseId    String?
+  teacherId   String
+  title       String
+  status      String   @default("idle") // idle | active | ended
+  currentQ    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course      Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  questions   PlickersQuestion[]
+  responses   PlickersResponse[]
+
+  @@index([teacherId])
+  @@index([courseId])
+  @@index([status])
+}
+
+model PlickersQuestion {
+  id            String   @id @default(uuid())
+  sessionId     String
+  text          String
+  order         Int      @default(0)
+  correctAnswer String?  // A | B | C | D
+
+  session       PlickersSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  responses     PlickersResponse[]
+
+  @@index([sessionId])
+  @@index([order])
+}
+
+model PlickersResponse {
+  id          String   @id @default(uuid())
+  sessionId   String
+  questionId  String
+  cardNumber  Int      // Card number (1-40) mapped to a student
+  studentId   String?  // Linked Canvas userId (if mapped)
+  answer      String   // A | B | C | D
+  scannedAt   DateTime @default(now())
+
+  session     PlickersSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question    PlickersQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, cardNumber])
+  @@index([sessionId])
+  @@index([questionId])
 }
