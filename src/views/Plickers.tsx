@@ -29,6 +29,9 @@ export function Plickers({ role }: PlickersProps) {
     courseId: '',
     questions: [{ text: '', correctAnswer: '' }],
   });
+  
+  const [importText, setImportText] = useState('');
+  const [showImport, setShowImport] = useState(false);
 
   // Load sessions
   const loadSessions = useCallback(async () => {
@@ -113,6 +116,46 @@ export function Plickers({ role }: PlickersProps) {
   const updateQuestion = (i: number, field: string, value: string) =>
     setForm(f => ({ ...f, questions: f.questions.map((q, idx) => idx === i ? { ...q, [field]: value } : q) }));
 
+  // Quick import parser
+  const handleImport = () => {
+    if (!importText.trim()) return;
+    const lines = importText.split('\n');
+    const newQuestions = [];
+    
+    let currentQ = '';
+    let currentAns = '';
+    
+    // Very basic parsing heuristic
+    for (const line of lines) {
+      const txt = line.trim();
+      if (!txt) continue;
+      
+      if (/^Đáp án:?\s*([A-D])/i.test(txt)) {
+        const match = txt.match(/^Đáp án:?\s*([A-D])/i);
+        if (match) currentAns = match[1].toUpperCase();
+      } else if (/^Câu \d+:/i.test(txt) || /^[0-9]+\./.test(txt)) {
+        if (currentQ) newQuestions.push({ text: currentQ, correctAnswer: currentAns });
+        currentQ = txt.replace(/^Câu \d+:\s*/i, '').replace(/^[0-9]+\.\s*/, '');
+        currentAns = '';
+      } else if (/^[A-D]\\./i.test(txt)) {
+        // Just options text, ignoring for now since Plickers UI only needs question block
+      } else {
+        if (!currentQ) currentQ = txt; // fallback
+      }
+    }
+    // push last
+    if (currentQ) newQuestions.push({ text: currentQ, correctAnswer: currentAns });
+    
+    if (newQuestions.length > 0) {
+      setForm(f => ({
+        ...f,
+        questions: [...f.questions.filter(q => q.text.trim() !== ''), ...newQuestions]
+      }));
+      setImportText('');
+      setShowImport(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -159,6 +202,15 @@ export function Plickers({ role }: PlickersProps) {
             className="flex items-center gap-2 bg-white text-violet-700 hover:bg-violet-50 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors"
           >
             <MonitorPlay className="w-4 h-4" /> Student Display
+            <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+          </a>
+          <a
+            href="https://assets.plickers.com/plickers-cards/PlickersCards_2up.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-indigo-800 hover:bg-indigo-900 text-white border-none px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm"
+          >
+            <ScanLine className="w-4 h-4" /> In Mã Mới (PDF)
             <ExternalLink className="w-3.5 h-3.5 opacity-70" />
           </a>
         </div>
@@ -288,7 +340,36 @@ export function Plickers({ role }: PlickersProps) {
 
               {/* Questions */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Câu hỏi <span className="text-rose-500">*</span></label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-bold text-slate-700">Câu hỏi <span className="text-rose-500">*</span></label>
+                  <button 
+                    onClick={() => setShowImport(!showImport)}
+                    className="text-sm font-semibold text-violet-600 hover:text-violet-700"
+                  >
+                    {showImport ? 'Nhập thủ công' : 'Import Tự Động Siêu Tốc'}
+                  </button>
+                </div>
+
+                {showImport && (
+                  <div className="bg-violet-50 rounded-xl p-4 border border-violet-100 mb-4 scale-up">
+                    <p className="text-xs text-violet-600 mb-2 font-bold">
+                      Cú pháp: Câu 1: [Nội dung]<br/>Đáp án: [A/B/C/D]
+                    </p>
+                    <textarea 
+                      className="w-full h-32 p-3 text-sm border border-violet-200 rounded-lg outline-none focus:border-violet-500"
+                      placeholder="Dán nội dung vào đây..."
+                      value={importText}
+                      onChange={e => setImportText(e.target.value)}
+                    />
+                    <button 
+                      onClick={handleImport}
+                      className="mt-2 w-full bg-violet-600 text-white font-bold text-sm py-2 rounded-lg hover:bg-violet-700 transition"
+                    >
+                      Bắt đầu Convert
+                    </button>
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   {form.questions.map((q, i) => (
                     <div key={i} className="bg-slate-50 rounded-xl p-3.5 space-y-2 border border-slate-200">
