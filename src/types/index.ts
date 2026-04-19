@@ -258,3 +258,45 @@ export interface DashboardStats {
   totalStars?: number;
   completionRate?: number;
 }
+
+// ─── Plickers Integration ─────────────────────────────────────────────────────
+
+export interface PlickersSession {
+  id: string;
+  courseId?: string;
+  teacherId: string;
+  title: string;
+  status: 'idle' | 'active' | 'ended';
+  currentQ: number;
+  createdAt?: string;
+  updatedAt?: string;
+  // Relations
+  questions?: PlickersQuestion[];
+  responses?: PlickersResponse[];
+}
+
+export interface PlickersQuestion {
+  id: string;
+  sessionId: string;
+  text: string;
+  order: number;
+  correctAnswer?: 'A' | 'B' | 'C' | 'D';
+  // Relations
+  responses?: PlickersResponse[];
+}
+
+export interface PlickersResponse {
+  id: string;
+  sessionId: string;
+  questionId: string;
+  cardNumber: number;
+  studentId?: string;
+  answer: 'A' | 'B' | 'C' | 'D';
+  scannedAt: string;
+}
+
+export interface CreatePlickersSessionForm {
+  title: string;
+  courseId?: string;
+  questions: { text: string; correctAnswer?: string; order: number }[];
+}
