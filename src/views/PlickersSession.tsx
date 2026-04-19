@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, BarChart3, Users, Loader2, ScanLine, ExternalLink } from 'lucide-react';
+import { ChevronLeft, BarChart3, Users, Loader2, ScanLine, ExternalLink, ArrowLeft, ArrowRight, MonitorPlay } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import type { PlickersSession, PlickersQuestion, PlickersResponse } from '@/src/types';
 
 const FLASK_URL = 'http://localhost:5000';
@@ -20,7 +20,7 @@ export function PlickersSession() {
       const json = await res.json();
       if (json.data) {
         setSession(json.data);
-        if (json.data.courseId) {
+        if (json.data.courseId && enrollments.length === 0) { // Only load once
           const eRes = await fetch(`/api/courses/${json.data.courseId}/enrollments`);
           const eJson = await eRes.json();
           if (eJson.data) setEnrollments(eJson.data);
@@ -31,7 +31,7 @@ export function PlickersSession() {
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [id, enrollments.length]);
 
   useEffect(() => {
     loadSession();
@@ -67,6 +67,21 @@ export function PlickersSession() {
     if (e.plickerCardId) cardMap.set(e.plickerCardId, e);
   });
 
+  const handleUpdateCurrentQ = async (newQIndex: number) => {
+    if (newQIndex < 0 || newQIndex >= questions.length || !session) return;
+    try {
+      await fetch(`/api/plickers/sessions/${id}`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ currentQ: newQIndex })
+      });
+      setSession({...session, currentQ: newQIndex});
+      toast.success(\`Đã chuyển sang câu \${newQIndex + 1}\`);
+    } catch(err) {
+      toast.error('Lỗi chuyển câu!');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -84,16 +99,52 @@ export function PlickersSession() {
         </div>
         <div className="flex gap-2">
            <a
+            href={`/plickers/${session.id}/live`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm"
+          >
+            <MonitorPlay className="w-4 h-4" /> Bật Máy Chiếu (Live View)
+            <ExternalLink className="w-3 h-3 opacity-50" />
+          </a>
+           <a
             href={`${FLASK_URL}/`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors"
           >
-            <ScanLine className="w-4 h-4" /> Quét Thẻ
+            <ScanLine className="w-4 h-4" /> Quét Thẻ (Camera)
             <ExternalLink className="w-3 h-3 opacity-50" />
           </a>
         </div>
       </div>
+
+      {/* Control Panel for Live Session */}
+      {session.status === 'active' && (
+        <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-2xl p-5 text-white flex flex-col md:flex-row items-center justify-between gap-4 shadow-md">
+          <div>
+            <h3 className="font-black text-xl mb-1">Đang ở: Câu hỏi số {session.currentQ + 1}</h3>
+            <p className="text-indigo-100 text-sm">Chuyển câu hỏi ở đây sẽ tự động đồng bộ trên màn hình trình chiếu.</p>
+          </div>
+          <div className="flex items-center gap-3 bg-black/20 p-2 rounded-xl backdrop-blur-sm">
+            <button 
+              onClick={() => handleUpdateCurrentQ(session.currentQ - 1)}
+              disabled={session.currentQ <= 0}
+              className="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <span className="font-black w-24 text-center">Câu {session.currentQ + 1} / {questions.length}</span>
+            <button 
+              onClick={() => handleUpdateCurrentQ(session.currentQ + 1)}
+              disabled={session.currentQ >= questions.length - 1}
+              className="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

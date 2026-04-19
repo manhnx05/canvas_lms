@@ -88,9 +88,44 @@ export async function PATCH(
           }
         });
 
-        // Cập nhật thẻ và sao cho học sinh
+        // Khởi tạo thư mục điểm bằng Assignment
+        const course = await prisma.course.findUnique({ where: { id: session.courseId } });
+        let assignment = null;
+        if (course) {
+          assignment = await prisma.assignment.create({
+            data: {
+              title: `[Plickers] ${session.title}`,
+              courseId: session.courseId,
+              courseName: course.title,
+              dueDate: new Date().toISOString(),
+              starsReward: session.questions.length * 5,
+              status: 'closed',
+              type: 'quiz',
+              description: `Bài kiểm tra Plickers nhanh trên lớp (Tổng: ${session.questions.length} câu).`,
+            }
+          });
+        }
+
+        // Cập nhật thẻ và sao cho học sinh, đồng thời nộp bài (Submission)
         const dbOperations = [];
         for (const [userId, score] of Object.entries(studentScores)) {
+          // Tính phần trăm điểm scale ra 100
+          const scaledScore = session.questions.length > 0 ? Math.round((score / session.questions.length) * 100) : 0;
+          
+          if (assignment) {
+            dbOperations.push(
+              prisma.submission.create({
+                data: {
+                  assignmentId: assignment.id,
+                  userId,
+                  status: 'graded',
+                  score: scaledScore,
+                  aiFeedback: `Đã trả lời đúng ${score}/${session.questions.length} câu trên lớp bằng thẻ Plickers.`
+                }
+              })
+            );
+          }
+
           if (score > 0) {
             const starsToAward = score * 5; // 5 sao mỗi câu đúng
             
@@ -108,7 +143,7 @@ export async function PATCH(
                 data: {
                   userId,
                   title: 'Thưởng Sao Plickers! 🌟',
-                  content: \`Bạn vừa trả lời đúng \${score} câu trong phiên Plickers "\${session.title}" và nhận được \${starsToAward} sao!\`,
+                  content: `Bạn vừa trả lời đúng ${score} câu trong phiên Plickers "${session.title}" và nhận được ${starsToAward} sao!`,
                 }
               })
             );
