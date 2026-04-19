@@ -111,8 +111,8 @@ describe('[UNIT] teacherService.getTeacherStats', () => {
     expect(result.pendingGrading).toBe(5);
     expect(result.totalCourses).toBe(1);
     expect(result.totalAssignments).toBe(15);
-    expect(result.studentsByClass).toHaveLength(2);
-    expect(result.studentsByClass[0].name).toBe('3A');
+    expect(result.studentsByClass!).toHaveLength(2);
+    expect(result.studentsByClass![0].name).toBe('3A');
     expect(result.completionRate).toBe(85);
     expect(result.activityTrend).toHaveLength(7);
   });

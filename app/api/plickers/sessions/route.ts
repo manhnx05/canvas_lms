@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/src/lib/prisma';
+import prisma from '@/src/lib/prisma';
 
 // GET /api/plickers/sessions?teacherId=...&courseId=...
 export async function GET(request: Request) {

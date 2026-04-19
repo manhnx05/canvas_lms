@@ -77,7 +77,7 @@ export function PlickersSession() {
         body: JSON.stringify({ currentQ: newQIndex })
       });
       setSession({...session, currentQ: newQIndex});
-      toast.success(\`Đã chuyển sang câu \${newQIndex + 1}\`);
+      toast.success(`Đã chuyển sang câu ${newQIndex + 1}`);
     } catch(err) {
       toast.error('Lỗi chuyển câu!');
     }
@@ -325,7 +325,7 @@ export function PlickersSession() {
                       <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                         <div 
                           className={`h-full rounded-full ${isCorrect ? 'bg-emerald-500' : 'bg-slate-400'}`} 
-                          style={{ width: \`\${percent}%\` }}
+                          style={{ width: `${percent}%` }}
                         />
                       </div>
                     </div>

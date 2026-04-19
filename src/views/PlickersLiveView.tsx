@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Loader2, Maximize, Play, CheckCircle2 } from 'lucide-react';
-import type { PlickersSession, PlickersQuestion, PlickersResponse } from '@/src/types';
+import { ChevronLeft, Loader2, Maximize, CheckCircle2 } from 'lucide-react';
+import type { PlickersSession, PlickersQuestion } from '@/src/types';
 
 export function PlickersLiveView() {
   const { id } = useParams<{ id: string }>();

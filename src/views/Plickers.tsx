@@ -120,7 +120,7 @@ export function Plickers({ role }: PlickersProps) {
   const handleImport = () => {
     if (!importText.trim()) return;
     const lines = importText.split('\n');
-    const newQuestions = [];
+    const newQuestions: any[] = [];
     
     let currentQ = '';
     let currentAns = '';

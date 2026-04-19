@@ -4,7 +4,7 @@ import prisma from '@/src/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -16,7 +16,7 @@ export async function GET(
       // Hàm gửi SSE (thực tế Next.js TextEncoder)
       function send(data: any) {
         if (!isClosed) {
-          const payload = \`data: \${JSON.stringify({ data })}\n\n\`;
+          const payload = `data: ${JSON.stringify({ data })}\n\n`;
           controller.enqueue(new TextEncoder().encode(payload));
         }
       }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/src/lib/prisma';
+import prisma from '@/src/lib/prisma';
 
 // GET /api/plickers/sessions/[id]
 export async function GET(
@@ -66,19 +66,19 @@ export async function PATCH(
 
         // Tạo map: { cardNumber: userId }
         const cardToUserMap: Record<number, string> = {};
-        enrollments.forEach(e => {
+        enrollments.forEach((e: any) => {
           if (e.plickerCardId) cardToUserMap[e.plickerCardId] = e.userId;
         });
 
         // Lấy đáp án đúng của câu hỏi: { questionId: correctAnswer }
         const correctAnswers: Record<string, string> = {};
-        session.questions.forEach(q => {
+        session.questions.forEach((q: any) => {
           if (q.correctAnswer) correctAnswers[q.id] = q.correctAnswer;
         });
 
         // Tính điểm cho từng học sinh
         const studentScores: Record<string, number> = {};
-        session.responses.forEach(r => {
+        session.responses.forEach((r: any) => {
           const userId = cardToUserMap[r.cardNumber];
           if (userId) {
             const isCorrect = correctAnswers[r.questionId] === r.answer;

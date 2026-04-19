@@ -4,7 +4,7 @@
  * UNIT TESTS — auth middleware
  * Coverage: verifyToken, extractTokenFromRequest, generateToken, refreshToken, requireAuth
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 
