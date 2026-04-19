@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ScanLine, Plus, ExternalLink, Trash2, PlayCircle, StopCircle, MonitorPlay, ChevronRight, Loader2, BookOpen, ListChecks, Users } from 'lucide-react';
 import type { PlickersSession, Course } from '@/src/types';
+import { parseQuestionsFromText } from '@/src/utils/plickersParser';
 
 interface PlickersProps {
   role: string;
@@ -118,33 +119,7 @@ export function Plickers({ role }: PlickersProps) {
 
   // Quick import parser
   const handleImport = () => {
-    if (!importText.trim()) return;
-    const lines = importText.split('\n');
-    const newQuestions: any[] = [];
-    
-    let currentQ = '';
-    let currentAns = '';
-    
-    // Very basic parsing heuristic
-    for (const line of lines) {
-      const txt = line.trim();
-      if (!txt) continue;
-      
-      if (/^Đáp án:?\s*([A-D])/i.test(txt)) {
-        const match = txt.match(/^Đáp án:?\s*([A-D])/i);
-        if (match) currentAns = match[1].toUpperCase();
-      } else if (/^Câu \d+:/i.test(txt) || /^[0-9]+\./.test(txt)) {
-        if (currentQ) newQuestions.push({ text: currentQ, correctAnswer: currentAns });
-        currentQ = txt.replace(/^Câu \d+:\s*/i, '').replace(/^[0-9]+\.\s*/, '');
-        currentAns = '';
-      } else if (/^[A-D]\\./i.test(txt)) {
-        // Just options text, ignoring for now since Plickers UI only needs question block
-      } else {
-        if (!currentQ) currentQ = txt; // fallback
-      }
-    }
-    // push last
-    if (currentQ) newQuestions.push({ text: currentQ, correctAnswer: currentAns });
+    const newQuestions = parseQuestionsFromText(importText);
     
     if (newQuestions.length > 0) {
       setForm(f => ({
