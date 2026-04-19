@@ -1,5 +1,6 @@
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, BarChart3, Users, Loader2, ScanLine, ExternalLink, ArrowLeft, ArrowRight, MonitorPlay } from 'lucide-react';
+import { ChevronLeft, BarChart3, Users, Loader2, ScanLine, ExternalLink, ArrowLeft, ArrowRight, MonitorPlay, AlertTriangle, TrendingDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import type { PlickersSession, PlickersQuestion, PlickersResponse } from '@/src/types';
 
@@ -81,6 +82,50 @@ export function PlickersSession() {
       toast.error('Lỗi chuyển câu!');
     }
   };
+
+  // --- Advanced Analytics ---
+  let hardestQuestion: any = null;
+  let strugglingStudents: any[] = [];
+  
+  if (session?.status === 'ended') {
+    let minCorrectRate = 100;
+    
+    // Tìm câu bị sai nhiều nhất
+    questions.forEach((q, idx) => {
+      const qResponses = responses.filter(r => r.questionId === q.id);
+      if (qResponses.length > 0) {
+        const correctCount = qResponses.filter(r => r.answer === q.correctAnswer).length;
+        const rate = (correctCount / qResponses.length) * 100;
+        if (rate <= minCorrectRate) {
+          minCorrectRate = rate;
+          hardestQuestion = { question: q, index: idx, rate };
+        }
+      }
+    });
+
+    // Lọc học sinh yếu
+    const studentScores = new Map<number, { correct: number, total: number }>();
+    responses.forEach(r => {
+      const q = questions.find(x => x.id === r.questionId);
+      const isCorrect = q?.correctAnswer === r.answer;
+      const stats = studentScores.get(r.cardNumber) || { correct: 0, total: 0 };
+      stats.total++;
+      if (isCorrect) stats.correct++;
+      studentScores.set(r.cardNumber, stats);
+    });
+
+    for (const [cardNumber, stats] of studentScores.entries()) {
+      const rate = questions.length > 0 ? (stats.correct / questions.length) * 100 : 0;
+      if (rate < 50) {
+        strugglingStudents.push({
+          card: cardNumber,
+          info: cardMap.get(cardNumber),
+          rate,
+          correct: stats.correct
+        });
+      }
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -176,6 +221,71 @@ export function PlickersSession() {
           </div>
         </div>
       </div>
+
+      {/* Advanced Analytics Dashboard */}
+      {session.status === 'ended' && (hardestQuestion || strugglingStudents.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          {/* Hardest Question */}
+          {hardestQuestion && (
+            <div className="bg-rose-50 border border-rose-100 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <AlertTriangle className="w-24 h-24 text-rose-500" />
+              </div>
+              <h3 className="text-rose-800 font-extrabold text-lg flex items-center gap-2 mb-4 relative z-10">
+                <AlertTriangle className="w-5 h-5" /> Điểm Mù Kiến Thức
+              </h3>
+              <div className="bg-white/60 p-4 rounded-2xl relative z-10">
+                <span className="text-xs font-bold text-rose-500 mb-1 block uppercase tracking-wider">
+                  Câu hỏi lừa nhiều nhất (Câu {hardestQuestion.index + 1})
+                </span>
+                <p className="font-bold text-slate-800 text-lg">"{hardestQuestion.question.text}"</p>
+                <div className="mt-3 flex items-center justify-between items-end">
+                  <div>
+                    <p className="text-sm text-slate-500">Tỷ lệ trả lời đúng:</p>
+                    <p className="font-black text-2xl text-rose-600">{Math.round(hardestQuestion.rate)}%</p>
+                  </div>
+                  <div className="bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                    <span className="text-xs text-slate-500">Đáp án chuẩn: </span>
+                    <strong className="text-emerald-600">{hardestQuestion.question.correctAnswer}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Struggling Students */}
+          {strugglingStudents.length > 0 && (
+            <div className="bg-amber-50 border border-amber-100 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <TrendingDown className="w-24 h-24 text-amber-500" />
+              </div>
+              <h3 className="text-amber-800 font-extrabold text-lg flex items-center gap-2 mb-4 relative z-10">
+                <TrendingDown className="w-5 h-5" /> Nhóm Học Sinh Mất Gốc
+              </h3>
+              <div className="relative z-10 max-h-40 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                {strugglingStudents.map(st => (
+                  <div key={st.card} className="flex items-center justify-between bg-white/70 p-2.5 rounded-xl border border-amber-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-amber-100 text-amber-700 font-bold rounded-lg flex items-center justify-center text-xs">
+                        #{st.card}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-800 text-sm">
+                          {st.info ? st.info.user.name : 'Chưa định danh'}
+                        </p>
+                        <p className="text-xs text-slate-500">Đúng {st.correct}/{questions.length} câu</p>
+                      </div>
+                    </div>
+                    <span className="font-black text-amber-600 bg-amber-100 px-2 py-1 rounded w-16 text-center text-xs block">
+                      {Math.round(st.rate)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Questions & Results */}
       <div className="space-y-4">
