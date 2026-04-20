@@ -508,22 +508,22 @@ Plickers là hệ thống kiểm tra nhanh sử dụng thẻ vật lý (QR code 
 - [x] Remove local state, sync với server
 - [x] Add toggle buttons trong PlickersSession
 
-#### **PHASE 2: Improve Validation & Logic** (Priority: MEDIUM) - IN PROGRESS
+#### **PHASE 2: Improve Validation & Logic** (Priority: MEDIUM) ✅ COMPLETED
 
-**Task 2.1: Add Validation**
-- [ ] Validate duplicate plickerCardId trong course
-- [ ] Validate cardNumber trong responses
-- [ ] Add error messages rõ ràng
+**Task 2.1: Add Validation** ✅
+- [x] Validate duplicate plickerCardId trong course
+- [x] Validate cardNumber trong responses
+- [x] Add error messages rõ ràng
 
-**Task 2.2: Improve Parser**
-- [ ] Handle multi-line questions
-- [ ] Validate correctAnswer format
-- [ ] Add more test cases
+**Task 2.2: Improve Parser** ✅
+- [x] Handle multi-line questions
+- [x] Validate correctAnswer format
+- [x] Add more test cases
 
-**Task 2.3: Fix Gamification**
-- [ ] Handle students không trả lời
-- [ ] Add transaction rollback
-- [ ] Improve error handling
+**Task 2.3: Fix Gamification** ✅
+- [x] Handle students không trả lời
+- [x] Add transaction rollback
+- [x] Improve error handling
 
 #### **PHASE 3: Polish & Testing** (Priority: LOW)
 
@@ -559,9 +559,12 @@ Mỗi task sẽ được implement, test, commit và push riêng biệt theo quy
 - Built manual scan interface for testing
 - Fixed Live View real-time sync
 
-**Phase 2 (Medium):** 🔄 0% Complete (0/3 tasks)
+**Phase 2 (Medium):** ✅ 100% Complete (3/3 tasks)
+- Added duplicate plickerCardId validation
+- Improved parser with multi-line support and answer validation
+- Fixed gamification logic with proper transaction handling
 
 **Phase 3 (Low):** 🔄 0% Complete (0/3 tasks)
 
-**Overall Progress:** 33% (3/9 tasks completed)
+**Overall Progress:** 67% (6/9 tasks completed)
 
