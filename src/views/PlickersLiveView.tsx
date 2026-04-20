@@ -8,7 +8,6 @@ export function PlickersLiveView() {
   const [session, setSession] = useState<PlickersSession | null>(null);
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [liveData, setLiveData] = useState<any>(null); // from SSE
-  const [showAnswer, setShowAnswer] = useState(false);
 
   // Load static base data
   const loadBase = useCallback(async () => {
@@ -79,6 +78,8 @@ export function PlickersLiveView() {
 
   // Phụ thuộc liveData hoac session
   const currentQIndex = liveData ? liveData.currentQ : session.currentQ;
+  const showAnswer = liveData ? liveData.showAnswer : session.showAnswer;
+  const showGraph = liveData ? liveData.showGraph : session.showGraph;
   const questions: PlickersQuestion[] = session.questions || [];
   const currentQuestion = questions[currentQIndex];
 
@@ -118,9 +119,6 @@ export function PlickersLiveView() {
           </h1>
         </div>
         <div className="flex items-center gap-4">
-          <button onClick={() => setShowAnswer(!showAnswer)} className="px-4 py-1.5 rounded-lg font-bold text-sm bg-indigo-600 hover:bg-indigo-500 transition-colors shadow-lg">
-            {showAnswer ? 'Ẩn đáp án' : 'Hiển thị đáp án'}
-          </button>
           <button onClick={toggleFullscreen} className="text-slate-400 hover:text-white p-2">
             <Maximize className="w-5 h-5" />
           </button>

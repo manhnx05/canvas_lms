@@ -83,6 +83,38 @@ export function PlickersSession() {
     }
   };
 
+  const handleToggleShowAnswer = async () => {
+    if (!session) return;
+    try {
+      const newValue = !session.showAnswer;
+      await fetch(`/api/plickers/sessions/${id}`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ showAnswer: newValue })
+      });
+      setSession({...session, showAnswer: newValue});
+      toast.success(newValue ? 'Đã hiển thị đáp án trên màn chiếu' : 'Đã ẩn đáp án');
+    } catch(err) {
+      toast.error('Lỗi cập nhật!');
+    }
+  };
+
+  const handleToggleShowGraph = async () => {
+    if (!session) return;
+    try {
+      const newValue = !session.showGraph;
+      await fetch(`/api/plickers/sessions/${id}`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ showGraph: newValue })
+      });
+      setSession({...session, showGraph: newValue});
+      toast.success(newValue ? 'Đã hiển thị biểu đồ trên màn chiếu' : 'Đã ẩn biểu đồ');
+    } catch(err) {
+      toast.error('Lỗi cập nhật!');
+    }
+  };
+
   // --- Advanced Analytics ---
   let hardestQuestion: any = null;
   let strugglingStudents: any[] = [];
@@ -172,26 +204,52 @@ export function PlickersSession() {
 
       {/* Control Panel for Live Session */}
       {session.status === 'active' && (
-        <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-2xl p-5 text-white flex flex-col md:flex-row items-center justify-between gap-4 shadow-md">
-          <div>
-            <h3 className="font-black text-xl mb-1">Đang ở: Câu hỏi số {session.currentQ + 1}</h3>
-            <p className="text-indigo-100 text-sm">Chuyển câu hỏi ở đây sẽ tự động đồng bộ trên màn hình trình chiếu.</p>
+        <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-2xl p-5 text-white shadow-md space-y-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-black text-xl mb-1">Đang ở: Câu hỏi số {session.currentQ + 1}</h3>
+              <p className="text-indigo-100 text-sm">Chuyển câu hỏi ở đây sẽ tự động đồng bộ trên màn hình trình chiếu.</p>
+            </div>
+            <div className="flex items-center gap-3 bg-black/20 p-2 rounded-xl backdrop-blur-sm">
+              <button 
+                onClick={() => handleUpdateCurrentQ(session.currentQ - 1)}
+                disabled={session.currentQ <= 0}
+                className="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <span className="font-black w-24 text-center">Câu {session.currentQ + 1} / {questions.length}</span>
+              <button 
+                onClick={() => handleUpdateCurrentQ(session.currentQ + 1)}
+                disabled={session.currentQ >= questions.length - 1}
+                className="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-3 bg-black/20 p-2 rounded-xl backdrop-blur-sm">
-            <button 
-              onClick={() => handleUpdateCurrentQ(session.currentQ - 1)}
-              disabled={session.currentQ <= 0}
-              className="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+
+          {/* Live View Controls */}
+          <div className="flex gap-3 pt-3 border-t border-white/20">
+            <button
+              onClick={handleToggleShowAnswer}
+              className={`flex-1 py-2.5 px-4 rounded-xl font-semibold text-sm transition-all ${
+                session.showAnswer
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                  : 'bg-white/10 hover:bg-white/20 text-white'
+              }`}
             >
-              <ArrowLeft className="w-5 h-5" />
+              {session.showAnswer ? '✓ Đang hiển thị đáp án' : 'Hiển thị đáp án trên màn chiếu'}
             </button>
-            <span className="font-black w-24 text-center">Câu {session.currentQ + 1} / {questions.length}</span>
-            <button 
-              onClick={() => handleUpdateCurrentQ(session.currentQ + 1)}
-              disabled={session.currentQ >= questions.length - 1}
-              className="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            <button
+              onClick={handleToggleShowGraph}
+              className={`flex-1 py-2.5 px-4 rounded-xl font-semibold text-sm transition-all ${
+                session.showGraph
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                  : 'bg-white/10 hover:bg-white/20 text-white'
+              }`}
             >
-              <ArrowRight className="w-5 h-5" />
+              {session.showGraph ? '✓ Đang hiển thị biểu đồ' : 'Hiển thị biểu đồ thống kê'}
             </button>
           </div>
         </div>
