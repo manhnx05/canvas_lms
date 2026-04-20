@@ -25,6 +25,7 @@ import { ExamTaking } from './views/ExamTaking';
 import { AIGrading } from './views/AiGrading';
 import { Plickers } from './views/Plickers';
 import { PlickersSession } from './views/PlickersSession';
+import { PlickersManualScan } from './views/PlickersManualScan';
 import { PlickersLiveView } from './views/PlickersLiveView';
 import { Role } from '@/src/types';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
@@ -61,6 +62,7 @@ function AppContent() {
               <Route path="/assignments" element={<Assignments role={role} />} />
               <Route path="/plickers" element={<Plickers role={role} />} />
               <Route path="/plickers/:id" element={<PlickersSession />} />
+              <Route path="/plickers/:id/scan" element={<PlickersManualScan />} />
               <Route path="/plickers/:id/live" element={<PlickersLiveView />} />
               <Route path="/ai-grading" element={<AIGrading />} />
               <Route path="/assignments/:id" element={<AssignmentDetail role={role} />} />

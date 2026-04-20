@@ -33,19 +33,27 @@ export async function GET(
 }
 
 // PATCH /api/plickers/sessions/[id]
-// Body: { status?, currentQ?, title? }
+// Body: { status?, currentQ?, title?, showAnswer?, showGraph? }
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const body = await request.json();
-    const { status, currentQ, title } = body;
+    const { status, currentQ, title, showAnswer, showGraph } = body;
 
     const updateData: Record<string, any> = {};
     if (status !== undefined) updateData.status = status;
     if (currentQ !== undefined) updateData.currentQ = currentQ;
     if (title !== undefined) updateData.title = title;
+    // Điều khiển màn hình chiếu từ xa (giáo viên toggle)
+    if (showAnswer !== undefined) updateData.showAnswer = showAnswer;
+    if (showGraph !== undefined) updateData.showGraph = showGraph;
+    // Khi chuyển sang câu mới, reset trạng thái hiển thị đáp án và biểu đồ
+    if (currentQ !== undefined) {
+      updateData.showAnswer = false;
+      updateData.showGraph = false;
+    }
 
     const session = await prisma.plickersSession.update({
       where: { id: params.id },

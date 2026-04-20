@@ -144,6 +144,12 @@ export function PlickersSession() {
         </div>
         <div className="flex gap-2">
            <a
+            href={`/plickers/${session.id}/scan`}
+            className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm"
+          >
+            <ScanLine className="w-4 h-4" /> Manual Scan (Test)
+          </a>
+           <a
             href={`/plickers/${session.id}/live`}
             target="_blank"
             rel="noopener noreferrer"

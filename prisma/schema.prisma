@@ -352,6 +352,8 @@ model PlickersSession {
   title       String
   status      String   @default("idle") // idle | active | ended
   currentQ    Int      @default(0)
+  showAnswer  Boolean  @default(false)  // Giáo viên điều khiển: hiện/ẩn đáp án trên máy chiếu
+  showGraph   Boolean  @default(false)  // Giáo viên điều khiển: hiện/ẩn biểu đồ kết quả
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -368,6 +370,10 @@ model PlickersQuestion {
   id            String   @id @default(uuid())
   sessionId     String
   text          String
+  optionA       String?  // Nội dung đáp án A (tuỳ chọn)
+  optionB       String?  // Nội dung đáp án B (tuỳ chọn)
+  optionC       String?  // Nội dung đáp án C (tuỳ chọn)
+  optionD       String?  // Nội dung đáp án D (tuỳ chọn)
   order         Int      @default(0)
   correctAnswer String?  // A | B | C | D
 

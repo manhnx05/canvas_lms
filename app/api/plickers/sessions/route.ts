@@ -47,6 +47,10 @@ export async function POST(request: Request) {
         questions: {
           create: questions.map((q: any, idx: number) => ({
             text: q.text,
+            optionA: q.optionA || null,
+            optionB: q.optionB || null,
+            optionC: q.optionC || null,
+            optionD: q.optionD || null,
             order: q.order ?? idx,
             correctAnswer: q.correctAnswer || null,
           })),

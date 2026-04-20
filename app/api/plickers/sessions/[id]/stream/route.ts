@@ -37,6 +37,8 @@ export async function GET(
           send({
             status: session.status,
             currentQ: session.currentQ,
+            showAnswer: session.showAnswer,  // Điều khiển từ Teacher Dashboard
+            showGraph: session.showGraph,    // Điều khiển từ Teacher Dashboard
             totalResponses: session.responses.length,
             responses: session.responses,
           });
