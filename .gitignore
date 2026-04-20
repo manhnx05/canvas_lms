@@ -22,6 +22,10 @@ check_*.ts
 ts_errors*.txt
 metadata.json
 
+# Documentation (except README.md)
+*.md
+!README.md
+
 # Python
 __pycache__/
 *.py[cod]
