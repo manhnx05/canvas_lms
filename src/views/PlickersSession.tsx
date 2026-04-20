@@ -4,18 +4,20 @@ import { ChevronLeft, BarChart3, Users, Loader2, ScanLine, ExternalLink, ArrowLe
 import { toast } from 'react-hot-toast';
 import type { PlickersSession, PlickersQuestion, PlickersResponse } from '@/src/types';
 
-const FLASK_URL = 'http://localhost:5000';
+const FLASK_URL = process.env.NEXT_PUBLIC_FLASK_URL || 'http://localhost:5000';
 
 export function PlickersSession() {
   const { id } = useParams<{ id: string }>();
   const [session, setSession] = useState<PlickersSession | null>(null);
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isChangingQuestion, setIsChangingQuestion] = useState(false);
 
   // Thêm định kiểu để dễ đọc code
   type FullQuestion = PlickersQuestion & { responses?: PlickersResponse[] };
 
-  const loadSession = useCallback(async () => {
+  const loadSession = useCallback(async (showLoader = false) => {
+    if (showLoader) setIsChangingQuestion(true);
     try {
       const res = await fetch(`/api/plickers/sessions/${id}`);
       const json = await res.json();
@@ -31,15 +33,20 @@ export function PlickersSession() {
       console.error(e);
     } finally {
       setIsLoading(false);
+      if (showLoader) setIsChangingQuestion(false);
     }
   }, [id, enrollments.length]);
 
   useEffect(() => {
     loadSession();
-    // Tuỳ chọn: thiết lập interval để auto-refresh kết quả
-    const interval = setInterval(loadSession, 3000);
+    // Chỉ auto-refresh khi session đang active, giảm tần suất xuống 5s
+    const interval = setInterval(() => {
+      if (session?.status === 'active') {
+        loadSession();
+      }
+    }, 5000);
     return () => clearInterval(interval);
-  }, [loadSession]);
+  }, [loadSession, session?.status]);
 
   if (isLoading) {
     return (
@@ -70,16 +77,18 @@ export function PlickersSession() {
 
   const handleUpdateCurrentQ = async (newQIndex: number) => {
     if (newQIndex < 0 || newQIndex >= questions.length || !session) return;
+    setIsChangingQuestion(true);
     try {
       await fetch(`/api/plickers/sessions/${id}`, {
         method: 'PATCH',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ currentQ: newQIndex })
       });
-      setSession({...session, currentQ: newQIndex});
+      await loadSession(true); // Reload with loading state
       toast.success(`Đã chuyển sang câu ${newQIndex + 1}`);
     } catch(err) {
       toast.error('Lỗi chuyển câu!');
+      setIsChangingQuestion(false);
     }
   };
 
@@ -213,18 +222,18 @@ export function PlickersSession() {
             <div className="flex items-center gap-3 bg-black/20 p-2 rounded-xl backdrop-blur-sm">
               <button 
                 onClick={() => handleUpdateCurrentQ(session.currentQ - 1)}
-                disabled={session.currentQ <= 0}
+                disabled={session.currentQ <= 0 || isChangingQuestion}
                 className="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
-                <ArrowLeft className="w-5 h-5" />
+                {isChangingQuestion ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowLeft className="w-5 h-5" />}
               </button>
               <span className="font-black w-24 text-center">Câu {session.currentQ + 1} / {questions.length}</span>
               <button 
                 onClick={() => handleUpdateCurrentQ(session.currentQ + 1)}
-                disabled={session.currentQ >= questions.length - 1}
+                disabled={session.currentQ >= questions.length - 1 || isChangingQuestion}
                 className="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
-                <ArrowRight className="w-5 h-5" />
+                {isChangingQuestion ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
               </button>
             </div>
           </div>
