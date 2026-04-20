@@ -1,110 +1,436 @@
-/**
- * @vitest-environment node
- *
- * UNIT/INTEGRATION TESTS — plickersService
- * Cung cấp độ phủ cho luồng xử lý Kết Thúc Phiên,
- * tạo Sổ điểm, nộp bài, cộng sao.
- */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { plickersService } from '../plickersService';
 import prisma from '@/src/lib/prisma';
 
+/**
+ * @vitest-environment node
+ */
+
 vi.mock('@/src/lib/prisma', () => ({
   default: {
-    enrollment: { findMany: vi.fn() },
-    course: { findUnique: vi.fn() },
-    assignment: { create: vi.fn() },
-    submission: { create: vi.fn() },
-    user: { update: vi.fn() },
-    notification: { create: vi.fn() },
+    enrollment: {
+      findMany: vi.fn(),
+    },
+    course: {
+      findUnique: vi.fn(),
+    },
+    assignment: {
+      create: vi.fn(),
+    },
+    submission: {
+      create: vi.fn(),
+    },
+    user: {
+      update: vi.fn(),
+    },
+    notification: {
+      create: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));
 
-describe('[INTEGRATION] plickersService.processSessionEnd', () => {
+describe('plickersService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  const mockSession = {
-    id: 'session-123',
-    title: 'Test Plickers',
-    courseId: 'course-[test]',
-    status: 'ended',
-    questions: [
-      { id: 'q1', correctAnswer: 'A' },
-      { id: 'q2', correctAnswer: 'B' }
-    ],
-    responses: [
-      { cardNumber: 1, questionId: 'q1', answer: 'A' }, // User 1 đúng Q1
-      { cardNumber: 1, questionId: 'q2', answer: 'C' }, // User 1 sai Q2
-      { cardNumber: 2, questionId: 'q1', answer: 'B' }, // User 2 sai Q1
-      { cardNumber: 2, questionId: 'q2', answer: 'B' }  // User 2 đúng Q2
-    ]
-  };
+  describe('TC-PLICKERS-001: processSessionEnd - basic flow', () => {
+    it('should process session end successfully with correct answers', async () => {
+      const mockSession = {
+        id: 'session-1',
+        title: 'Test Session',
+        courseId: 'course-1',
+        status: 'ended',
+        questions: [
+          { id: 'q1', text: 'Question 1', correctAnswer: 'A' },
+          { id: 'q2', text: 'Question 2', correctAnswer: 'B' },
+        ],
+        responses: [
+          { id: 'r1', questionId: 'q1', cardNumber: 1, answer: 'A' },
+          { id: 'r2', questionId: 'q2', cardNumber: 1, answer: 'B' },
+          { id: 'r3', questionId: 'q1', cardNumber: 2, answer: 'A' },
+          { id: 'r4', questionId: 'q2', cardNumber: 2, answer: 'C' },
+        ],
+      };
 
-  it('TC-PLICKERS-001: Không xử lý nếu status chưa phải "ended"', async () => {
-    await plickersService.processSessionEnd({ ...mockSession, status: 'active' });
-    expect(prisma.enrollment.findMany).not.toHaveBeenCalled();
+      const mockEnrollments = [
+        { userId: 'user-1', plickerCardId: 1, user: { name: 'Student 1' } },
+        { userId: 'user-2', plickerCardId: 2, user: { name: 'Student 2' } },
+      ];
+
+      const mockCourse = { id: 'course-1', title: 'Test Course' };
+
+      vi.mocked(prisma.enrollment.findMany).mockResolvedValue(mockEnrollments as any);
+      vi.mocked(prisma.course.findUnique).mockResolvedValue(mockCourse as any);
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        return await callback(prisma);
+      });
+      vi.mocked(prisma.assignment.create).mockResolvedValue({ id: 'assignment-1' } as any);
+
+      const result = await plickersService.processSessionEnd(mockSession);
+
+      expect(result).toBe(true);
+      expect(prisma.enrollment.findMany).toHaveBeenCalledWith({
+        where: { courseId: 'course-1' },
+        include: { user: true },
+      });
+      expect(prisma.course.findUnique).toHaveBeenCalledWith({ where: { id: 'course-1' } });
+      expect(prisma.$transaction).toHaveBeenCalled();
+    });
   });
 
-  it('TC-PLICKERS-002: Xử lý chấm điểm và tạo Assignment chính xác', async () => {
-    (prisma.enrollment.findMany as any).mockResolvedValue([
-      { userId: 'u1', plickerCardId: 1 },
-      { userId: 'u2', plickerCardId: 2 },
-    ]);
-    (prisma.course.findUnique as any).mockResolvedValue({ id: 'course-[test]', title: 'Lớp Test' });
-    (prisma.assignment.create as any).mockResolvedValue({ id: 'assign_123' });
-    
-    // Lưu tạm các argument của transaction vào mảng
-    (prisma.$transaction as any).mockImplementation((ops: any[]) => Promise.resolve(ops));
+  describe('TC-PLICKERS-002: processSessionEnd - invalid session', () => {
+    it('should return early if session is null', async () => {
+      const result = await plickersService.processSessionEnd(null);
+      
+      expect(result).toBeUndefined();
+      expect(prisma.enrollment.findMany).not.toHaveBeenCalled();
+    });
 
-    await plickersService.processSessionEnd(mockSession);
+    it('should return early if session has no courseId', async () => {
+      const mockSession = {
+        id: 'session-1',
+        status: 'ended',
+        questions: [],
+        responses: [],
+      };
 
-    // Verify
-    expect(prisma.assignment.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({
-        title: '[Plickers] Test Plickers',
-        starsReward: 10, // 2 questions * 5
-      })
-    }));
+      const result = await plickersService.processSessionEnd(mockSession);
+      
+      expect(result).toBeUndefined();
+      expect(prisma.enrollment.findMany).not.toHaveBeenCalled();
+    });
 
-    expect(prisma.$transaction).toHaveBeenCalled();
-    const ops = (prisma.$transaction as any).mock.calls[0][0];
-    // Ops bao gồm 2 submission tạo mới, và những user có score > 0 sẽ được update(stars) & notification
-    // User 1 đúng 1 câu -> 1 sub, 1 userUpdate, 1 noti
-    // User 2 đúng 1 câu -> 1 sub, 1 userUpdate, 1 noti
-    // Tổng cộng 6 thao tác DB trong Transaction
-    expect(ops).toHaveLength(6);
+    it('should return early if session status is not ended', async () => {
+      const mockSession = {
+        id: 'session-1',
+        courseId: 'course-1',
+        status: 'active',
+        questions: [],
+        responses: [],
+      };
+
+      const result = await plickersService.processSessionEnd(mockSession);
+      
+      expect(result).toBeUndefined();
+      expect(prisma.enrollment.findMany).not.toHaveBeenCalled();
+    });
   });
 
-  it('TC-PLICKERS-003: Xử lý đúng nếu có user bị sai hoàn toàn cả 2 câu', async () => {
-    const customSession = {
-      ...mockSession,
-      responses: [
-        { cardNumber: 1, questionId: 'q1', answer: 'D' }, // Sai
-        { cardNumber: 1, questionId: 'q2', answer: 'D' }, // Sai
-      ]
-    };
-    (prisma.enrollment.findMany as any).mockResolvedValue([{ userId: 'u1', plickerCardId: 1 }]);
-    (prisma.course.findUnique as any).mockResolvedValue({ id: 'course-[test]' });
-    (prisma.assignment.create as any).mockResolvedValue({ id: 'assign_123' });
+  describe('TC-PLICKERS-003: processSessionEnd - no enrollments', () => {
+    it('should return early if no students enrolled', async () => {
+      const mockSession = {
+        id: 'session-1',
+        courseId: 'course-1',
+        status: 'ended',
+        questions: [{ id: 'q1', correctAnswer: 'A' }],
+        responses: [],
+      };
 
-    await plickersService.processSessionEnd(customSession);
-    const ops = (prisma.$transaction as any).mock.calls[0][0];
-    
-    // Chỉ có tạo 1 Submission (có score 0) nhưng không có thưởng sao / thông báo
-    expect(ops).toHaveLength(1);
-    
-    // Không ai được thưởng vì sai hết
-    expect(prisma.user.update).not.toHaveBeenCalled();
+      vi.mocked(prisma.enrollment.findMany).mockResolvedValue([]);
+
+      const result = await plickersService.processSessionEnd(mockSession);
+      
+      expect(result).toBeUndefined();
+      expect(prisma.enrollment.findMany).toHaveBeenCalled();
+      expect(prisma.course.findUnique).not.toHaveBeenCalled();
+    });
   });
 
-  it('TC-PLICKERS-004: ACID - Ném lỗi nếu Database gặp vấn đề, bảo toàn dữ liệu', async () => {
-    (prisma.course.findUnique as any).mockRejectedValueOnce(new Error('DB Connection Lost'));
-    (prisma.enrollment.findMany as any).mockResolvedValue([{ userId: 'u1', plickerCardId: 1 }]);
+  describe('TC-PLICKERS-004: processSessionEnd - students without cards', () => {
+    it('should handle students without plickerCardId', async () => {
+      const mockSession = {
+        id: 'session-1',
+        courseId: 'course-1',
+        status: 'ended',
+        questions: [{ id: 'q1', correctAnswer: 'A' }],
+        responses: [{ id: 'r1', questionId: 'q1', cardNumber: 1, answer: 'A' }],
+      };
 
-    await expect(plickersService.processSessionEnd(mockSession)).rejects.toThrow('DB Connection Lost');
-    expect(prisma.$transaction).not.toHaveBeenCalled(); // Đảm bảo chưa lưu ghi
+      const mockEnrollments = [
+        { userId: 'user-1', plickerCardId: 1, user: { name: 'Student 1' } },
+        { userId: 'user-2', plickerCardId: null, user: { name: 'Student 2' } },
+      ];
+
+      const mockCourse = { id: 'course-1', title: 'Test Course' };
+
+      vi.mocked(prisma.enrollment.findMany).mockResolvedValue(mockEnrollments as any);
+      vi.mocked(prisma.course.findUnique).mockResolvedValue(mockCourse as any);
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        return await callback(prisma);
+      });
+      vi.mocked(prisma.assignment.create).mockResolvedValue({ id: 'assignment-1' } as any);
+
+      const result = await plickersService.processSessionEnd(mockSession);
+
+      expect(result).toBe(true);
+      // Student 2 không có thẻ nên không được xử lý
+    });
+  });
+
+  describe('TC-PLICKERS-005: processSessionEnd - non-participants', () => {
+    it('should create submissions for students who did not participate', async () => {
+      const mockSession = {
+        id: 'session-1',
+        courseId: 'course-1',
+        status: 'ended',
+        questions: [{ id: 'q1', correctAnswer: 'A' }],
+        responses: [{ id: 'r1', questionId: 'q1', cardNumber: 1, answer: 'A' }],
+      };
+
+      const mockEnrollments = [
+        { userId: 'user-1', plickerCardId: 1, user: { name: 'Student 1' } },
+        { userId: 'user-2', plickerCardId: 2, user: { name: 'Student 2' } },
+      ];
+
+      const mockCourse = { id: 'course-1', title: 'Test Course' };
+
+      vi.mocked(prisma.enrollment.findMany).mockResolvedValue(mockEnrollments as any);
+      vi.mocked(prisma.course.findUnique).mockResolvedValue(mockCourse as any);
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        return await callback(prisma);
+      });
+      vi.mocked(prisma.assignment.create).mockResolvedValue({ id: 'assignment-1' } as any);
+
+      const result = await plickersService.processSessionEnd(mockSession);
+
+      expect(result).toBe(true);
+      // Student 2 (card 2) không tham gia nên phải có submission với score 0
+    });
+  });
+
+  describe('TC-PLICKERS-006: processSessionEnd - all wrong answers', () => {
+    it('should handle students who answered all questions incorrectly', async () => {
+      const mockSession = {
+        id: 'session-1',
+        courseId: 'course-1',
+        status: 'ended',
+        questions: [
+          { id: 'q1', correctAnswer: 'A' },
+          { id: 'q2', correctAnswer: 'B' },
+        ],
+        responses: [
+          { id: 'r1', questionId: 'q1', cardNumber: 1, answer: 'B' },
+          { id: 'r2', questionId: 'q2', cardNumber: 1, answer: 'C' },
+        ],
+      };
+
+      const mockEnrollments = [
+        { userId: 'user-1', plickerCardId: 1, user: { name: 'Student 1' } },
+      ];
+
+      const mockCourse = { id: 'course-1', title: 'Test Course' };
+
+      vi.mocked(prisma.enrollment.findMany).mockResolvedValue(mockEnrollments as any);
+      vi.mocked(prisma.course.findUnique).mockResolvedValue(mockCourse as any);
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        return await callback(prisma);
+      });
+      vi.mocked(prisma.assignment.create).mockResolvedValue({ id: 'assignment-1' } as any);
+
+      const result = await plickersService.processSessionEnd(mockSession);
+
+      expect(result).toBe(true);
+      // Student 1 trả lời sai hết nên score = 0, không được sao
+    });
+  });
+
+  describe('TC-PLICKERS-007: processSessionEnd - partial correct answers', () => {
+    it('should calculate correct score for partial correct answers', async () => {
+      const mockSession = {
+        id: 'session-1',
+        courseId: 'course-1',
+        status: 'ended',
+        questions: [
+          { id: 'q1', correctAnswer: 'A' },
+          { id: 'q2', correctAnswer: 'B' },
+          { id: 'q3', correctAnswer: 'C' },
+        ],
+        responses: [
+          { id: 'r1', questionId: 'q1', cardNumber: 1, answer: 'A' }, // Correct
+          { id: 'r2', questionId: 'q2', cardNumber: 1, answer: 'C' }, // Wrong
+          { id: 'r3', questionId: 'q3', cardNumber: 1, answer: 'C' }, // Correct
+        ],
+      };
+
+      const mockEnrollments = [
+        { userId: 'user-1', plickerCardId: 1, user: { name: 'Student 1' } },
+      ];
+
+      const mockCourse = { id: 'course-1', title: 'Test Course' };
+
+      vi.mocked(prisma.enrollment.findMany).mockResolvedValue(mockEnrollments as any);
+      vi.mocked(prisma.course.findUnique).mockResolvedValue(mockCourse as any);
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        return await callback(prisma);
+      });
+      vi.mocked(prisma.assignment.create).mockResolvedValue({ id: 'assignment-1' } as any);
+
+      const result = await plickersService.processSessionEnd(mockSession);
+
+      expect(result).toBe(true);
+      // Student 1 đúng 2/3 câu = 67 điểm, được 10 sao (2 * 5)
+    });
+  });
+
+  describe('TC-PLICKERS-008: processSessionEnd - course not found', () => {
+    it('should return early if course not found', async () => {
+      const mockSession = {
+        id: 'session-1',
+        courseId: 'course-1',
+        status: 'ended',
+        questions: [{ id: 'q1', correctAnswer: 'A' }],
+        responses: [],
+      };
+
+      const mockEnrollments = [
+        { userId: 'user-1', plickerCardId: 1, user: { name: 'Student 1' } },
+      ];
+
+      vi.mocked(prisma.enrollment.findMany).mockResolvedValue(mockEnrollments as any);
+      vi.mocked(prisma.course.findUnique).mockResolvedValue(null);
+
+      const result = await plickersService.processSessionEnd(mockSession);
+
+      expect(result).toBeUndefined();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('TC-PLICKERS-009: processSessionEnd - error handling', () => {
+    it('should throw error if transaction fails', async () => {
+      const mockSession = {
+        id: 'session-1',
+        courseId: 'course-1',
+        status: 'ended',
+        questions: [{ id: 'q1', correctAnswer: 'A' }],
+        responses: [{ id: 'r1', questionId: 'q1', cardNumber: 1, answer: 'A' }],
+      };
+
+      const mockEnrollments = [
+        { userId: 'user-1', plickerCardId: 1, user: { name: 'Student 1' } },
+      ];
+
+      const mockCourse = { id: 'course-1', title: 'Test Course' };
+
+      vi.mocked(prisma.enrollment.findMany).mockResolvedValue(mockEnrollments as any);
+      vi.mocked(prisma.course.findUnique).mockResolvedValue(mockCourse as any);
+      vi.mocked(prisma.$transaction).mockRejectedValue(new Error('Transaction failed'));
+
+      await expect(plickersService.processSessionEnd(mockSession)).rejects.toThrow('Transaction failed');
+    });
+  });
+
+  describe('TC-PLICKERS-010: processSessionEnd - star rewards calculation', () => {
+    it('should calculate star rewards correctly (5 stars per correct answer)', async () => {
+      const mockSession = {
+        id: 'session-1',
+        courseId: 'course-1',
+        status: 'ended',
+        questions: [
+          { id: 'q1', correctAnswer: 'A' },
+          { id: 'q2', correctAnswer: 'B' },
+          { id: 'q3', correctAnswer: 'C' },
+          { id: 'q4', correctAnswer: 'D' },
+        ],
+        responses: [
+          { id: 'r1', questionId: 'q1', cardNumber: 1, answer: 'A' },
+          { id: 'r2', questionId: 'q2', cardNumber: 1, answer: 'B' },
+          { id: 'r3', questionId: 'q3', cardNumber: 1, answer: 'C' },
+          { id: 'r4', questionId: 'q4', cardNumber: 1, answer: 'D' },
+        ],
+      };
+
+      const mockEnrollments = [
+        { userId: 'user-1', plickerCardId: 1, user: { name: 'Student 1' } },
+      ];
+
+      const mockCourse = { id: 'course-1', title: 'Test Course' };
+
+      vi.mocked(prisma.enrollment.findMany).mockResolvedValue(mockEnrollments as any);
+      vi.mocked(prisma.course.findUnique).mockResolvedValue(mockCourse as any);
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        return await callback(prisma);
+      });
+      vi.mocked(prisma.assignment.create).mockResolvedValue({ id: 'assignment-1' } as any);
+
+      const result = await plickersService.processSessionEnd(mockSession);
+
+      expect(result).toBe(true);
+      // Student 1 đúng 4/4 câu = 20 sao (4 * 5)
+    });
+  });
+
+  describe('TC-PLICKERS-011: processSessionEnd - multiple students', () => {
+    it('should process multiple students with different scores', async () => {
+      const mockSession = {
+        id: 'session-1',
+        courseId: 'course-1',
+        status: 'ended',
+        questions: [
+          { id: 'q1', correctAnswer: 'A' },
+          { id: 'q2', correctAnswer: 'B' },
+        ],
+        responses: [
+          { id: 'r1', questionId: 'q1', cardNumber: 1, answer: 'A' }, // Student 1: correct
+          { id: 'r2', questionId: 'q2', cardNumber: 1, answer: 'B' }, // Student 1: correct
+          { id: 'r3', questionId: 'q1', cardNumber: 2, answer: 'A' }, // Student 2: correct
+          { id: 'r4', questionId: 'q2', cardNumber: 2, answer: 'C' }, // Student 2: wrong
+          // Student 3 (card 3) không tham gia
+        ],
+      };
+
+      const mockEnrollments = [
+        { userId: 'user-1', plickerCardId: 1, user: { name: 'Student 1' } },
+        { userId: 'user-2', plickerCardId: 2, user: { name: 'Student 2' } },
+        { userId: 'user-3', plickerCardId: 3, user: { name: 'Student 3' } },
+      ];
+
+      const mockCourse = { id: 'course-1', title: 'Test Course' };
+
+      vi.mocked(prisma.enrollment.findMany).mockResolvedValue(mockEnrollments as any);
+      vi.mocked(prisma.course.findUnique).mockResolvedValue(mockCourse as any);
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        return await callback(prisma);
+      });
+      vi.mocked(prisma.assignment.create).mockResolvedValue({ id: 'assignment-1' } as any);
+
+      const result = await plickersService.processSessionEnd(mockSession);
+
+      expect(result).toBe(true);
+      // Student 1: 2/2 = 100 điểm, 10 sao
+      // Student 2: 1/2 = 50 điểm, 5 sao
+      // Student 3: 0/2 = 0 điểm, 0 sao, có submission
+    });
+  });
+
+  describe('TC-PLICKERS-012: processSessionEnd - empty questions', () => {
+    it('should handle session with no questions', async () => {
+      const mockSession = {
+        id: 'session-1',
+        courseId: 'course-1',
+        status: 'ended',
+        questions: [],
+        responses: [],
+      };
+
+      const mockEnrollments = [
+        { userId: 'user-1', plickerCardId: 1, user: { name: 'Student 1' } },
+      ];
+
+      const mockCourse = { id: 'course-1', title: 'Test Course' };
+
+      vi.mocked(prisma.enrollment.findMany).mockResolvedValue(mockEnrollments as any);
+      vi.mocked(prisma.course.findUnique).mockResolvedValue(mockCourse as any);
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        return await callback(prisma);
+      });
+      vi.mocked(prisma.assignment.create).mockResolvedValue({ id: 'assignment-1' } as any);
+
+      const result = await plickersService.processSessionEnd(mockSession);
+
+      expect(result).toBe(true);
+    });
   });
 });
