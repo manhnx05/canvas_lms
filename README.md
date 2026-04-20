@@ -402,3 +402,152 @@ npm run db:reset
 - SQL injection prevention
 - XSS protection headers
 
+---
+
+## 📋 PLICKERS FEATURE - ANALYSIS & FIX PLAN
+
+### 🔍 PHÂN TÍCH TỔNG QUAN
+
+#### Chức năng Plickers hiện tại:
+Plickers là hệ thống kiểm tra nhanh sử dụng thẻ vật lý (QR code cards) để học sinh trả lời câu hỏi trắc nghiệm. Giáo viên quét thẻ bằng camera và hệ thống tự động chấm điểm.
+
+#### Các thành phần chính:
+
+**1. Database Schema (Prisma)**
+- ✅ `PlickersSession` - Phiên kiểm tra
+- ✅ `PlickersQuestion` - Câu hỏi trong phiên
+- ✅ `PlickersResponse` - Câu trả lời của học sinh
+- ✅ `Enrollment.plickerCardId` - Mapping học sinh với số thẻ
+
+**2. Backend API**
+- ✅ `GET /api/plickers/sessions` - Lấy danh sách phiên
+- ✅ `POST /api/plickers/sessions` - Tạo phiên mới
+- ✅ `GET /api/plickers/sessions/[id]` - Chi tiết phiên
+- ✅ `PATCH /api/plickers/sessions/[id]` - Cập nhật phiên (status, currentQ)
+- ✅ `DELETE /api/plickers/sessions/[id]` - Xóa phiên
+- ✅ `GET /api/plickers/sessions/[id]/stream` - SSE real-time updates
+- ✅ `GET /api/courses/[id]/enrollments` - Lấy danh sách học sinh
+- ✅ `PATCH /api/courses/[id]/enrollments` - Cập nhật plickerCardId
+
+**3. Frontend Views**
+- ✅ `Plickers.tsx` - Danh sách phiên, tạo phiên mới
+- ✅ `PlickersSession.tsx` - Chi tiết phiên, thống kê, điều khiển
+- ✅ `PlickersLiveView.tsx` - Màn hình chiếu cho học sinh
+- ✅ `PlickersCardTab.tsx` - Quản lý mapping thẻ trong course
+
+**4. Services & Utils**
+- ✅ `plickersService.ts` - Business logic (processSessionEnd)
+- ✅ `plickersParser.ts` - Parse câu hỏi từ text
+
+**5. External Integration**
+- ⚠️ Flask App (http://localhost:5000) - Camera scanning (KHÔNG CÓ TRONG CODE)
+
+---
+
+### 🐛 CÁC VẤN ĐỀ PHÁT HIỆN
+
+#### **CRITICAL ISSUES**
+
+**1. Missing Flask Application**
+- ❌ Frontend references `http://localhost:5000` nhưng không có Flask app trong codebase
+- ❌ Không có API để nhận responses từ camera scanning
+- ❌ Không có endpoint để Flask app gửi scanned data về
+
+**2. Missing Response Creation API**
+- ❌ Không có API endpoint để tạo `PlickersResponse` khi quét thẻ
+- ❌ Frontend chỉ đọc responses nhưng không có cách tạo mới
+
+**3. Incomplete Live View Integration**
+- ⚠️ `PlickersLiveView` có toggle `showAnswer` local nhưng không sync với server
+- ⚠️ Server có fields `showAnswer` và `showGraph` nhưng frontend không sử dụng đúng
+
+#### **MEDIUM ISSUES**
+
+**4. Parser Logic Issues**
+- ⚠️ `plickersParser.ts` không handle multi-line questions tốt
+- ⚠️ Không validate correctAnswer phải là A/B/C/D
+
+**5. Missing Validation**
+- ⚠️ Không validate duplicate plickerCardId trong cùng course
+- ⚠️ Không validate cardNumber trong PlickersResponse phải match với enrolled students
+
+**6. Gamification Logic**
+- ⚠️ `processSessionEnd` tính điểm nhưng không handle trường hợp học sinh không trả lời
+- ⚠️ Không có rollback mechanism nếu tạo Assignment thành công nhưng Submission fail
+
+#### **MINOR ISSUES**
+
+**7. UI/UX Issues**
+- ⚠️ PlickersSession auto-refresh mỗi 3s có thể gây lag
+- ⚠️ Không có loading state khi chuyển câu hỏi
+- ⚠️ Hardcoded FLASK_URL không có env variable
+
+**8. Type Safety**
+- ⚠️ Một số type assertions không an toàn (`as const`, `as any`)
+- ⚠️ Missing error boundaries
+
+---
+
+### 📝 KẾ HOẠCH TRIỂN KHAI
+
+#### **PHASE 1: Fix Critical Issues** (Priority: HIGH)
+
+**Task 1.1: Create PlickersResponse API**
+- [ ] Tạo `POST /api/plickers/sessions/[id]/responses`
+- [ ] Validate cardNumber, questionId, answer
+- [ ] Check duplicate responses (unique constraint)
+- [ ] Return updated session data
+
+**Task 1.2: Mock Flask Integration** 
+- [ ] Tạo mock endpoint để simulate camera scanning
+- [ ] Hoặc tạo UI manual input để test without camera
+
+**Task 1.3: Fix Live View Sync**
+- [ ] Sử dụng `showAnswer` và `showGraph` từ SSE stream
+- [ ] Remove local state, sync với server
+- [ ] Add toggle buttons trong PlickersSession
+
+#### **PHASE 2: Improve Validation & Logic** (Priority: MEDIUM)
+
+**Task 2.1: Add Validation**
+- [ ] Validate duplicate plickerCardId trong course
+- [ ] Validate cardNumber trong responses
+- [ ] Add error messages rõ ràng
+
+**Task 2.2: Improve Parser**
+- [ ] Handle multi-line questions
+- [ ] Validate correctAnswer format
+- [ ] Add more test cases
+
+**Task 2.3: Fix Gamification**
+- [ ] Handle students không trả lời
+- [ ] Add transaction rollback
+- [ ] Improve error handling
+
+#### **PHASE 3: Polish & Testing** (Priority: LOW)
+
+**Task 3.1: UI/UX Improvements**
+- [ ] Optimize auto-refresh strategy
+- [ ] Add loading states
+- [ ] Move FLASK_URL to env variable
+
+**Task 3.2: Add Tests**
+- [ ] Unit tests cho plickersParser
+- [ ] Integration tests cho API endpoints
+- [ ] E2E tests cho full flow
+
+**Task 3.3: Documentation**
+- [ ] API documentation
+- [ ] Setup guide cho Flask app
+- [ ] User guide
+
+---
+
+### 🚀 TRIỂN KHAI
+
+Mỗi task sẽ được implement, test, commit và push riêng biệt theo quy tắc:
+- ✅ Commit message bắt đầu bằng động từ
+- ✅ Mỗi thay đổi một commit
+- ✅ Push lên nhánh `manhdev`
+- ✅ Chỉ cập nhật README.md, không tạo file .md mới
+
