@@ -525,12 +525,12 @@ Plickers là hệ thống kiểm tra nhanh sử dụng thẻ vật lý (QR code 
 - [x] Add transaction rollback
 - [x] Improve error handling
 
-#### **PHASE 3: Polish & Testing** (Priority: LOW)
+#### **PHASE 3: Polish & Testing** (Priority: LOW) - IN PROGRESS
 
-**Task 3.1: UI/UX Improvements**
-- [ ] Optimize auto-refresh strategy
-- [ ] Add loading states
-- [ ] Move FLASK_URL to env variable
+**Task 3.1: UI/UX Improvements** ✅
+- [x] Optimize auto-refresh strategy (chỉ refresh khi active, giảm từ 3s xuống 5s)
+- [x] Add loading states when switching questions
+- [x] Move FLASK_URL to environment variable
 
 **Task 3.2: Add Tests**
 - [ ] Unit tests cho plickersParser
@@ -564,7 +564,8 @@ Mỗi task sẽ được implement, test, commit và push riêng biệt theo quy
 - Improved parser with multi-line support and answer validation
 - Fixed gamification logic with proper transaction handling
 
-**Phase 3 (Low):** 🔄 0% Complete (0/3 tasks)
+**Phase 3 (Low):** 🔄 33% Complete (1/3 tasks)
+- Optimized auto-refresh and added loading states
 
-**Overall Progress:** 67% (6/9 tasks completed)
+**Overall Progress:** 78% (7/9 tasks completed)
 
