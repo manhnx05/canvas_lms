@@ -42,6 +42,33 @@ export const PATCH = withErrorHandler(async (req: Request, { params }: { params:
     return NextResponse.json({ error: 'enrollmentId là bắt buộc' }, { status: 400 });
   }
 
+  // Validate plickerCardId range
+  if (plickerCardId !== null && plickerCardId !== undefined) {
+    if (typeof plickerCardId !== 'number' || plickerCardId < 1 || plickerCardId > 40) {
+      return NextResponse.json({ error: 'plickerCardId phải là số từ 1-40' }, { status: 400 });
+    }
+
+    // Check for duplicate plickerCardId in the same course
+    const duplicate = await prisma.enrollment.findFirst({
+      where: {
+        courseId: id,
+        plickerCardId: plickerCardId,
+        id: { not: enrollmentId } // Exclude current enrollment
+      },
+      include: {
+        user: {
+          select: { name: true }
+        }
+      }
+    });
+
+    if (duplicate) {
+      return NextResponse.json({ 
+        error: `Thẻ số ${plickerCardId} đã được gán cho học sinh ${duplicate.user.name}. Vui lòng chọn số thẻ khác.` 
+      }, { status: 400 });
+    }
+  }
+
   // Ensure enrollment belongs to this course
   const enrollment = await prisma.enrollment.update({
     where: { 
