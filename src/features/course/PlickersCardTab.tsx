@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ScanLine, Save, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -19,7 +19,7 @@ export function PlickersCardTab({ courseId }: { courseId: string }) {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
 
-  const loadEnrollments = async () => {
+  const loadEnrollments = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/courses/${courseId}/enrollments`);
@@ -27,16 +27,17 @@ export function PlickersCardTab({ courseId }: { courseId: string }) {
       if (json.data) {
         setEnrollments(json.data.filter((e: EnrollmentInfo) => e.user.email !== 'teacher@example.com')); // filter out teacher if mixed
       }
-    } catch (e) {
+    } catch (error) {
+      console.error('Error loading enrollments:', error);
       toast.error('Lỗi khi tải danh sách học sinh');
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId]);
 
   useEffect(() => {
     loadEnrollments();
-  }, [courseId]);
+  }, [loadEnrollments]);
 
   const autoAssignCards = async () => {
     if (!confirm('Bạn có muốn tự động gán mã thẻ (1-40) theo thứ tự Alphabet cho toàn bộ lớp không? Dữ liệu cũ sẽ bị đè.')) return;
@@ -58,8 +59,8 @@ export function PlickersCardTab({ courseId }: { courseId: string }) {
         successCount++;
         // Update local state without full reload
         setEnrollments(prev => prev.map(p => p.id === e.id ? { ...p, plickerCardId: cardId } : p));
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        console.error('Error updating card:', error);
       }
     }
     toast.success(`Đã tự động gán thẻ cho ${successCount} học sinh`);
@@ -81,7 +82,8 @@ export function PlickersCardTab({ courseId }: { courseId: string }) {
       } else {
         toast.error('Lỗi khi lưu mã thẻ');
       }
-    } catch (e) {
+    } catch (error) {
+      console.error('Error updating card:', error);
       toast.error('Không thể kết nối máy chủ');
     } finally {
       setSavingId(null);

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Send, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import type { PlickersSession, PlickersQuestion } from '@/src/types';
+import type { PlickersSession } from '@/src/types';
 
 /**
  * Manual Scan Interface - Mock camera scanning for testing
@@ -21,7 +21,7 @@ export function PlickersManualScan() {
   // Response history
   const [responses, setResponses] = useState<any[]>([]);
 
-  const loadSession = async () => {
+  const loadSession = useCallback(async () => {
     try {
       const res = await fetch(`/api/plickers/sessions/${id}`);
       const json = await res.json();
@@ -29,19 +29,22 @@ export function PlickersManualScan() {
         setSession(json.data);
         setResponses(json.data.responses || []);
       }
-    } catch (e) {
+    } catch (error) {
+      console.error('Error loading session:', error);
       toast.error('Không thể tải phiên');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
-    loadSession();
-    // Auto refresh every 2s
-    const interval = setInterval(loadSession, 2000);
-    return () => clearInterval(interval);
-  }, [id]);
+    if (id) {
+      loadSession();
+      // Auto refresh every 2s
+      const interval = setInterval(loadSession, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [id, loadSession]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +85,8 @@ export function PlickersManualScan() {
       } else {
         toast.error(json.error || 'Lỗi khi gửi câu trả lời');
       }
-    } catch (e) {
+    } catch (error) {
+      console.error('Error submitting response:', error);
       toast.error('Không thể kết nối server');
     } finally {
       setSubmitting(false);

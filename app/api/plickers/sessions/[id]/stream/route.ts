@@ -52,7 +52,11 @@ export async function GET(
         }
       }
       
-      try { controller.close(); } catch (err) {}
+      try { 
+        controller.close(); 
+      } catch (error) {
+        console.error('Error closing controller:', error);
+      }
     },
     cancel() {
       isClosed = true;

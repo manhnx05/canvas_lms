@@ -2,13 +2,26 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, BarChart3, Users, Loader2, ScanLine, ExternalLink, ArrowLeft, ArrowRight, MonitorPlay, AlertTriangle, TrendingDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import type { PlickersSession, PlickersQuestion, PlickersResponse } from '@/src/types';
+import type { PlickersQuestion, PlickersResponse } from '@/src/types';
+
+interface PlickersSessionData {
+  id: string;
+  title: string;
+  status: string;
+  currentQ: number;
+  showAnswer: boolean;
+  showGraph: boolean;
+  createdAt: string;
+  courseId?: string;
+  questions?: PlickersQuestion[];
+  responses?: PlickersResponse[];
+}
 
 const FLASK_URL = process.env.NEXT_PUBLIC_FLASK_URL || 'http://localhost:5000';
 
 export function PlickersSession() {
   const { id } = useParams<{ id: string }>();
-  const [session, setSession] = useState<PlickersSession | null>(null);
+  const [session, setSession] = useState<PlickersSessionData | null>(null);
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isChangingQuestion, setIsChangingQuestion] = useState(false);
@@ -29,8 +42,8 @@ export function PlickersSession() {
           if (eJson.data) setEnrollments(eJson.data);
         }
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error('Error loading session:', error);
     } finally {
       setIsLoading(false);
       if (showLoader) setIsChangingQuestion(false);
@@ -86,7 +99,8 @@ export function PlickersSession() {
       });
       await loadSession(true); // Reload with loading state
       toast.success(`Đã chuyển sang câu ${newQIndex + 1}`);
-    } catch(err) {
+    } catch(error) {
+      console.error('Error updating question:', error);
       toast.error('Lỗi chuyển câu!');
       setIsChangingQuestion(false);
     }
@@ -103,7 +117,8 @@ export function PlickersSession() {
       });
       setSession({...session, showAnswer: newValue});
       toast.success(newValue ? 'Đã hiển thị đáp án trên màn chiếu' : 'Đã ẩn đáp án');
-    } catch(err) {
+    } catch(error) {
+      console.error('Error toggling show answer:', error);
       toast.error('Lỗi cập nhật!');
     }
   };
@@ -119,7 +134,8 @@ export function PlickersSession() {
       });
       setSession({...session, showGraph: newValue});
       toast.success(newValue ? 'Đã hiển thị biểu đồ trên màn chiếu' : 'Đã ẩn biểu đồ');
-    } catch(err) {
+    } catch(error) {
+      console.error('Error toggling show graph:', error);
       toast.error('Lỗi cập nhật!');
     }
   };

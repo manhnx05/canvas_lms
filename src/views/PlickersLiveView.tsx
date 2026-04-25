@@ -22,14 +22,27 @@ export function PlickersLiveView() {
           if (eJson.data) setEnrollments(eJson.data);
         }
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error('Error loading session:', error);
     }
   }, [id]);
 
+  // Load data on mount and when id changes
   useEffect(() => {
-    loadBase();
-  }, [loadBase]);
+    let isMounted = true;
+    
+    const loadData = async () => {
+      if (id && isMounted) {
+        await loadBase();
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [id, loadBase]);
 
   // SSE Stream for Real-time
   useEffect(() => {
@@ -42,7 +55,9 @@ export function PlickersLiveView() {
         if (payload && payload.data) {
           setLiveData(payload.data);
         }
-      } catch(err) {}
+      } catch(error) {
+        console.error('Error parsing SSE data:', error);
+      }
     };
 
     sse.onerror = () => {
@@ -79,7 +94,6 @@ export function PlickersLiveView() {
   // Phụ thuộc liveData hoac session
   const currentQIndex = liveData ? liveData.currentQ : session.currentQ;
   const showAnswer = liveData ? liveData.showAnswer : session.showAnswer;
-  const showGraph = liveData ? liveData.showGraph : session.showGraph;
   const questions: PlickersQuestion[] = session.questions || [];
   const currentQuestion = questions[currentQIndex];
 
