@@ -1,18 +1,30 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, CheckCircle, AlertCircle, Star, Trophy, Users, FileText, TrendingUp } from 'lucide-react';
 import { Role } from '@/src/types';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { MemoizedStatsCard } from '../components/optimized/MemoizedStatsCard';
+import { MemoizedCourseCard } from '../components/optimized/MemoizedCourseCard';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 const COLORS = ['#0ea5e9', '#6366f1', '#f59e0b', '#10b981', '#f43f5e'];
 
-export function Dashboard({ role }: { role: Role }) {
+export const Dashboard = React.memo(function Dashboard({ role }: { role: Role }) {
   const { courses, assignments, stats, loading } = useDashboardData(role);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
 
+  const handleCourseClick = React.useCallback((courseId: string) => {
+    navigate(`/courses/${courseId}`);
+  }, [navigate]);
+
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" text="Đang tải dữ liệu..." />
+      </div>
+    );
   }
 
   return (
@@ -36,36 +48,30 @@ export function Dashboard({ role }: { role: Role }) {
       {/* Stats Overview */}
       {role === 'student' ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-3xl border-2 border-sky-100 shadow-sm flex items-center gap-5 hover:border-sky-300 transition-colors cursor-pointer">
-            <div className="w-14 h-14 bg-amber-100 text-amber-500 rounded-2xl flex items-center justify-center rotate-3">
-              <Star className="w-8 h-8 fill-current" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-sky-500 uppercase tracking-wider">Điểm Thưởng</p>
-              <p className="text-3xl font-extrabold text-sky-900">{user.stars || 0} <span className="text-lg text-sky-400 font-semibold">Sao</span></p>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-3xl border-2 border-sky-100 shadow-sm flex items-center gap-5 hover:border-sky-300 transition-colors cursor-pointer">
-            <div className="w-14 h-14 bg-rose-100 text-rose-500 rounded-2xl flex items-center justify-center -rotate-3">
-              <Trophy className="w-8 h-8" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-sky-500 uppercase tracking-wider">Huy Hiệu</p>
-              <p className="text-3xl font-extrabold text-sky-900">5 <span className="text-lg text-sky-400 font-semibold">Cái</span></p>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-3xl border-2 border-sky-100 shadow-sm flex items-center gap-5 hover:border-sky-300 transition-colors cursor-pointer">
-            <div className="w-14 h-14 bg-emerald-100 text-emerald-500 rounded-2xl flex items-center justify-center rotate-3">
-              <CheckCircle className="w-8 h-8" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-sky-500 uppercase tracking-wider">Hoàn Thành</p>
-              <p className="text-3xl font-extrabold text-sky-900">
-                {assignments.length > 0 ? Math.round((assignments.filter(a => a.mySubmission?.status === 'graded').length / assignments.length) * 100) : 0}
-                <span className="text-lg text-sky-400 font-semibold">%</span>
-              </p>
-            </div>
-          </div>
+          <MemoizedStatsCard
+            icon={Star}
+            title="Điểm Thưởng"
+            value={user.stars || 0}
+            subtitle="Sao"
+            bgColor="bg-amber-100"
+            iconColor="text-amber-500"
+          />
+          <MemoizedStatsCard
+            icon={Trophy}
+            title="Huy Hiệu"
+            value={5}
+            subtitle="Cái"
+            bgColor="bg-rose-100"
+            iconColor="text-rose-500"
+          />
+          <MemoizedStatsCard
+            icon={CheckCircle}
+            title="Hoàn Thành"
+            value={assignments.length > 0 ? Math.round((assignments.filter(a => a.mySubmission?.status === 'graded').length / assignments.length) * 100) : 0}
+            subtitle="%"
+            bgColor="bg-emerald-100"
+            iconColor="text-emerald-500"
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -177,32 +183,12 @@ export function Dashboard({ role }: { role: Role }) {
           
           <div className="grid sm:grid-cols-2 gap-6">
             {courses.slice(0, 4).map(course => (
-              <div key={course.id} onClick={() => navigate(`/courses/${course.id}`)} className="bg-white rounded-3xl border-2 border-sky-100 shadow-sm overflow-hidden hover:shadow-md hover:border-sky-300 transition-all cursor-pointer group transform hover:-translate-y-1">
-                <div className={`h-28 ${course.color} p-5 flex flex-col justify-between relative overflow-hidden`}>
-                  <div className="absolute right-[-20px] bottom-[-20px] opacity-20 transform rotate-12">
-                    <BookOpen className="w-32 h-32 text-white" />
-                  </div>
-                  <div className="bg-white/20 w-fit px-3 py-1 rounded-lg backdrop-blur-sm">
-                    <span className="text-white font-bold text-sm">{course.studentsCount} Học sinh</span>
-                  </div>
-                  <h3 className="text-white font-extrabold text-xl leading-tight z-10">{course.title}</h3>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="font-semibold text-sky-700">{course.teacher}</p>
-                    {role === 'student' && (
-                      <div className="w-10 h-10 rounded-full bg-sky-50 flex items-center justify-center">
-                        <span className="text-sky-600 font-bold text-sm">{course.progress}%</span>
-                      </div>
-                    )}
-                  </div>
-                  {role === 'student' && (
-                    <div className="w-full bg-sky-100 rounded-full h-2.5 mb-2">
-                      <div className="bg-sky-500 h-2.5 rounded-full" style={{ width: `${course.progress}%` }}></div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <MemoizedCourseCard
+                key={course.id}
+                course={course}
+                role={role}
+                onClick={handleCourseClick}
+              />
             ))}
           </div>
         </div>
@@ -239,4 +225,4 @@ export function Dashboard({ role }: { role: Role }) {
       </div>
     </div>
   );
-}
+});

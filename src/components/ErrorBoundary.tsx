@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Props {
@@ -25,14 +25,15 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({ error, errorInfo });
+    
+    // Log to external service in production
+    if (process.env.NODE_ENV === 'production') {
+      // TODO: Send to error tracking service (Sentry, LogRocket, etc.)
+    }
   }
 
-  handleReload = () => {
-    window.location.reload();
-  };
-
-  handleReset = () => {
-    this.setState({ hasError: false } as unknown as State);
+  handleRetry = () => {
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
   };
 
   render() {
@@ -42,45 +43,45 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
-            <div className="flex justify-center mb-4">
-              <AlertTriangle className="h-12 w-12 text-red-500" />
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-md w-full text-center">
+            <div className="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8" />
             </div>
             
-            <h1 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-bold text-slate-800 mb-2">
               Oops! Có lỗi xảy ra
-            </h1>
+            </h2>
             
-            <p className="text-gray-600 mb-6">
-              Ứng dụng gặp lỗi không mong muốn. Vui lòng thử lại hoặc tải lại trang.
+            <p className="text-slate-600 mb-6">
+              Ứng dụng gặp sự cố không mong muốn. Vui lòng thử lại hoặc liên hệ hỗ trợ nếu vấn đề vẫn tiếp tục.
             </p>
-            
+
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="mb-6 text-left">
-                <summary className="cursor-pointer text-sm text-gray-500 mb-2">
+              <details className="text-left bg-slate-100 rounded-lg p-4 mb-4 text-sm">
+                <summary className="cursor-pointer font-semibold text-slate-700 mb-2">
                   Chi tiết lỗi (Development)
                 </summary>
-                <pre className="text-xs bg-gray-100 p-3 rounded overflow-auto max-h-32">
+                <pre className="text-rose-600 whitespace-pre-wrap break-words">
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack}
                 </pre>
               </details>
             )}
-            
-            <div className="flex gap-3 justify-center">
+
+            <div className="flex gap-3">
               <button
-                onClick={this.handleReset}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                onClick={this.handleRetry}
+                className="flex-1 bg-sky-600 hover:bg-sky-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
               >
+                <RefreshCw className="w-4 h-4" />
                 Thử lại
               </button>
               
               <button
-                onClick={this.handleReload}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2"
+                onClick={() => window.location.reload()}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-4 rounded-xl transition-colors"
               >
-                <RefreshCw className="h-4 w-4" />
                 Tải lại trang
               </button>
             </div>
@@ -92,15 +93,3 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
-
-// Hook version for functional components
-export const useErrorHandler = () => {
-  const handleError = (error: Error, errorInfo?: any) => {
-    console.error('Error caught by useErrorHandler:', error, errorInfo);
-    
-    // You can send error to logging service here
-    // Example: sendErrorToLoggingService(error, errorInfo);
-  };
-
-  return { handleError };
-};

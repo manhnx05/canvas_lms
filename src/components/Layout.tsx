@@ -1,37 +1,39 @@
-import React, { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import { Outlet, Link } from 'react-router-dom';
 import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText, MessageCircle, Bot, ScanLine } from 'lucide-react';
 import { Role } from '@/src/types';
+import { MemoizedNavItem } from './optimized/MemoizedNavItem';
 
-export function Layout({ role, onLogout, children }: { role: Role, onLogout: () => void, children?: React.ReactNode }) {
-  const location = useLocation();
+export const Layout = React.memo(function Layout({ role, onLogout, children }: { role: Role, onLogout: () => void, children?: React.ReactNode }) {
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const studentNav = [
-    { icon: Home, label: 'Bảng điều khiển', path: '/' },
-    { icon: BookOpen, label: 'Môn học', path: '/courses' },
-    { icon: Users, label: 'Thành viên', path: '/students' },
-    { icon: PenTool, label: 'Bài tập', path: '/assignments' },
-    { icon: MessageCircle, label: 'Hỏi AI', path: '/ai-chat' },
-    { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
-    { icon: Trophy, label: 'Góc khen thưởng', path: '/rewards' },
-    { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
-  ];
+  const navItems = useMemo(() => {
+    const studentNav = [
+      { icon: Home, label: 'Bảng điều khiển', path: '/' },
+      { icon: BookOpen, label: 'Môn học', path: '/courses' },
+      { icon: Users, label: 'Thành viên', path: '/students' },
+      { icon: PenTool, label: 'Bài tập', path: '/assignments' },
+      { icon: MessageCircle, label: 'Hỏi AI', path: '/ai-chat' },
+      { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
+      { icon: Trophy, label: 'Góc khen thưởng', path: '/rewards' },
+      { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
+    ];
 
-  const teacherNav = [
-    { icon: Home, label: 'Tổng quan', path: '/' },
-    { icon: BookOpen, label: 'Lớp học', path: '/courses' },
-    { icon: Users, label: 'Quản lý Học Sinh', path: '/students' },
-    { icon: FileText, label: 'Ra đề thi AI', path: '/exams' },
-    { icon: ScanLine, label: 'Plickers', path: '/plickers' },
-    { icon: Bot, label: 'Chấm bài AI ', path: '/ai-grading' },
-    { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
-    { icon: MessageCircle, label: 'Hỏi AI', path: '/ai-chat' },
-    { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
-  ];
+    const teacherNav = [
+      { icon: Home, label: 'Tổng quan', path: '/' },
+      { icon: BookOpen, label: 'Lớp học', path: '/courses' },
+      { icon: Users, label: 'Quản lý Học Sinh', path: '/students' },
+      { icon: FileText, label: 'Ra đề thi AI', path: '/exams' },
+      { icon: ScanLine, label: 'Plickers', path: '/plickers' },
+      { icon: Bot, label: 'Chấm bài AI ', path: '/ai-grading' },
+      { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
+      { icon: MessageCircle, label: 'Hỏi AI', path: '/ai-chat' },
+      { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
+    ];
 
-  const navItems = role === 'student' ? studentNav : teacherNav;
+    return role === 'student' ? studentNav : teacherNav;
+  }, [role]);
 
   return (
     <div className="flex h-screen bg-sky-50 font-sans">
@@ -51,24 +53,15 @@ export function Layout({ role, onLogout, children }: { role: Role, onLogout: () 
         </div>
         
         <nav className="flex-1 py-6 flex flex-col gap-3 px-4 overflow-x-hidden">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center px-4 py-3.5 rounded-2xl transition-all duration-200 font-semibold group ${
-                  isActive 
-                    ? 'bg-sky-500 text-white shadow-md shadow-sky-200 lg:translate-y-[-2px]' 
-                    : 'text-sky-700 hover:bg-sky-100'
-                }`}
-                title={isSidebarCollapsed ? item.label : undefined}
-              >
-                <item.icon className={`w-6 h-6 shrink-0 ${isActive ? 'text-white' : 'text-sky-500'}`} />
-                {!isSidebarCollapsed && <span className="ml-3 hidden lg:block text-[15px] truncate">{item.label}</span>}
-              </Link>
-            );
-          })}
+          {navItems.map((item) => (
+            <MemoizedNavItem
+              key={item.path}
+              icon={item.icon}
+              label={item.label}
+              path={item.path}
+              isSidebarCollapsed={isSidebarCollapsed}
+            />
+          ))}
         </nav>
       </aside>
 
@@ -122,4 +115,4 @@ export function Layout({ role, onLogout, children }: { role: Role, onLogout: () 
       </main>
     </div>
   );
-}
+});
