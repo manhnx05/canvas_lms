@@ -1,12 +1,27 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText, MessageCircle, Bot, ScanLine } from 'lucide-react';
+import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText, MessageCircle, Bot, ScanLine, X } from 'lucide-react';
 import { Role } from '@/src/types';
 import { MemoizedNavItem } from './optimized/MemoizedNavItem';
 
 export const Layout = React.memo(function Layout({ role, onLogout, children }: { role: Role, onLogout: () => void, children?: React.ReactNode }) {
   const user = JSON.parse(localStorage.getItem('canvas_user') || '{}');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Close mobile sidebar when clicking outside or on navigation
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const closeMobileSidebar = () => setIsMobileSidebarOpen(false);
 
   const navItems = useMemo(() => {
     const studentNav = [
@@ -37,7 +52,30 @@ export const Layout = React.memo(function Layout({ role, onLogout, children }: {
 
   return (
     <div className="flex h-screen bg-sky-50 font-sans">
-      <aside className={`bg-white border-r border-sky-100 flex flex-col transition-all duration-300 shadow-sm z-20 relative ${isSidebarCollapsed ? 'w-20' : 'w-20 lg:w-64'}`}>
+      {/* Mobile sidebar overlay */}
+      {isMobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={closeMobileSidebar}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        bg-white border-r border-sky-100 flex flex-col transition-all duration-300 shadow-sm z-50 relative
+        ${isSidebarCollapsed ? 'w-20' : 'w-20 lg:w-64'}
+        lg:relative lg:translate-x-0
+        ${isMobileSidebarOpen ? 'fixed inset-y-0 left-0 w-64 translate-x-0' : 'fixed inset-y-0 left-0 w-64 -translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Mobile close button */}
+        <button 
+          onClick={closeMobileSidebar}
+          className="absolute top-4 right-4 p-2 hover:bg-sky-100 rounded-xl text-sky-600 lg:hidden"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Desktop collapse button */}
         <button 
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
           className="absolute -right-3 top-24 bg-white border border-sky-200 text-sky-500 rounded-full p-1 shadow-sm hover:bg-sky-50 transition-colors z-30 hidden lg:block"
@@ -49,26 +87,34 @@ export const Layout = React.memo(function Layout({ role, onLogout, children }: {
           <div className="w-10 h-10 bg-amber-400 rounded-2xl flex items-center justify-center rotate-3 shadow-sm shrink-0">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
-          {!isSidebarCollapsed && <span className="ml-3 text-2xl font-extrabold text-sky-900 hidden lg:block tracking-tight truncate">LớpHọc<span className="text-amber-500">Vui</span></span>}
+          {(!isSidebarCollapsed || isMobileSidebarOpen) && (
+            <span className="ml-3 text-2xl font-extrabold text-sky-900 tracking-tight truncate lg:block">
+              LớpHọc<span className="text-amber-500">Vui</span>
+            </span>
+          )}
         </div>
         
         <nav className="flex-1 py-6 flex flex-col gap-3 px-4 overflow-x-hidden">
           {navItems.map((item) => (
-            <MemoizedNavItem
-              key={item.path}
-              icon={item.icon}
-              label={item.label}
-              path={item.path}
-              isSidebarCollapsed={isSidebarCollapsed}
-            />
+            <div key={item.path} onClick={closeMobileSidebar}>
+              <MemoizedNavItem
+                icon={item.icon}
+                label={item.label}
+                path={item.path}
+                isSidebarCollapsed={isSidebarCollapsed && !isMobileSidebarOpen}
+              />
+            </div>
           ))}
         </nav>
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-sky-100 flex items-center justify-between px-6 shrink-0 sticky top-0 z-10">
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-sky-100 flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-10">
           <div className="flex items-center gap-4 flex-1">
-            <button className="lg:hidden p-2 hover:bg-sky-100 rounded-xl text-sky-600">
+            <button 
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="lg:hidden p-2 hover:bg-sky-100 rounded-xl text-sky-600"
+            >
               <Menu className="w-6 h-6" />
             </button>
             <div className="relative max-w-md w-full hidden md:block">
@@ -81,13 +127,13 @@ export const Layout = React.memo(function Layout({ role, onLogout, children }: {
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 md:gap-6">
             <Link to="/notifications" className="p-2.5 hover:bg-sky-100 rounded-full relative text-sky-600 transition-colors">
               <Bell className="w-6 h-6" />
               <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
             </Link>
             
-            <div className="flex items-center gap-4 pl-6 border-l-2 border-sky-100">
+            <div className="flex items-center gap-2 md:gap-4 pl-3 md:pl-6 border-l-2 border-sky-100">
               <Link to="/profile" className="hidden md:flex flex-col items-end hover:bg-sky-50 px-3 py-1 rounded-xl transition-colors cursor-pointer group">
                 <p className="text-sm font-bold text-sky-900 group-hover:text-sky-700">{user.name}</p>
                 <p className="text-xs font-semibold text-sky-500">{user.email}</p>
@@ -98,7 +144,7 @@ export const Layout = React.memo(function Layout({ role, onLogout, children }: {
               
               <button 
                 onClick={onLogout} 
-                className="ml-2 p-2 hover:bg-rose-100 text-rose-500 rounded-xl transition-colors flex items-center justify-center" 
+                className="ml-1 md:ml-2 p-2 hover:bg-rose-100 text-rose-500 rounded-xl transition-colors flex items-center justify-center" 
                 title="Đăng xuất"
               >
                 <LogOut className="w-5 h-5" />
