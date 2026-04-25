@@ -1,11 +1,40 @@
 import { NextRequest } from 'next/server';
-import DOMPurify from 'isomorphic-dompurify';
+
+// Dynamic import DOMPurify only on client side to avoid jsdom issues during build
+let DOMPurify: any = null;
+
+// Initialize DOMPurify only when needed
+async function getDOMPurify() {
+  if (typeof window !== 'undefined') {
+    // Client side - use regular DOMPurify
+    if (!DOMPurify) {
+      const { default: purify } = await import('dompurify');
+      DOMPurify = purify;
+    }
+  } else {
+    // Server side - use isomorphic version with dynamic import
+    if (!DOMPurify) {
+      try {
+        const { default: purify } = await import('isomorphic-dompurify');
+        DOMPurify = purify;
+      } catch {
+        // Fallback if isomorphic-dompurify fails
+        console.warn('DOMPurify not available, using basic sanitization');
+        DOMPurify = {
+          sanitize: (html: string) => html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        };
+      }
+    }
+  }
+  return DOMPurify;
+}
 
 /**
  * Sanitize HTML content to prevent XSS attacks
  */
-export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
+export async function sanitizeHtml(html: string): Promise<string> {
+  const purify = await getDOMPurify();
+  return purify.sanitize(html, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
     ALLOWED_ATTR: ['class'],
     FORBID_SCRIPT: true,
@@ -29,13 +58,13 @@ export function sanitizeText(text: string): string {
 /**
  * Sanitize object recursively
  */
-export function sanitizeObject(obj: any): any {
+export async function sanitizeObject(obj: any): Promise<any> {
   if (typeof obj === 'string') {
     return sanitizeText(obj);
   }
   
   if (Array.isArray(obj)) {
-    return obj.map(sanitizeObject);
+    return Promise.all(obj.map(sanitizeObject));
   }
   
   if (obj && typeof obj === 'object') {
@@ -43,7 +72,7 @@ export function sanitizeObject(obj: any): any {
     for (const [key, value] of Object.entries(obj)) {
       // Sanitize key names too
       const cleanKey = sanitizeText(key);
-      sanitized[cleanKey] = sanitizeObject(value);
+      sanitized[cleanKey] = await sanitizeObject(value);
     }
     return sanitized;
   }
@@ -57,7 +86,7 @@ export function sanitizeObject(obj: any): any {
 export async function sanitizeRequestBody(req: NextRequest): Promise<any> {
   try {
     const body = await req.json();
-    return sanitizeObject(body);
+    return await sanitizeObject(body);
   } catch {
     // If JSON parsing fails, return null
     return null;

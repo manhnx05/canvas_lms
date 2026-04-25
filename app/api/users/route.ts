@@ -4,17 +4,20 @@ import { requireAuth } from '@/src/middleware/auth';
 import { createUserSchema, validateRequestBody } from '@/src/lib/validations';
 import { withErrorHandler } from '@/src/utils/errorHandler';
 import { withRateLimit, rateLimitConfigs } from '@/src/middleware/rateLimiting';
-import { sanitizeRequestBody, sanitizeObject } from '@/src/middleware/sanitization';
+import { sanitizeRequestBody, sanitizeText } from '@/src/middleware/sanitization';
 
 export const GET = withRateLimit(
   withErrorHandler(async (req: Request) => {
     await requireAuth(req);
     const { searchParams } = new URL(req.url);
     const query: Record<string, string> = {};
-    searchParams.forEach((v, k) => { 
-      // Sanitize query parameters
-      query[k] = sanitizeObject(v) as string; 
-    });
+    
+    // Process query parameters
+    for (const [k, v] of searchParams.entries()) {
+      // Sanitize query parameters - use simple text sanitization for query params
+      query[k] = sanitizeText(v);
+    }
+    
     const users = await userService.getUsers(query);
     return NextResponse.json(users);
   }),

@@ -192,7 +192,7 @@ export const fileUploadSchema = z.object({
 
 // Rate limiting schema
 export const rateLimitSchema = z.object({
-  ip: z.string().ip('IP address không hợp lệ'),
+  ip: z.string().regex(/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^unknown$/, 'IP address không hợp lệ'),
   endpoint: z.string().min(1, 'Endpoint không được để trống'),
   timestamp: z.number().int().positive('Timestamp phải là số dương')
 });
