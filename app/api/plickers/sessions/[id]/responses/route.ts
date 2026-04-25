@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/src/lib/prisma';
-import { withErrorHandler, HttpError } from '@/src/utils/errorHandler';
+import { createPlickersResponseSchema, validateRequestBody } from '@/src/lib/validations';
+import { withErrorHandler, ValidationError, HttpError } from '@/src/utils/errorHandler';
+import { sanitizeRequestBody } from '@/src/middleware/sanitization';
 
 // POST /api/plickers/sessions/[id]/responses
 // Body: { cardNumber: number, questionId: string, answer: 'A' | 'B' | 'C' | 'D' }
@@ -9,21 +11,17 @@ export const POST = withErrorHandler(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id: sessionId } = await params;
-  const body = await req.json();
-  const { cardNumber, questionId, answer } = body;
-
-  // Validation
-  if (!cardNumber || typeof cardNumber !== 'number') {
-    throw new HttpError(400, 'cardNumber là bắt buộc và phải là số');
+  
+  // Sanitize and validate request body
+  const sanitizedBody = await sanitizeRequestBody(req as any);
+  if (!sanitizedBody) {
+    throw new ValidationError('Invalid request body');
   }
 
-  if (!questionId || typeof questionId !== 'string') {
-    throw new HttpError(400, 'questionId là bắt buộc');
-  }
-
-  if (!answer || !['A', 'B', 'C', 'D'].includes(answer)) {
-    throw new HttpError(400, 'answer phải là A, B, C hoặc D');
-  }
+  const { questionId, cardNumber, answer } = validateRequestBody(createPlickersResponseSchema, {
+    ...sanitizedBody,
+    sessionId
+  });
 
   // Check session exists and is active
   const session = await prisma.plickersSession.findUnique({

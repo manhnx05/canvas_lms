@@ -2,14 +2,19 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/src/middleware/auth';
 import prisma from '@/src/lib/prisma';
 import { withErrorHandler } from '@/src/utils/errorHandler';
+import { validateRequestBody, validateUUID, updateEnrollmentSchema } from '@/src/lib/validations';
+import { sanitizeRequestBody } from '@/src/middleware/sanitization';
 
 // GET /api/courses/[id]/enrollments
 export const GET = withErrorHandler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   await requireAuth(req);
   const { id } = await params;
   
+  // Validate course ID
+  const courseId = validateUUID(id, 'Course ID');
+  
   const enrollments = await prisma.enrollment.findMany({
-    where: { courseId: id },
+    where: { courseId },
     include: {
       user: {
         select: {
@@ -35,23 +40,26 @@ export const PATCH = withErrorHandler(async (req: Request, { params }: { params:
   await requireAuth(req, ['teacher']);
   const { id } = await params;
   
-  const body = await req.json();
-  const { enrollmentId, plickerCardId } = body;
+  // Validate course ID
+  const courseId = validateUUID(id, 'Course ID');
   
-  if (!enrollmentId) {
-    return NextResponse.json({ error: 'enrollmentId là bắt buộc' }, { status: 400 });
+  // Sanitize and validate request body
+  const sanitizedBody = await sanitizeRequestBody(req);
+  if (!sanitizedBody) {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
+  
+  const validatedData = validateRequestBody(updateEnrollmentSchema, sanitizedBody);
+  const { enrollmentId, plickerCardId } = validatedData;
 
-  // Validate plickerCardId range
+  // Validate enrollment ID
+  validateUUID(enrollmentId, 'Enrollment ID');
+
+  // Check for duplicate plickerCardId in the same course (if provided)
   if (plickerCardId !== null && plickerCardId !== undefined) {
-    if (typeof plickerCardId !== 'number' || plickerCardId < 1 || plickerCardId > 40) {
-      return NextResponse.json({ error: 'plickerCardId phải là số từ 1-40' }, { status: 400 });
-    }
-
-    // Check for duplicate plickerCardId in the same course
     const duplicate = await prisma.enrollment.findFirst({
       where: {
-        courseId: id,
+        courseId,
         plickerCardId: plickerCardId,
         id: { not: enrollmentId } // Exclude current enrollment
       },
@@ -69,11 +77,11 @@ export const PATCH = withErrorHandler(async (req: Request, { params }: { params:
     }
   }
 
-  // Ensure enrollment belongs to this course
+  // Ensure enrollment belongs to this course and update
   const enrollment = await prisma.enrollment.update({
     where: { 
       id: enrollmentId,
-      courseId: id // Security check
+      courseId // Security check
     },
     data: {
       plickerCardId: plickerCardId !== undefined ? plickerCardId : null

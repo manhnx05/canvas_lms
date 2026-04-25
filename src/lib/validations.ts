@@ -128,7 +128,74 @@ export const createExamSchema = z.object({
   courseId: uuidSchema.optional()
 });
 
-// User validations
+// Plickers validations
+export const createPlickersSessionSchema = z.object({
+  title: z.string().min(1, 'Tiêu đề không được để trống').max(200, 'Tiêu đề không được quá 200 ký tự'),
+  courseId: uuidSchema.optional(),
+  teacherId: uuidSchema,
+  questions: z.array(z.object({
+    text: z.string().min(1, 'Câu hỏi không được để trống').max(500, 'Câu hỏi không được quá 500 ký tự'),
+    optionA: z.string().max(200, 'Đáp án A không được quá 200 ký tự').optional(),
+    optionB: z.string().max(200, 'Đáp án B không được quá 200 ký tự').optional(),
+    optionC: z.string().max(200, 'Đáp án C không được quá 200 ký tự').optional(),
+    optionD: z.string().max(200, 'Đáp án D không được quá 200 ký tự').optional(),
+    correctAnswer: z.enum(['A', 'B', 'C', 'D']).optional(),
+    order: z.number().int().min(0).optional()
+  })).min(1, 'Phải có ít nhất 1 câu hỏi').max(50, 'Không được quá 50 câu hỏi')
+});
+
+export const updatePlickersSessionSchema = z.object({
+  title: z.string().min(1, 'Tiêu đề không được để trống').max(200, 'Tiêu đề không được quá 200 ký tự').optional(),
+  status: z.enum(['idle', 'active', 'ended']).optional(),
+  currentQ: z.number().int().min(0).optional(),
+  showAnswer: z.boolean().optional(),
+  showGraph: z.boolean().optional()
+});
+
+export const createPlickersResponseSchema = z.object({
+  sessionId: uuidSchema,
+  questionId: uuidSchema,
+  cardNumber: z.number().int().min(1, 'Số thẻ phải >= 1').max(40, 'Số thẻ phải <= 40'),
+  answer: z.enum(['A', 'B', 'C', 'D'], {
+    errorMap: () => ({ message: 'Đáp án phải là A, B, C hoặc D' })
+  })
+});
+
+export const updateEnrollmentSchema = z.object({
+  enrollmentId: uuidSchema,
+  plickerCardId: z.number().int().min(1, 'Số thẻ phải >= 1').max(40, 'Số thẻ phải <= 40').nullable()
+});
+
+// Security validations
+export const sanitizeHtmlSchema = z.string().transform((val) => {
+  // Basic HTML sanitization - remove script tags and dangerous attributes
+  return val
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '')
+    .replace(/data:/gi, '');
+});
+
+export const fileUploadSchema = z.object({
+  filename: z.string().min(1, 'Tên file không được để trống').max(255, 'Tên file không được quá 255 ký tự'),
+  mimetype: z.string().refine((val) => {
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf', 'application/msword', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+    return allowedTypes.includes(val);
+  }, 'Loại file không được hỗ trợ'),
+  size: z.number().max(10 * 1024 * 1024, 'File không được lớn hơn 10MB') // 10MB limit
+});
+
+// Rate limiting schema
+export const rateLimitSchema = z.object({
+  ip: z.string().ip('IP address không hợp lệ'),
+  endpoint: z.string().min(1, 'Endpoint không được để trống'),
+  timestamp: z.number().int().positive('Timestamp phải là số dương')
+});
 export const updateProfileSchema = z.object({
   name: z.string().min(2, 'Tên phải có ít nhất 2 ký tự').max(100, 'Tên không được quá 100 ký tự').optional(),
   avatar: z.string().url('URL avatar không hợp lệ').optional().or(z.literal('')),
