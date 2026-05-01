@@ -268,6 +268,8 @@ export interface PlickersSession {
   title: string;
   status: 'idle' | 'active' | 'ended';
   currentQ: number;
+  showAnswer?: boolean;
+  showGraph?: boolean;
   createdAt?: string;
   updatedAt?: string;
   // Relations
