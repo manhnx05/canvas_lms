@@ -42,7 +42,11 @@ class InMemoryCache {
     this.delete(key);
     
     // Add new item
-    this.cache.set(key, { data, expiry, tags });
+    const item: CacheItem<T> = { data, expiry };
+    if (tags) {
+      item.tags = tags;
+    }
+    this.cache.set(key, item);
     
     // Update tag mappings
     if (tags) {
