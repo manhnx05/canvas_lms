@@ -98,6 +98,7 @@ export function useOptimizedFetch<T>(
       const interval = setInterval(fetchData, refetchInterval);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [refetchInterval, enabled, fetchData]);
 
   return { ...state, refetch };
