@@ -97,7 +97,7 @@ function getClientIP(req: NextRequest): string {
   }
   
   // Fallback to connection remote address
-  return req.ip || 'unknown';
+  return (req as any).ip || 'unknown';
 }
 
 /**
