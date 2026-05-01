@@ -190,10 +190,10 @@ export function handleApiError(error: unknown, req?: Request): NextResponse<Erro
 }
 
 // Wrapper for API route handlers with error handling
-export function withErrorHandler(
-  handler: (req: Request, context?: any) => Promise<NextResponse>
+export function withErrorHandler<T extends Request>(
+  handler: (req: T, context?: any) => Promise<NextResponse>
 ) {
-  return async (req: Request, context?: any): Promise<NextResponse> => {
+  return async (req: T, context?: any): Promise<NextResponse> => {
     try {
       return await handler(req, context);
     } catch (error) {
