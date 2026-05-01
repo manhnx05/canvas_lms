@@ -16,8 +16,26 @@
   ],
   "item": [
     {
-      "name": "Auth",
+      "name": "Auth & Users",
       "item": [
+        {
+          "name": "User Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Học Sinh Mới\",\n  \"email\": \"student@example.com\",\n  \"password\": \"123456\",\n  \"role\": \"student\"\n}"
+            }
+          }
+        },
         {
           "name": "User Login",
           "request": {
@@ -33,6 +51,20 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"teacher@example.com\",\n  \"password\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me"]
             }
           }
         },
@@ -68,6 +100,25 @@
           }
         },
         {
+          "name": "Create Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Toán Học Cơ Bản\",\n  \"color\": \"#3498db\",\n  \"icon\": \"calculator\"\n}"
+            }
+          }
+        },
+        {
           "name": "Get Course Detail",
           "request": {
             "method": "GET",
@@ -82,7 +133,7 @@
           }
         },
         {
-          "name": "Create Announcement",
+          "name": "Enroll Student",
           "request": {
             "method": "POST",
             "header": [
@@ -90,13 +141,32 @@
               { "key": "Content-Type", "value": "application/json" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/courses/COURSE_ID_HERE/announcements",
+              "raw": "{{baseUrl}}/courses/COURSE_ID_HERE/enrollments",
               "host": ["{{baseUrl}}"],
-              "path": ["courses", "COURSE_ID_HERE", "announcements"]
+              "path": ["courses", "COURSE_ID_HERE", "enrollments"]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Thông báo nghỉ học\",\n  \"content\": \"Hôm nay cô có việc bận, các em nghỉ nha!\"\n}"
+              "raw": "{\n  \"userId\": \"USER_ID_HERE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Module",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses/COURSE_ID_HERE/modules",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "COURSE_ID_HERE", "modules"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Chương 1: Đại số\",\n  \"order\": 1\n}"
             }
           }
         },
@@ -119,6 +189,25 @@
                 { "key": "type", "value": "file", "type": "text" },
                 { "key": "file", "type": "file", "src": "" }
               ]
+            }
+          }
+        },
+        {
+          "name": "Create Announcement",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses/COURSE_ID_HERE/announcements",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "COURSE_ID_HERE", "announcements"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Thông báo nghỉ học\",\n  \"content\": \"Hôm nay cô có việc bận, các em nghỉ nha!\"\n}"
             }
           }
         }
@@ -159,7 +248,21 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Bài tập về nhà số 1\",\n  \"courseId\": \"COURSE_ID_HERE\",\n  \"dueDate\": \"2024-12-31T23:59:59\",\n  \"starsReward\": 5,\n  \"type\": \"writing\",\n  \"description\": \"Hãy viết 1 đoạn văn về kỳ nghỉ của em.\"\n}"
+              "raw": "{\n  \"title\": \"Bài tập về nhà số 1\",\n  \"courseId\": \"COURSE_ID_HERE\",\n  \"courseName\": \"Tên Khóa Học\",\n  \"dueDate\": \"2024-12-31T23:59:59\",\n  \"starsReward\": 5,\n  \"type\": \"writing\",\n  \"description\": \"Hãy viết 1 đoạn văn về kỳ nghỉ của em.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Assignment Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assignments/ASSIGNMENT_ID_HERE",
+              "host": ["{{baseUrl}}"],
+              "path": ["assignments", "ASSIGNMENT_ID_HERE"]
             }
           }
         },
@@ -183,6 +286,219 @@
               ]
             }
           }
+        },
+        {
+          "name": "Grade Assignment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assignments/ASSIGNMENT_ID_HERE/grade",
+              "host": ["{{baseUrl}}"],
+              "path": ["assignments", "ASSIGNMENT_ID_HERE", "grade"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"submissionId\": \"SUBMISSION_ID_HERE\",\n  \"score\": 9.5,\n  \"feedback\": \"Bài làm rất tốt, đáng khen!\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exams",
+      "item": [
+        {
+          "name": "Get Exams",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/exams",
+              "host": ["{{baseUrl}}"],
+              "path": ["exams"]
+            }
+          }
+        },
+        {
+          "name": "Create Exam",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/exams",
+              "host": ["{{baseUrl}}"],
+              "path": ["exams"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Đề thi thử THPT Quốc gia\",\n  \"subject\": \"math\",\n  \"grade\": \"12\",\n  \"duration\": 90,\n  \"totalScore\": 10,\n  \"difficulty\": \"medium\",\n  \"questions\": [\n    {\n      \"question\": \"1 + 1 = ?\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"2\" },\n        { \"id\": \"B\", \"text\": \"3\" }\n      ],\n      \"correctOptionId\": \"A\",\n      \"difficulty\": \"easy\"\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Exam Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/exams/EXAM_ID_HERE",
+              "host": ["{{baseUrl}}"],
+              "path": ["exams", "EXAM_ID_HERE"]
+            }
+          }
+        },
+        {
+          "name": "Start Exam Attempt",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/exams/EXAM_ID_HERE/attempt",
+              "host": ["{{baseUrl}}"],
+              "path": ["exams", "EXAM_ID_HERE", "attempt"]
+            }
+          }
+        },
+        {
+          "name": "Save Exam Answer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/exams/EXAM_ID_HERE/attempt",
+              "host": ["{{baseUrl}}"],
+              "path": ["exams", "EXAM_ID_HERE", "attempt"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attemptId\": \"ATTEMPT_ID_HERE\",\n  \"questionId\": \"QUESTION_ID_HERE\",\n  \"optionId\": \"A\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Submit Exam",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/exams/EXAM_ID_HERE/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["exams", "EXAM_ID_HERE", "submit"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attemptId\": \"ATTEMPT_ID_HERE\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plickers",
+      "item": [
+        {
+          "name": "Get Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/plickers/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["plickers", "sessions"]
+            }
+          }
+        },
+        {
+          "name": "Create Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/plickers/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["plickers", "sessions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Kiểm tra bài cũ\",\n  \"courseId\": \"COURSE_ID_HERE\",\n  \"questions\": [\n    {\n      \"text\": \"Thủ đô của Việt Nam là gì?\",\n      \"correctAnswer\": \"A\",\n      \"order\": 1\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Session Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/plickers/sessions/SESSION_ID_HERE",
+              "host": ["{{baseUrl}}"],
+              "path": ["plickers", "sessions", "SESSION_ID_HERE"]
+            }
+          }
+        },
+        {
+          "name": "Scan Response",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/plickers/sessions/SESSION_ID_HERE/scan",
+              "host": ["{{baseUrl}}"],
+              "path": ["plickers", "sessions", "SESSION_ID_HERE", "scan"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionId\": \"QUESTION_ID_HERE\",\n  \"cardNumber\": 1,\n  \"answer\": \"A\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Session State",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/plickers/sessions/SESSION_ID_HERE",
+              "host": ["{{baseUrl}}"],
+              "path": ["plickers", "sessions", "SESSION_ID_HERE"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\",\n  \"currentQ\": 1,\n  \"showAnswer\": false\n}"
+            }
+          }
         }
       ]
     },
@@ -200,6 +516,20 @@
               "raw": "{{baseUrl}}/conversations",
               "host": ["{{baseUrl}}"],
               "path": ["conversations"]
+            }
+          }
+        },
+        {
+          "name": "Get Conversation Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/conversations/CONV_ID_HERE",
+              "host": ["{{baseUrl}}"],
+              "path": ["conversations", "CONV_ID_HERE"]
             }
           }
         },
@@ -240,6 +570,105 @@
               "raw": "{\n  \"receiverId\": \"RECEIVER_USER_ID_HERE\",\n  \"subject\": \"Hỏi đáp Khóa học Toán\",\n  \"content\": \"Xin chào! Lâu quá không gặp.\"\n}"
             }
           }
+        },
+        {
+          "name": "Mark Messages As Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/conversations/CONV_ID_HERE/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["conversations", "CONV_ID_HERE", "read"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            }
+          }
+        },
+        {
+          "name": "Mark All Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "read-all"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rewards",
+      "item": [
+        {
+          "name": "Get User Rewards",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rewards",
+              "host": ["{{baseUrl}}"],
+              "path": ["rewards"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Teacher Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/teacher/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["teacher", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/teacher/students?courseId=COURSE_ID_HERE",
+              "host": ["{{baseUrl}}"],
+              "path": ["teacher", "students"]
+            }
+          }
         }
       ]
     },
@@ -262,6 +691,25 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"teacherPrompt\": \"Chấm điểm nội dung học sinh đã trình bày.\",\n  \"title\": \"Viết văn tả cảnh\",\n  \"description\": \"Tả cảnh trường em\",\n  \"studentAnswers\": {\n    \"essay\": \"Trường em vào mùa thu tuyệt đẹp...\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Chat with Context (AI Grading)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai-grading/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai-grading", "chat"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"Giải thích tại sao chỗ này sai?\" }\n  ],\n  \"context\": {\n    \"assignmentTitle\": \"Toán 12\",\n    \"studentAnswer\": \"1 + 1 = 3\",\n    \"aiFeedback\": \"Sai rồi nhé\"\n  }\n}"
             }
           }
         }
