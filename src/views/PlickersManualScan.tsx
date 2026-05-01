@@ -44,6 +44,7 @@ export function PlickersManualScan() {
       const interval = setInterval(loadSession, 2000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [id, loadSession]);
 
   const handleSubmit = async (e: React.FormEvent) => {
