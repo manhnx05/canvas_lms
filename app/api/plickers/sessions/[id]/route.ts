@@ -5,11 +5,12 @@ import { plickersService } from '@/src/services/plickersService';
 // GET /api/plickers/sessions/[id]
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await prisma.plickersSession.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         questions: {
           orderBy: { order: 'asc' },
@@ -36,9 +37,10 @@ export async function GET(
 // Body: { status?, currentQ?, title?, showAnswer?, showGraph? }
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { status, currentQ, title, showAnswer, showGraph } = body;
 
@@ -56,7 +58,7 @@ export async function PATCH(
     }
 
     const session = await prisma.plickersSession.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: { 
         questions: { orderBy: { order: 'asc' } },
@@ -84,10 +86,11 @@ export async function PATCH(
 // DELETE /api/plickers/sessions/[id]
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await prisma.plickersSession.delete({ where: { id: params.id } });
+    const { id } = await params;
+    await prisma.plickersSession.delete({ where: { id } });
     return NextResponse.json({ message: 'Đã xóa session' });
   } catch (error) {
     console.error('[Plickers] DELETE session error:', error);
