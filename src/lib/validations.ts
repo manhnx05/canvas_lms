@@ -157,7 +157,7 @@ export const createPlickersResponseSchema = z.object({
   questionId: uuidSchema,
   cardNumber: z.number().int().min(1, 'Số thẻ phải >= 1').max(40, 'Số thẻ phải <= 40'),
   answer: z.enum(['A', 'B', 'C', 'D'], {
-    errorMap: () => ({ message: 'Đáp án phải là A, B, C hoặc D' })
+    message: 'Đáp án phải là A, B, C hoặc D'
   })
 });
 
