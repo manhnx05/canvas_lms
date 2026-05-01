@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { requireAuth } from '@/src/middleware/auth';
 import prisma from '@/src/lib/prisma';
 import { withErrorHandler } from '@/src/utils/errorHandler';
@@ -6,7 +6,7 @@ import { validateRequestBody, validateUUID, updateEnrollmentSchema } from '@/src
 import { sanitizeRequestBody } from '@/src/middleware/sanitization';
 
 // GET /api/courses/[id]/enrollments
-export const GET = withErrorHandler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
+export const GET = withErrorHandler(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   await requireAuth(req);
   const { id } = await params;
   
@@ -36,7 +36,7 @@ export const GET = withErrorHandler(async (req: Request, { params }: { params: P
 
 // PATCH /api/courses/[id]/enrollments
 // Expected body: { enrollmentId: string, plickerCardId: number | null }
-export const PATCH = withErrorHandler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
+export const PATCH = withErrorHandler(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   await requireAuth(req, ['teacher']);
   const { id } = await params;
   
