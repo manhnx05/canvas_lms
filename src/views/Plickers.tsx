@@ -47,10 +47,15 @@ export function Plickers({ role }: PlickersProps) {
     }
   }, [currentUser.id]);
 
-  // Load courses for dropdown
   const loadCourses = useCallback(async () => {
     try {
-      const res = await fetch('/api/courses');
+      const token = localStorage.getItem('canvas_token');
+      const res = await fetch('/api/courses', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      if (!res.ok) {
+        throw new Error('Failed to fetch courses');
+      }
       const json = await res.json();
       if (Array.isArray(json)) {
         setCourses(json);
