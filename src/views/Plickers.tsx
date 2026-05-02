@@ -52,7 +52,11 @@ export function Plickers({ role }: PlickersProps) {
     try {
       const res = await fetch('/api/courses');
       const json = await res.json();
-      if (json.data) setCourses(json.data);
+      if (Array.isArray(json)) {
+        setCourses(json);
+      } else if (json.data) {
+        setCourses(json.data);
+      }
     } catch (e) {
       console.error(e);
     }
