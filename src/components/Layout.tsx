@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText, MessageCircle, Bot, ScanLine, X } from 'lucide-react';
+import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText, MessageCircle, Bot, ScanLine, X, Activity } from 'lucide-react';
 import { Role } from '@/src/types';
 import { MemoizedNavItem } from './optimized/MemoizedNavItem';
 
@@ -45,6 +45,7 @@ export const Layout = React.memo(function Layout({ role, onLogout, children }: {
       { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
       { icon: MessageCircle, label: 'Hỏi AI', path: '/ai-chat' },
       { icon: MessageSquare, label: 'Tin nhắn', path: '/inbox' },
+      { icon: Activity, label: 'Giám sát hệ thống', path: '/system-monitor' },
     ];
 
     return role === 'student' ? studentNav : teacherNav;
