@@ -33,6 +33,7 @@ const Plickers = lazy(() => import('./views/Plickers').then(m => ({ default: m.P
 const PlickersSession = lazy(() => import('./views/PlickersSession').then(m => ({ default: m.PlickersSession })));
 const PlickersManualScan = lazy(() => import('./views/PlickersManualScan').then(m => ({ default: m.PlickersManualScan })));
 const PlickersLiveView = lazy(() => import('./views/PlickersLiveView').then(m => ({ default: m.PlickersLiveView })));
+const SystemMonitor = lazy(() => import('./views/SystemMonitor').then(m => ({ default: m.SystemMonitor })));
 
 const AppContent = React.memo(function AppContent() {
   const { currentUser, isLoading, login, logout } = useAuthContext();
@@ -86,6 +87,7 @@ const AppContent = React.memo(function AppContent() {
               <Route path="/exams/new" element={<LazyRoute><ExamGenerator /></LazyRoute>} />
               <Route path="/exams/:id" element={<LazyRoute><ExamViewer /></LazyRoute>} />
               <Route path="/exams/:id/take" element={<LazyRoute><ExamTaking /></LazyRoute>} />
+              <Route path="/system-monitor" element={<LazyRoute><SystemMonitor /></LazyRoute>} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </ErrorBoundary>
