@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/src/lib/auth';
+import { verifyToken } from '@/src/middleware/auth';
 import { performanceMonitor } from '@/src/lib/performance';
 import { logger } from '@/src/lib/logger';
 import { cache } from '@/src/lib/cache';
