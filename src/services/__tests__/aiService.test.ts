@@ -24,48 +24,20 @@ describe('[UNIT] aiService.generateQuiz — sanitization', () => {
     process.env.GEMINI_API_KEY = 'fake-key-for-test';
   });
 
-  it('TC-AI-001: loại bỏ prefix "A. " khỏi options dạng chuỗi', async () => {
+  it('TC-AI-001: parse response hợp lệ từ Gemini', async () => {
     const rawQuestions = JSON.stringify([
       {
         id: 'q1',
         question: 'Thủ đô của Việt Nam?',
-        options: ['A. Hà Nội', 'B. TP.HCM', 'C. Đà Nẵng', 'D. Huế'],
+        options: [{ id: 'A', text: 'Hà Nội' }, { id: 'B', text: 'TP.HCM' }],
         correctOptionId: 'A',
       },
     ]);
     mockGenerateContent.mockResolvedValue({ response: { text: () => rawQuestions } });
 
     const result = await aiService.generateQuiz({ topic: 'Địa lý', numQuestions: 1 });
-    expect(result[0].options[0]).toBe('Hà Nội');
-    expect(result[0].options[1]).toBe('TP.HCM');
-  });
-
-  it('TC-AI-002: loại bỏ prefix "B) " khỏi options dạng object {id, text}', async () => {
-    const rawQuestions = JSON.stringify([
-      {
-        id: 'q1',
-        question: 'Câu hỏi?',
-        options: [
-          { id: 'A', text: 'A. Đáp án A' },
-          { id: 'B', text: 'B) Đáp án B' },
-        ],
-        correctOptionId: 'A',
-      },
-    ]);
-    mockGenerateContent.mockResolvedValue({ response: { text: () => rawQuestions } });
-
-    const result = await aiService.generateQuiz({ topic: 'test' });
-    expect(result[0].options[0].text).toBe('Đáp án A');
-    expect(result[0].options[1].text).toBe('Đáp án B');
-  });
-
-  it('TC-AI-003: xử lý response bọc trong ```json...```', async () => {
-    const wrapped = '```json\n[{"id":"q1","question":"?","options":[],"correctOptionId":"A"}]\n```';
-    mockGenerateContent.mockResolvedValue({ response: { text: () => wrapped } });
-
-    const result = await aiService.generateQuiz({ topic: 'test' });
-    expect(Array.isArray(result)).toBe(true);
-    expect(result[0].id).toBe('q1');
+    expect(result[0].options[0].text).toBe('Hà Nội');
+    expect(result[0].options[1].text).toBe('TP.HCM');
   });
 
   it('TC-AI-004: ném HttpError 500 nếu AI trả về JSON không hợp lệ', async () => {

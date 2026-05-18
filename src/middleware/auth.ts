@@ -30,7 +30,7 @@ export function verifyToken(token: string): JWTPayload | null {
 
 export function extractTokenFromRequest(req: NextRequest): string | null {
   // First try to get token from cookie
-  const cookieToken = req.cookies.get('auth_token')?.value;
+  const cookieToken = req.cookies?.get('auth_token')?.value;
   if (cookieToken) return cookieToken;
 
   // Fallback to Authorization header
