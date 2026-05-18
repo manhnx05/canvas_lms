@@ -4,7 +4,7 @@ import apiClient from '@/src/lib/apiClient';
 
 type FlowState = 'LOGIN' | 'REGISTER_INIT' | 'REGISTER_CONFIRM' | 'FORGOT_INIT' | 'FORGOT_CONFIRM';
 
-export function Login({ onLogin }: { onLogin: (user: any, token: string) => void }) {
+export function Login({ onLogin }: { onLogin: (user: any) => void }) {
   const [flow, setFlow] = useState<FlowState>('LOGIN');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,9 +28,7 @@ export function Login({ onLogin }: { onLogin: (user: any, token: string) => void
     setLoading(true); setError(''); setSuccessMsg('');
     try {
       const res = await apiClient.post('/auth/login', { email, password });
-      const token = res.data.token;
-      localStorage.setItem('canvas_token', token);
-      onLogin(res.data.user, token);
+      onLogin(res.data.user);
     } catch (err: any) { handleError(err.response?.data || err); }
     finally { setLoading(false); }
   };
@@ -51,9 +49,7 @@ export function Login({ onLogin }: { onLogin: (user: any, token: string) => void
     setLoading(true); setError(''); setSuccessMsg('');
     try {
       const res = await apiClient.post('/auth/register/confirm', { email, otp, password, name, role: 'student' });
-      const token = res.data.token;
-      localStorage.setItem('canvas_token', token);
-      onLogin(res.data.user, token);
+      onLogin(res.data.user);
     } catch (err: any) { handleError(err.response?.data || err); }
     finally { setLoading(false); }
   };
