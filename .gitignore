@@ -40,3 +40,7 @@ htmlcov/
 *.egg-info/
 dist/
 build/
+
+# IDE and Editor
+.vscode/
+.kiro/
