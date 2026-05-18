@@ -29,11 +29,16 @@ export function verifyToken(token: string): JWTPayload | null {
 }
 
 export function extractTokenFromRequest(req: NextRequest): string | null {
+  // First try to get token from cookie
+  const cookieToken = req.cookies?.get('auth_token')?.value;
+  if (cookieToken) return cookieToken;
+
+  // Fallback to Authorization header
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.split(' ')[1];
   }
-  return authHeader.split(' ')[1];
+  return null;
 }
 
 export function createAuthMiddleware(requiredRoles?: Role[]) {

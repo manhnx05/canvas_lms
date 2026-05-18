@@ -1,5 +1,6 @@
 import { getGeminiModel } from '@/src/lib/gemini';
 import { HttpError } from '@/src/utils/errorHandler';
+import { SchemaType } from '@google/generative-ai';
 
 export const aiService = {
   generateQuiz: async (data: any) => {
@@ -11,45 +12,45 @@ export const aiService = {
 
     const model = getGeminiModel();
     const prompt = `Bạn là một giáo viên chuyên nghiệp. Sinh ra chính xác ${numQuestions} câu hỏi trắc nghiệm bằng Tiếng Việt cho học sinh cấp ${gradeLevel} về chủ đề: "${topic}".
-    Yêu cầu ĐẦU RA CHỈ LÀ MỘT MẢNG JSON HỢP LỆ, không kèm theo bất kỳ văn bản giải thích nào khác (không bọc trong \`\`\`json).
-    Cấu trúc mỗi object trong mảng:
-    {
-      "id": string (tạo uuid ngẫu nhiên),
-      "question": string,
-      "options": [{"id": "A", "text": string}, {"id": "B", "text": string}, {"id": "C", "text": string}, {"id": "D", "text": string}],
-      "correctOptionId": string ("A", "B", "C" hoặc "D"),
-      "difficulty": "easy" | "medium" | "hard",
-      "explanation": string (giải thích ngắn tại sao đáp án đúng)
-    }
     LƯU Ý QUAN TRỌNG: Trong trường "text" của options, TUYỆT ĐỐI KHÔNG ghi thêm ký tự tiền tố (VD: "A. ", "B. ", "C) ") mà CHỈ GHI phần nội dung đáp án trơn.`;
 
-    try {
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-      
-      let cleanedText = text.trim();
-      if (cleanedText.startsWith('```json')) cleanedText = cleanedText.slice(7);
-      if (cleanedText.startsWith('```')) cleanedText = cleanedText.slice(3);
-      if (cleanedText.endsWith('```')) cleanedText = cleanedText.slice(0, -3);
-      
-      const parsedData = JSON.parse(cleanedText.trim());
-      
-      // Sanitization: Tẩy sạch triệt để nếu AI vẫn lỡ lầm chèn "A. "
-      if (Array.isArray(parsedData)) {
-         parsedData.forEach(q => {
-            if (Array.isArray(q.options)) {
-               q.options = q.options.map((opt: any) => {
-                  if (typeof opt === 'string') {
-                     return opt.replace(/^[A-D][.:)]\s*/i, '');
-                  } else if (opt && typeof opt.text === 'string') {
-                     opt.text = opt.text.replace(/^[A-D][.:)]\s*/i, '');
-                     return opt;
-                  }
-                  return opt;
-               });
+    const responseSchema = {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          id: { type: SchemaType.STRING, description: "tạo uuid ngẫu nhiên" },
+          question: { type: SchemaType.STRING },
+          options: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                id: { type: SchemaType.STRING, description: "A, B, C, D" },
+                text: { type: SchemaType.STRING }
+              },
+              required: ["id", "text"]
             }
-         });
+          },
+          correctOptionId: { type: SchemaType.STRING, description: "A, B, C, hoặc D" },
+          difficulty: { type: SchemaType.STRING, description: "easy, medium, hoặc hard" },
+          explanation: { type: SchemaType.STRING, description: "giải thích ngắn tại sao đáp án đúng" }
+        },
+        required: ["id", "question", "options", "correctOptionId", "difficulty", "explanation"]
       }
+    };
+
+    try {
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema
+        }
+      });
+      
+      const text = result.response.text();
+      const parsedData = JSON.parse(text);
       
       return parsedData;
     } catch (error: any) {

@@ -34,9 +34,8 @@ export const POST = withErrorHandler(async (req: Request) => {
     role: updated.role as any
   });
 
-  return NextResponse.json({ 
+  const response = NextResponse.json({ 
     message: 'Đăng ký thành công!', 
-    token,
     user: { 
       id: updated.id, 
       name: updated.name, 
@@ -45,4 +44,14 @@ export const POST = withErrorHandler(async (req: Request) => {
       avatar: updated.avatar 
     }
   });
+
+  response.cookies.set('auth_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    path: '/',
+  });
+
+  return response;
 });

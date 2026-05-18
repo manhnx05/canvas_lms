@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/src/types';
+import apiClient from '@/src/lib/apiClient';
 
 interface AuthContextType {
   currentUser: User | null;
   isLoading: boolean;
-  login: (user: User, token: string) => void;
-  logout: () => void;
+  login: (user: User) => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,31 +18,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     try {
       const saved = localStorage.getItem('canvas_user');
-      const token = localStorage.getItem('canvas_token');
       
-      if (saved && token) {
+      if (saved) {
         const user = JSON.parse(saved);
         setCurrentUser(user);
       }
     } catch (error) {
       console.error('Error loading saved user:', error);
       localStorage.removeItem('canvas_user');
-      localStorage.removeItem('canvas_token');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const login = (user: User, token: string) => {
+  const login = (user: User) => {
     setCurrentUser(user);
     localStorage.setItem('canvas_user', JSON.stringify(user));
-    localStorage.setItem('canvas_token', token);
   };
 
-  const logout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('canvas_user');
-    localStorage.removeItem('canvas_token');
+  const logout = async () => {
+    try {
+      await apiClient.post('/auth/logout');
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      setCurrentUser(null);
+      localStorage.removeItem('canvas_user');
+    }
   };
 
   return (

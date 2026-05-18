@@ -32,9 +32,8 @@ export const POST = withRateLimit(
       role: user.role as any
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       message: 'Đăng nhập thành công',
-      token,
       user: { 
         id: user.id, 
         name: user.name, 
@@ -45,6 +44,16 @@ export const POST = withRateLimit(
         className: user.className
       }
     });
+
+    response.cookies.set('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: '/',
+    });
+
+    return response;
   }),
   rateLimitConfigs.auth
 );

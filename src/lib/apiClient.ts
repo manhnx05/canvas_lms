@@ -6,17 +6,14 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
   timeout: 120000, // 120 seconds — AI generation can take 60-120s
 });
 
 // Request Interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    // Add auth token if present
-    const token = localStorage.getItem('canvas_token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // Note: auth token is now sent automatically via Http-Only cookie
     // Extra-long timeout for AI/exam generation endpoints
     const url = config.url || '';
     if (url.includes('/exams/generate') || url.includes('/ai/')) {
