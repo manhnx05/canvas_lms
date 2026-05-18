@@ -37,7 +37,8 @@ export const courseService = {
 
         // 2. Auto-sync students based on class name or fallback to all
         const allStudents = await prisma.user.findMany({ where: { role: 'student' } });
-        let targetStudents = allStudents.filter(s => s.className && baseCourse.title.includes(s.className));
+        const titleWords = baseCourse.title.split(/[\s,.-]+/);
+        let targetStudents = allStudents.filter(s => s.className && titleWords.includes(s.className));
         if (targetStudents.length === 0) targetStudents = allStudents;
 
         if (targetStudents.length > 0) {
@@ -89,7 +90,8 @@ export const courseService = {
 
     // Auto-sync students mapped to this course
     const allStudents = await prisma.user.findMany({ where: { role: 'student' } });
-    let targetStudents = allStudents.filter(s => s.className && title.includes(s.className));
+    const titleWords = title.split(/[\s,.-]+/);
+    let targetStudents = allStudents.filter(s => s.className && titleWords.includes(s.className));
     if (targetStudents.length === 0) targetStudents = allStudents;
 
     if (targetStudents.length > 0) {
