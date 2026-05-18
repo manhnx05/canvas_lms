@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/src/types';
+import apiClient from '@/src/lib/apiClient';
 
 interface AuthContextType {
   currentUser: User | null;
   isLoading: boolean;
   login: (user: User) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,9 +36,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('canvas_user', JSON.stringify(user));
   };
 
-  const logout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('canvas_user');
+  const logout = async () => {
+    try {
+      await apiClient.post('/auth/logout');
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      setCurrentUser(null);
+      localStorage.removeItem('canvas_user');
+    }
   };
 
   return (
