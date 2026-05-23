@@ -4,6 +4,7 @@ import {
   Clock, Star, TrendingUp, AlertCircle, Loader, Download
 } from 'lucide-react';
 import apiClient from '@/src/lib/apiClient';
+import { QuizResultExport } from './QuizResultExport';
 
 export interface QuizQuestion {
   id: string;
@@ -299,6 +300,14 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
               dangerouslySetInnerHTML={{ __html: result.aiFeedback.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
           </div>
         )}
+
+        <QuizResultExport
+          result={result}
+          questions={questions}
+          topic={topic || 'Bài_Kiểm_Tra'}
+          studentName={studentName || currentUser?.name || 'Học_sinh'}
+          elementIdToPrint="id-for-pdf-export"
+        />
 
         <div className="flex gap-3">
           <button onClick={reset} className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-colors">
