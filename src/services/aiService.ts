@@ -11,8 +11,12 @@ export const aiService = {
     }
 
     const model = getGeminiModel();
-    const prompt = `Bạn là một giáo viên chuyên nghiệp. Sinh ra chính xác ${numQuestions} câu hỏi trắc nghiệm bằng Tiếng Việt cho học sinh cấp ${gradeLevel} về chủ đề: "${topic}".
-    LƯU Ý QUAN TRỌNG: Trong trường "text" của options, TUYỆT ĐỐI KHÔNG ghi thêm ký tự tiền tố (VD: "A. ", "B. ", "C) ") mà CHỈ GHI phần nội dung đáp án trơn.`;
+    const prompt = `Bạn là một giáo viên chuyên nghiệp. Sinh ra chính xác ${numQuestions} câu hỏi bằng Tiếng Việt cho học sinh cấp ${gradeLevel} về chủ đề: "${topic}".
+    LƯU Ý QUAN TRỌNG:
+    - Các câu hỏi có thể thuộc các loại sau: 'multiple_choice', 'true_false', 'fill_blank', 'matching' (nối đáp án), 'drag_drop' (kéo thả). Hãy đa dạng các loại câu hỏi.
+    - Đối với 'multiple_choice': Trong trường "text" của options, CHỈ GHI phần nội dung đáp án trơn (không ghi A., B., C.).
+    - Đối với 'matching': Phải tạo danh sách matchingPairs với 'left' và 'right'.
+    - Đối với 'drag_drop': Phải tạo dragDropText chứa các ô trống dạng [1], [2] và dragDropTokens là mảng các từ khóa tương ứng.`;
 
     const responseSchema = {
       type: SchemaType.ARRAY,
@@ -20,9 +24,11 @@ export const aiService = {
         type: SchemaType.OBJECT,
         properties: {
           id: { type: SchemaType.STRING, description: "tạo uuid ngẫu nhiên" },
-          question: { type: SchemaType.STRING },
+          type: { type: SchemaType.STRING, description: "multiple_choice, true_false, fill_blank, matching, hoặc drag_drop" },
+          question: { type: SchemaType.STRING, description: "Nội dung câu hỏi hoặc yêu cầu" },
           options: {
             type: SchemaType.ARRAY,
+            description: "Dùng cho multiple_choice, true_false",
             items: {
               type: SchemaType.OBJECT,
               properties: {
@@ -32,11 +38,29 @@ export const aiService = {
               required: ["id", "text"]
             }
           },
-          correctOptionId: { type: SchemaType.STRING, description: "A, B, C, hoặc D" },
+          correctOptionId: { type: SchemaType.STRING, description: "Dùng cho multiple_choice (A, B, C, D), true_false, fill_blank" },
           difficulty: { type: SchemaType.STRING, description: "easy, medium, hoặc hard" },
-          explanation: { type: SchemaType.STRING, description: "giải thích ngắn tại sao đáp án đúng" }
+          explanation: { type: SchemaType.STRING, description: "giải thích ngắn tại sao đáp án đúng" },
+          matchingPairs: {
+            type: SchemaType.ARRAY,
+            description: "Chỉ dùng cho loại matching",
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                left: { type: SchemaType.STRING },
+                right: { type: SchemaType.STRING }
+              },
+              required: ["left", "right"]
+            }
+          },
+          dragDropText: { type: SchemaType.STRING, description: "Chỉ dùng cho drag_drop. VD: 'Trời [1] và có [2].'" },
+          dragDropTokens: {
+            type: SchemaType.ARRAY,
+            description: "Chỉ dùng cho drag_drop. VD: ['nắng', 'mây']",
+            items: { type: SchemaType.STRING }
+          }
         },
-        required: ["id", "question", "options", "correctOptionId", "difficulty", "explanation"]
+        required: ["id", "type", "question", "difficulty", "explanation"]
       }
     } as any;
 

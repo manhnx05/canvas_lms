@@ -5,15 +5,20 @@ import {
 } from 'lucide-react';
 import apiClient from '@/src/lib/apiClient';
 import { QuizResultExport } from './QuizResultExport';
+import { QuizMatching } from './QuizMatching';
+import { QuizDragDrop } from './QuizDragDrop';
 
 export interface QuizQuestion {
   id: string;
-  type?: 'multiple_choice' | 'true_false' | 'fill_blank';
+  type?: 'multiple_choice' | 'true_false' | 'fill_blank' | 'matching' | 'drag_drop' | undefined;
   question: string;
-  options: { id: string; text: string }[];
-  correctOptionId: string;
-  difficulty?: string;
-  explanation?: string;
+  options?: { id: string; text: string }[] | undefined;
+  correctOptionId?: string | undefined;
+  matchingPairs?: { left: string; right: string }[] | undefined;
+  dragDropText?: string | undefined;
+  dragDropTokens?: string[] | undefined;
+  difficulty?: string | undefined;
+  explanation?: string | undefined;
 }
 
 export interface QuizSystemProps {
@@ -107,10 +112,13 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
     let finalQs = [...qs];
     if (shuffleQuestions) finalQs = shuffleArray(finalQs);
     if (shuffleOptions) {
-      finalQs = finalQs.map(q => ({
-        ...q,
-        options: (q.type === 'multiple_choice' || !q.type) ? shuffleArray(q.options) : q.options
-      }));
+      finalQs = finalQs.map(q => {
+        const newQ = { ...q };
+        if (newQ.options && (newQ.type === 'multiple_choice' || !newQ.type)) {
+          newQ.options = shuffleArray(newQ.options);
+        }
+        return newQ as QuizQuestion;
+      });
     }
     setQuestions(finalQs);
 
@@ -150,8 +158,22 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
 
     setPhase('submitting');
     const correct = questions.filter(q => {
+      if (!answers[q.id]) return false;
+      
       if (q.type === 'fill_blank') {
-        return normalizeText(answers[q.id]) === normalizeText(q.correctOptionId);
+        return normalizeText(answers[q.id]) === normalizeText(q.correctOptionId || '');
+      }
+      if (q.type === 'matching') {
+        try {
+          const ansObj = JSON.parse(answers[q.id] || '{}');
+          return q.matchingPairs?.every(p => ansObj[p.left] === p.right);
+        } catch { return false; }
+      }
+      if (q.type === 'drag_drop') {
+        try {
+          const ansObj = JSON.parse(answers[q.id] || '{}');
+          return q.dragDropTokens?.every((tok, idx) => ansObj[(idx + 1).toString()] === tok);
+        } catch { return false; }
       }
       return answers[q.id] === q.correctOptionId;
     }).length;
@@ -266,8 +288,35 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
           <h3 className="font-extrabold text-slate-700 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-sky-500" />Đáp án chi tiết</h3>
           {questions.map((q, i) => {
             const chosen = result.answers[q.id];
-            const isFillBlank = q.type === 'fill_blank';
-            const isCorrect = isFillBlank ? normalizeText(chosen) === normalizeText(q.correctOptionId) : chosen === q.correctOptionId;
+            
+            let isCorrect = false;
+            let studentAnsText = chosen || '(chưa trả lời)';
+            let correctAnsText = q.correctOptionId || '';
+            
+            if (q.type === 'fill_blank') {
+              isCorrect = normalizeText(chosen) === normalizeText(q.correctOptionId || '');
+            } else if (q.type === 'matching') {
+              try {
+                const ansObj = JSON.parse(chosen || '{}');
+                isCorrect = !!q.matchingPairs && q.matchingPairs.every(p => ansObj[p.left] === p.right);
+                studentAnsText = chosen ? 'Đã nối' : '(chưa trả lời)';
+                correctAnsText = 'Đúng theo cặp AI tạo';
+              } catch { isCorrect = false; }
+            } else if (q.type === 'drag_drop') {
+              try {
+                const ansObj = JSON.parse(chosen || '{}');
+                isCorrect = !!q.dragDropTokens && q.dragDropTokens.every((tok, idx) => ansObj[(idx + 1).toString()] === tok);
+                studentAnsText = chosen ? 'Đã kéo thả' : '(chưa trả lời)';
+                correctAnsText = 'Đúng thứ tự từ khóa';
+              } catch { isCorrect = false; }
+            } else {
+              isCorrect = chosen === q.correctOptionId;
+              const sOpt = q.options?.find(o => o.id === chosen);
+              if (sOpt) studentAnsText = sOpt.text;
+              const cOpt = q.options?.find(o => o.id === q.correctOptionId);
+              if (cOpt) correctAnsText = cOpt.text;
+            }
+
             return (
               <div key={q.id} className={`rounded-2xl p-4 border ${isCorrect ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
                 <div className="flex items-start gap-2">
@@ -275,11 +324,9 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
                   <div>
                     <p className="font-semibold text-slate-700 text-sm">{i + 1}. {q.question}</p>
                     <p className="text-xs mt-1">
-                      Bé chọn: <span className={isCorrect ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}>
-                        {isFillBlank ? (chosen || '(chưa trả lời)') : (q.options.find(o => o.id === chosen)?.text || '(chưa trả lời)')}
-                      </span>
+                      Bé chọn: <span className={isCorrect ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}>{studentAnsText}</span>
                       {!isCorrect && <>
-                        {' '} · Đúng: <span className="text-emerald-600 font-bold">{isFillBlank ? q.correctOptionId : q.options.find(o => o.id === q.correctOptionId)?.text}</span>
+                        {' '} · Đúng: <span className="text-emerald-600 font-bold">{correctAnsText}</span>
                       </>}
                     </p>
                     {q.explanation && <p className="text-xs text-slate-500 mt-1 italic">{q.explanation}</p>}
@@ -358,7 +405,22 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
       </div>
 
       {/* Options / Input */}
-      {isFillBlank ? (
+      {q.type === 'matching' ? (
+        <QuizMatching 
+          questionId={q.id}
+          pairs={q.matchingPairs || []}
+          answeredThisQ={answeredThisQ}
+          onSelectAnswer={selectAnswer}
+        />
+      ) : q.type === 'drag_drop' ? (
+        <QuizDragDrop
+          questionId={q.id}
+          text={q.dragDropText || ''}
+          tokens={q.dragDropTokens || []}
+          answeredThisQ={answeredThisQ}
+          onSelectAnswer={selectAnswer}
+        />
+      ) : isFillBlank ? (
         <div className="space-y-3">
           <input 
             type="text" 
@@ -384,11 +446,11 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
           )}
           
           {answeredThisQ && (
-            <div className={`mt-4 p-4 rounded-xl border-2 ${normalizeText(answeredThisQ) === normalizeText(q.correctOptionId) ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+            <div className={`mt-4 p-4 rounded-xl border-2 ${normalizeText(answeredThisQ) === normalizeText(q.correctOptionId || '') ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
                <div className="flex items-center gap-2 font-bold mb-1">
-                 {normalizeText(answeredThisQ) === normalizeText(q.correctOptionId) ? <><CheckCircle className="w-5 h-5"/> Chính xác!</> : <><XCircle className="w-5 h-5"/> Sai rồi!</>}
+                 {normalizeText(answeredThisQ) === normalizeText(q.correctOptionId || '') ? <><CheckCircle className="w-5 h-5"/> Chính xác!</> : <><XCircle className="w-5 h-5"/> Sai rồi!</>}
                </div>
-               {normalizeText(answeredThisQ) !== normalizeText(q.correctOptionId) && (
+               {normalizeText(answeredThisQ) !== normalizeText(q.correctOptionId || '') && (
                  <p className="text-sm mt-2">Đáp án đúng: <span className="font-bold">{q.correctOptionId}</span></p>
                )}
             </div>
@@ -396,7 +458,7 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
         </div>
       ) : (
         <div className={`grid gap-3 ${q.type === 'true_false' ? 'grid-cols-2' : 'grid-cols-1'}`}>
-          {q.options.map(opt => {
+          {q.options?.map(opt => {
             const isChosen = answeredThisQ === opt.id;
             const isCorrect = opt.id === q.correctOptionId;
             const showResult = !!answeredThisQ;

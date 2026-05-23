@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText, MessageCircle, Bot, ScanLine, X, Activity } from 'lucide-react';
+import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText, MessageCircle, Bot, ScanLine, X } from 'lucide-react';
 import { Role } from '@/src/types';
 import { MemoizedNavItem } from './optimized/MemoizedNavItem';
 
