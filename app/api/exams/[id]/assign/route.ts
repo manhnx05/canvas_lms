@@ -52,20 +52,36 @@ export const POST = withErrorHandler(async (req: Request, { params }: { params: 
     }
   });
 
-  // Tạo Assignment để học sinh thấy trong tab "Bài Tập" của lớp
-  const assignment = await prisma.assignment.create({
-    data: {
-      title: exam.title,
-      description: `Bài kiểm tra ${exam.subject} — Thời gian làm bài: ${updatedExam.duration} phút`,
-      courseId,
-      courseName: course.title,
-      dueDate: dueDateStr,
-      starsReward: exam.totalScore,
-      type: 'quiz',
-      status: 'published',
-      questions: exam.questions as any
-    }
+  // Tạo hoặc cập nhật Assignment để tránh trùng lặp khi giao đề nhiều lần
+  // Kiểm tra xem đã có Assignment nào cho đề thi này trong lớp chưa
+  const existingAssignment = await prisma.assignment.findFirst({
+    where: { title: exam.title, courseId }
   });
+
+  const assignment = existingAssignment
+    ? await prisma.assignment.update({
+        where: { id: existingAssignment.id },
+        data: {
+          description: `Bài kiểm tra ${exam.subject} — Thời gian làm bài: ${updatedExam.duration} phút`,
+          dueDate: dueDateStr,
+          starsReward: exam.totalScore,
+          status: 'published',
+          questions: exam.questions as any
+        }
+      })
+    : await prisma.assignment.create({
+        data: {
+          title: exam.title,
+          description: `Bài kiểm tra ${exam.subject} — Thời gian làm bài: ${updatedExam.duration} phút`,
+          courseId,
+          courseName: course.title,
+          dueDate: dueDateStr,
+          starsReward: exam.totalScore,
+          type: 'quiz',
+          status: 'published',
+          questions: exam.questions as any
+        }
+      });
 
   // Gửi Notification cho toàn bộ học sinh trong lớp
   if (course.enrollments.length > 0) {
