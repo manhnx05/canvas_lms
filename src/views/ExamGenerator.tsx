@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Settings, CheckCircle, Settings2, Sparkles, ArrowRight, ArrowLeft, Send, Clock, Calendar } from 'lucide-react';
+import { BookOpen, Settings, CheckCircle, Settings2, Sparkles, ArrowRight, ArrowLeft, Send, Clock, Calendar, Edit3, Eye, Save } from 'lucide-react';
 import { LatexRenderer } from '../components/LatexRenderer';
 import apiClient from '@/src/lib/apiClient';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { ExamQuestionEditor, AddQuestionButton } from '../components/optimized/ExamQuestionEditor';
+import type { EditableQuestion } from '../components/optimized/ExamQuestionEditor';
+import toast from 'react-hot-toast';
 
 interface ExamConfig {
   title: string;
@@ -75,6 +80,71 @@ export const ExamGenerator: React.FC = () => {
   });
 
   const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+  const [editedQuestions, setEditedQuestions] = useState<EditableQuestion[]>([]);
+  const [editMode, setEditMode] = useState(false);
+  const [isSavingEdits, setIsSavingEdits] = useState(false);
+
+  // dnd-kit sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setEditedQuestions(items => {
+        const oldIdx = items.findIndex(q => q.id === active.id);
+        const newIdx = items.findIndex(q => q.id === over.id);
+        return arrayMove(items, oldIdx, newIdx);
+      });
+    }
+  }, []);
+
+  const enterEditMode = () => {
+    // Deep clone questions into editable format
+    const cloned: EditableQuestion[] = generatedQuestions.map((q, i) => ({
+      id: q.id || `q${i + 1}`,
+      content: q.content || '',
+      level: q.level || 'NB',
+      type: q.type || 'multiple_choice',
+      options: Array.isArray(q.options) ? q.options : ['A. ', 'B. ', 'C. ', 'D. '],
+      answer: q.answer || 'A',
+      explanation: q.explanation || '',
+      score: q.score || 0.25,
+    }));
+    setEditedQuestions(cloned);
+    setEditMode(true);
+  };
+
+  const addManualQuestion = () => {
+    const newQ: EditableQuestion = {
+      id: `manual_${Date.now()}`,
+      content: '',
+      level: 'NB',
+      type: 'multiple_choice',
+      options: ['A. ', 'B. ', 'C. ', 'D. '],
+      answer: 'A',
+      explanation: '',
+      score: 0.25,
+    };
+    setEditedQuestions(prev => [...prev, newQ]);
+  };
+
+  const saveEdits = async () => {
+    if (!createdExamId) { toast.error('Không tìm thấy ID đề thi'); return; }
+    try {
+      setIsSavingEdits(true);
+      await apiClient.put(`/exams/${createdExamId}`, { questions: editedQuestions });
+      setGeneratedQuestions(editedQuestions);
+      setEditMode(false);
+      toast.success('Đã lưu chỉnh sửa đề thi!');
+    } catch (err: any) {
+      toast.error(err.message || 'Lỗi khi lưu chỉnh sửa');
+    } finally {
+      setIsSavingEdits(false);
+    }
+  };
 
   const SCOPE_OPTIONS = [
     { value: 'lesson', label: 'Kiểm tra bài học' },
@@ -405,40 +475,94 @@ export const ExamGenerator: React.FC = () => {
             </div>
           </div>
 
-          {/* Preview câu hỏi */}
-          <div className="space-y-8 mb-10">
-            {generatedQuestions.map((q, idx) => (
-              <div key={q.id || idx} className="p-6 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white transition-colors hover:shadow-md">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-bold text-lg text-gray-800">
-                    Câu {idx + 1} <span className="text-sm font-normal text-white bg-indigo-500 px-2 py-0.5 rounded-full ml-2">{q.level}</span>
-                  </h3>
-                  <span className="text-sm font-medium text-gray-500">{q.score} điểm</span>
-                </div>
-                <div className="mb-6 text-gray-800 text-lg">
-                  <LatexRenderer content={q.content} />
-                </div>
-                {q.type === 'multiple_choice' && q.options && (
-                  <div className="grid grid-cols-2 gap-4">
-                    {q.options.map((opt: string, oIdx: number) => {
-                      const isCorrect = q.answer === String.fromCharCode(65 + oIdx);
-                      return (
-                        <div key={oIdx} className={`p-4 rounded-lg border ${isCorrect ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white'}`}>
-                          <LatexRenderer content={opt} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                {q.explanation && (
-                  <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <strong className="text-yellow-800">Giải thích:</strong>
-                    <div className="mt-2 text-sm text-yellow-900"><LatexRenderer content={q.explanation} /></div>
-                  </div>
-                )}
-              </div>
-            ))}
+          {/* Toolbar: Edit / Preview toggle + Save */}
+          <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-200">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-gray-600">{editMode ? '✏️ Chế độ chỉnh sửa' : '👁 Chế độ xem trước'}</span>
+              <span className="text-xs text-gray-400">({editMode ? editedQuestions.length : generatedQuestions.length} câu hỏi)</span>
+            </div>
+            <div className="flex gap-2">
+              {editMode ? (
+                <>
+                  <button
+                    onClick={() => setEditMode(false)}
+                    className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition"
+                  >
+                    <Eye className="w-4 h-4" /> Xem trước
+                  </button>
+                  <button
+                    onClick={saveEdits}
+                    disabled={isSavingEdits}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 transition disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" /> {isSavingEdits ? 'Đang lưu...' : 'Lưu chỉnh sửa'}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={enterEditMode}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition"
+                >
+                  <Edit3 className="w-4 h-4" /> Chỉnh sửa đề
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* EDIT MODE: sortable list with ExamQuestionEditor */}
+          {editMode ? (
+            <div className="space-y-4 mb-8">
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={editedQuestions.map(q => q.id)} strategy={verticalListSortingStrategy}>
+                  {editedQuestions.map((q, idx) => (
+                    <ExamQuestionEditor
+                      key={q.id}
+                      question={q}
+                      index={idx}
+                      onChange={updated => setEditedQuestions(prev => prev.map(x => x.id === updated.id ? updated : x))}
+                      onDelete={() => setEditedQuestions(prev => prev.filter(x => x.id !== q.id))}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+              <AddQuestionButton onClick={addManualQuestion} />
+            </div>
+          ) : (
+            /* PREVIEW MODE: read-only display */
+            <div className="space-y-8 mb-10">
+              {generatedQuestions.map((q, idx) => (
+                <div key={q.id || idx} className="p-6 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white transition-colors hover:shadow-md">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="font-bold text-lg text-gray-800">
+                      Câu {idx + 1} <span className="text-sm font-normal text-white bg-indigo-500 px-2 py-0.5 rounded-full ml-2">{q.level}</span>
+                    </h3>
+                    <span className="text-sm font-medium text-gray-500">{q.score} điểm</span>
+                  </div>
+                  <div className="mb-6 text-gray-800 text-lg">
+                    <LatexRenderer content={q.content} />
+                  </div>
+                  {q.type === 'multiple_choice' && q.options && (
+                    <div className="grid grid-cols-2 gap-4">
+                      {q.options.map((opt: string, oIdx: number) => {
+                        const isCorrect = q.answer === String.fromCharCode(65 + oIdx);
+                        return (
+                          <div key={oIdx} className={`p-4 rounded-lg border ${isCorrect ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white'}`}>
+                            <LatexRenderer content={opt} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {q.explanation && (
+                    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <strong className="text-yellow-800">Giải thích:</strong>
+                      <div className="mt-2 text-sm text-yellow-900"><LatexRenderer content={q.explanation} /></div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Panel Giao bài */}
           {successMsg ? (

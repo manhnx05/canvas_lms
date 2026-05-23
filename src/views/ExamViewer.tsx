@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Download, Printer, ArrowLeft, DownloadCloud, Send, Calendar, Clock } from 'lucide-react';
+import { Download, Printer, ArrowLeft, DownloadCloud, Send, Calendar, Clock, Edit3, Eye, Save } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { LatexRenderer } from '../components/LatexRenderer';
 import apiClient from '@/src/lib/apiClient';
@@ -8,6 +8,11 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { Document, Paragraph, TextRun, Packer } from 'docx';
 import { saveAs } from 'file-saver';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { ExamQuestionEditor, AddQuestionButton } from '../components/optimized/ExamQuestionEditor';
+import type { EditableQuestion } from '../components/optimized/ExamQuestionEditor';
+import toast from 'react-hot-toast';
 
 export const ExamViewer: React.FC = () => {
   const { id } = useParams();
@@ -18,6 +23,11 @@ export const ExamViewer: React.FC = () => {
   const [statistics, setStatistics] = useState<any[]>([]);
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Edit mode state
+  const [editMode, setEditMode] = useState(false);
+  const [editedQuestions, setEditedQuestions] = useState<EditableQuestion[]>([]);
+  const [isSavingEdits, setIsSavingEdits] = useState(false);
+
   // Giao bài state
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');
@@ -26,6 +36,67 @@ export const ExamViewer: React.FC = () => {
   const [assigning, setAssigning] = useState(false);
   const [assignSuccess, setAssignSuccess] = useState('');
   const [assignError, setAssignError] = useState('');
+
+  // dnd-kit sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setEditedQuestions(items => {
+        const oldIdx = items.findIndex(q => q.id === active.id);
+        const newIdx = items.findIndex(q => q.id === over.id);
+        return arrayMove(items, oldIdx, newIdx);
+      });
+    }
+  }, []);
+
+  const enterEditMode = () => {
+    if (!exam || !exam.questions) return;
+    const cloned: EditableQuestion[] = exam.questions.map((q: any, i: number) => ({
+      id: q.id || `q${i + 1}`,
+      content: q.content || q.question || '',
+      level: q.level || 'NB',
+      type: q.type || 'multiple_choice',
+      options: Array.isArray(q.options) ? q.options : ['A. ', 'B. ', 'C. ', 'D. '],
+      answer: q.answer || q.correctOptionId || 'A',
+      explanation: q.explanation || '',
+      score: q.score || 0.25,
+    }));
+    setEditedQuestions(cloned);
+    setEditMode(true);
+  };
+
+  const addManualQuestion = () => {
+    const newQ: EditableQuestion = {
+      id: `manual_${Date.now()}`,
+      content: '',
+      level: 'NB',
+      type: 'multiple_choice',
+      options: ['A. ', 'B. ', 'C. ', 'D. '],
+      answer: 'A',
+      explanation: '',
+      score: 0.25,
+    };
+    setEditedQuestions(prev => [...prev, newQ]);
+  };
+
+  const saveEdits = async () => {
+    try {
+      setIsSavingEdits(true);
+      await apiClient.put(`/exams/${id}`, { questions: editedQuestions });
+      setExam((prev: any) => ({ ...prev, questions: editedQuestions }));
+      setEditMode(false);
+      toast.success('Đã lưu chỉnh sửa đề thi!');
+    } catch (err: any) {
+      toast.error(err.message || 'Lỗi khi lưu chỉnh sửa');
+    } finally {
+      setIsSavingEdits(false);
+    }
+  };
 
   useEffect(() => {
     const fetchExam = async () => {
@@ -189,6 +260,33 @@ export const ExamViewer: React.FC = () => {
             </button>
           </div>
 
+          {exam?.status !== 'published' && (
+            editMode ? (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditMode(false)}
+                  className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-50 transition"
+                >
+                  <Eye className="w-4 h-4" /> Xem trước
+                </button>
+                <button
+                  onClick={saveEdits}
+                  disabled={isSavingEdits}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 transition disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" /> {isSavingEdits ? 'Đang lưu...' : 'Lưu chỉnh sửa'}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={enterEditMode}
+                className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition"
+              >
+                <Edit3 className="w-4 h-4" /> Chỉnh sửa đề
+              </button>
+            )
+          )}
+
           <button onClick={handleDownloadWord} className="flex items-center gap-2 px-4 py-2 border border-blue-200 text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
             <DownloadCloud size={18} /> Word
           </button>
@@ -201,8 +299,31 @@ export const ExamViewer: React.FC = () => {
         </div>
       </div>
 
-      {/* Panel Giao bài — chỉ hiển thị cho giáo viên, ẩn khi in */}
-      <div className="bg-indigo-50 rounded-2xl border-2 border-indigo-100 p-6 mb-8 print:hidden">
+      {editMode ? (
+        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm mb-8 print:hidden">
+          <h2 className="text-xl font-bold mb-6 text-gray-800">Chỉnh sửa nội dung đề thi</h2>
+          <div className="space-y-4">
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={editedQuestions.map(q => q.id)} strategy={verticalListSortingStrategy}>
+                {editedQuestions.map((q, idx) => (
+                  <ExamQuestionEditor
+                    key={q.id}
+                    question={q}
+                    index={idx}
+                    onChange={updated => setEditedQuestions(prev => prev.map(x => x.id === updated.id ? updated : x))}
+                    onDelete={() => setEditedQuestions(prev => prev.filter(x => x.id !== q.id))}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+            <AddQuestionButton onClick={addManualQuestion} />
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Panel Giao bài — chỉ hiển thị cho giáo viên, ẩn khi in */}
+          {exam?.status !== 'published' && (
+            <div className="bg-indigo-50 rounded-2xl border-2 border-indigo-100 p-6 mb-8 print:hidden">
         <h3 className="font-bold text-indigo-900 text-base mb-4 flex items-center gap-2">
           <Send size={16} className="text-indigo-600" /> Giao Bài Cho Lớp
         </h3>
@@ -269,6 +390,7 @@ export const ExamViewer: React.FC = () => {
           </>
         )}
       </div>
+      )}
 
       {/* Thống kê học sinh làm bài */}
       {statistics && statistics.length > 0 && (
@@ -341,7 +463,8 @@ export const ExamViewer: React.FC = () => {
       )}
 
       {/* Printable Area */}
-      <div ref={printRef} className="bg-white p-10 rounded-xl shadow-sm border border-gray-100 print:shadow-none print:border-none print:p-0">
+      {!editMode && (
+        <div ref={printRef} className="bg-white p-10 rounded-xl shadow-sm border border-gray-100 print:shadow-none print:border-none print:p-0">
         
         {/* Header Đề thi */}
         <div className="text-center mb-10 pb-6 border-b-2 border-gray-800">
@@ -395,6 +518,9 @@ export const ExamViewer: React.FC = () => {
         </div>
 
       </div>
+      )}
+      </>
+      )}
     </div>
   );
 };

@@ -38,7 +38,7 @@ export const aiService = {
         },
         required: ["id", "question", "options", "correctOptionId", "difficulty", "explanation"]
       }
-    };
+    } as any;
 
     try {
       const result = await model.generateContent({

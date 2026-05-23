@@ -4,9 +4,11 @@ import {
   Clock, Star, TrendingUp, AlertCircle, Loader
 } from 'lucide-react';
 import apiClient from '@/src/lib/apiClient';
+import { QuizResultExport } from './QuizResultExport';
 
-interface QuizQuestion {
+export interface QuizQuestion {
   id: string;
+  type?: 'multiple_choice' | 'true_false' | 'fill_blank';
   question: string;
   options: { id: string; text: string }[];
   correctOptionId: string;
@@ -14,12 +16,15 @@ interface QuizQuestion {
   explanation?: string;
 }
 
-interface QuizSystemProps {
+export interface QuizSystemProps {
   assignmentId?: string;
   questions?: QuizQuestion[];
   topic?: string;
   onComplete?: (result: QuizResult) => void;
   studentName?: string;
+  timeLimitSeconds?: number;
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
 }
 
 export interface QuizResult {
@@ -33,7 +38,20 @@ export interface QuizResult {
 
 type Phase = 'ready' | 'quiz' | 'submitting' | 'result';
 
-export function QuizSystem({ assignmentId, questions: initialQuestions, topic, onComplete, studentName }: QuizSystemProps) {
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+const normalizeText = (text: string) => {
+  return (text || '').toString().trim().toLowerCase();
+};
+
+export function QuizSystem({ assignmentId, questions: initialQuestions, topic, onComplete, studentName, timeLimitSeconds, shuffleQuestions, shuffleOptions }: QuizSystemProps) {
   const [phase, setPhase] = useState<Phase>('ready');
   const [questions, setQuestions] = useState<QuizQuestion[]>(initialQuestions || []);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -42,54 +60,102 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
   const [generatingAI, setGeneratingAI] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
   const [timeElapsed, setTimeElapsed] = useState(0);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [fillBlankInput, setFillBlankInput] = useState('');
+  
   const currentUser = JSON.parse(localStorage.getItem('canvas_user') || '{}');
 
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
     if (phase === 'quiz') {
-      timer = setInterval(() => setTimeElapsed(t => t + 1), 1000);
+      timer = setInterval(() => {
+        setTimeElapsed(t => t + 1);
+        if (timeLimitSeconds) {
+          setTimeLeft(prev => {
+            if (prev !== null && prev <= 1) {
+              return 0;
+            }
+            return prev !== null ? prev - 1 : null;
+          });
+        }
+      }, 1000);
     }
     return () => clearInterval(timer);
-  }, [phase]);
+  }, [phase, timeLimitSeconds]);
+
+  useEffect(() => {
+    if (timeLeft === 0 && phase === 'quiz') {
+      submitQuiz();
+    }
+  }, [timeLeft, phase]);
 
   const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   const startQuiz = async () => {
-    let qs = questions;
+    let qs = initialQuestions || [];
     if (qs.length === 0 && topic) {
       setGeneratingAI(true);
       try {
         const res = await apiClient.post('/ai/generate-quiz', { topic, numQuestions: 5, gradeLevel: 'Tiểu học' });
         const data = res.data;
         qs = data.questions || [];
-        setQuestions(qs);
       } catch (e) { console.error(e); }
       setGeneratingAI(false);
     }
     if (qs.length === 0) return;
+
+    let finalQs = [...qs];
+    if (shuffleQuestions) finalQs = shuffleArray(finalQs);
+    if (shuffleOptions) {
+      finalQs = finalQs.map(q => ({
+        ...q,
+        options: (q.type === 'multiple_choice' || !q.type) ? shuffleArray(q.options) : q.options
+      }));
+    }
+    setQuestions(finalQs);
+
     setCurrentIdx(0);
     setAnswers({});
+    setFillBlankInput('');
     setStartTime(Date.now());
     setTimeElapsed(0);
+    if (timeLimitSeconds) setTimeLeft(timeLimitSeconds);
     setPhase('quiz');
   };
 
-  const selectAnswer = (optionId: string) => {
+  const selectAnswer = (value: string) => {
     if (answers[questions[currentIdx].id]) return; // already answered
-    setAnswers(prev => ({ ...prev, [questions[currentIdx].id]: optionId }));
+    setAnswers(prev => ({ ...prev, [questions[currentIdx].id]: value }));
   };
 
   const nextQuestion = () => {
+    if (questions[currentIdx].type === 'fill_blank' && !answers[questions[currentIdx].id]) {
+      selectAnswer(fillBlankInput);
+    }
+    
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(i => i + 1);
+      setFillBlankInput('');
     } else {
       submitQuiz();
     }
   };
 
   const submitQuiz = async () => {
+    // If last question was fill_blank and not saved
+    if (questions[currentIdx]?.type === 'fill_blank' && !answers[questions[currentIdx].id] && fillBlankInput) {
+       answers[questions[currentIdx].id] = fillBlankInput;
+       setAnswers({...answers});
+    }
+
     setPhase('submitting');
-    const correct = questions.filter(q => answers[q.id] === q.correctOptionId).length;
+    const correct = questions.filter(q => {
+      if (q.type === 'fill_blank') {
+        return normalizeText(answers[q.id]) === normalizeText(q.correctOptionId);
+      }
+      return answers[q.id] === q.correctOptionId;
+    }).length;
+    
     const timeTaken = Math.floor((Date.now() - startTime) / 1000);
     const percentage = Math.round((correct / questions.length) * 100);
 
@@ -100,7 +166,6 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
       aiFeedback = data.feedback;
     } catch (e) { console.error(e); }
 
-    // Save to DB if assignmentId given
     if (assignmentId && currentUser.id) {
       try {
         await apiClient.post(`/assignments/${assignmentId}/submit`, { userId: currentUser.id, answers: { answers, aiFeedback, score: correct, total: questions.length } });
@@ -120,7 +185,13 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
     onComplete?.(r);
   };
 
-  const reset = () => { setPhase('ready'); setResult(null); setAnswers({}); setCurrentIdx(0); };
+  const reset = () => { 
+    setPhase('ready'); 
+    setResult(null); 
+    setAnswers({}); 
+    setCurrentIdx(0); 
+    setTimeLeft(null); 
+  };
 
   // ── Ready Screen ──
   if (phase === 'ready') {
@@ -132,7 +203,8 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
         <div>
           <h2 className="text-2xl font-extrabold text-slate-800">{topic ? `Kiểm tra: ${topic}` : 'Bài kiểm tra'}</h2>
           <p className="text-slate-500 mt-2">
-            {questions.length > 0 ? `${questions.length} câu hỏi` : `Sẽ tạo 5 câu hỏi bằng AI về chủ đề trên`} · Trả lời trắc nghiệm · Nhận nhận xét AI
+            {(initialQuestions && initialQuestions.length > 0) ? `${initialQuestions.length} câu hỏi` : `Sẽ tạo 5 câu hỏi bằng AI về chủ đề trên`}
+            {timeLimitSeconds ? ` · ⏱ ${Math.round(timeLimitSeconds/60)} phút` : ''} · Nhận nhận xét AI
           </p>
         </div>
         <button
@@ -168,7 +240,7 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
     const grade = getGrade(result.percentage);
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 id-for-pdf-export">
         {/* Score Card */}
         <div className={`${grade.bg} rounded-3xl p-6 text-center border-2 ${result.percentage >= 70 ? 'border-emerald-100' : 'border-rose-100'}`}>
           <p className={`text-sm font-bold uppercase tracking-wide ${grade.color} mb-2`}>{grade.label}</p>
@@ -194,7 +266,8 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
           <h3 className="font-extrabold text-slate-700 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-sky-500" />Đáp án chi tiết</h3>
           {questions.map((q, i) => {
             const chosen = result.answers[q.id];
-            const isCorrect = chosen === q.correctOptionId;
+            const isFillBlank = q.type === 'fill_blank';
+            const isCorrect = isFillBlank ? normalizeText(chosen) === normalizeText(q.correctOptionId) : chosen === q.correctOptionId;
             return (
               <div key={q.id} className={`rounded-2xl p-4 border ${isCorrect ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
                 <div className="flex items-start gap-2">
@@ -203,10 +276,10 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
                     <p className="font-semibold text-slate-700 text-sm">{i + 1}. {q.question}</p>
                     <p className="text-xs mt-1">
                       Bé chọn: <span className={isCorrect ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}>
-                        {q.options.find(o => o.id === chosen)?.text || '(chưa trả lời)'}
+                        {isFillBlank ? (chosen || '(chưa trả lời)') : (q.options.find(o => o.id === chosen)?.text || '(chưa trả lời)')}
                       </span>
                       {!isCorrect && <>
-                        {' '} · Đúng: <span className="text-emerald-600 font-bold">{q.options.find(o => o.id === q.correctOptionId)?.text}</span>
+                        {' '} · Đúng: <span className="text-emerald-600 font-bold">{isFillBlank ? q.correctOptionId : q.options.find(o => o.id === q.correctOptionId)?.text}</span>
                       </>}
                     </p>
                     {q.explanation && <p className="text-xs text-slate-500 mt-1 italic">{q.explanation}</p>}
@@ -228,9 +301,19 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
           </div>
         )}
 
-        <button onClick={reset} className="w-full flex items-center justify-center gap-2 py-3 border-2 border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-colors">
-          <RotateCcw className="w-4 h-4" />Làm lại bài
-        </button>
+        <QuizResultExport
+          result={result}
+          questions={questions}
+          topic={topic || 'Bài_Kiểm_Tra'}
+          studentName={studentName || currentUser?.name || 'Học_sinh'}
+          elementIdToPrint="id-for-pdf-export"
+        />
+
+        <div className="flex gap-3">
+          <button onClick={reset} className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-colors">
+            <RotateCcw className="w-4 h-4" />Làm lại bài
+          </button>
+        </div>
       </div>
     );
   }
@@ -238,6 +321,7 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
   // ── Quiz Screen ──
   const q = questions[currentIdx];
   const answeredThisQ = answers[q.id];
+  const isFillBlank = q.type === 'fill_blank';
 
   return (
     <div className="space-y-5">
@@ -254,9 +338,9 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 text-slate-500 text-sm font-semibold">
+        <div className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full ${timeLeft !== null && timeLeft <= 60 ? 'bg-rose-100 text-rose-600 animate-pulse' : 'bg-slate-100 text-slate-600'}`}>
           <Clock className="w-4 h-4" />
-          {formatTime(timeElapsed)}
+          {timeLeft !== null ? formatTime(timeLeft) : formatTime(timeElapsed)}
         </div>
       </div>
 
@@ -273,40 +357,80 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
         <p className="font-extrabold text-slate-800 text-lg leading-relaxed">{q.question}</p>
       </div>
 
-      {/* Options */}
-      <div className="space-y-3">
-        {q.options.map(opt => {
-          const isChosen = answeredThisQ === opt.id;
-          const isCorrect = opt.id === q.correctOptionId;
-          const showResult = !!answeredThisQ;
+      {/* Options / Input */}
+      {isFillBlank ? (
+        <div className="space-y-3">
+          <input 
+            type="text" 
+            value={answeredThisQ !== undefined ? answeredThisQ : fillBlankInput}
+            onChange={(e) => setFillBlankInput(e.target.value)}
+            disabled={!!answeredThisQ}
+            placeholder="Nhập câu trả lời của bạn..."
+            className="w-full border-2 border-sky-200 rounded-2xl px-5 py-4 text-lg font-semibold text-slate-700 outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all disabled:bg-slate-50 disabled:text-slate-500"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && fillBlankInput.trim()) {
+                selectAnswer(fillBlankInput.trim());
+              }
+            }}
+          />
+          {!answeredThisQ && (
+             <button 
+                onClick={() => selectAnswer(fillBlankInput.trim())}
+                disabled={!fillBlankInput.trim()}
+                className="w-full bg-indigo-100 text-indigo-700 font-bold py-3 rounded-xl hover:bg-indigo-200 disabled:opacity-50 transition-colors"
+             >
+               Chốt đáp án
+             </button>
+          )}
+          
+          {answeredThisQ && (
+            <div className={`mt-4 p-4 rounded-xl border-2 ${normalizeText(answeredThisQ) === normalizeText(q.correctOptionId) ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+               <div className="flex items-center gap-2 font-bold mb-1">
+                 {normalizeText(answeredThisQ) === normalizeText(q.correctOptionId) ? <><CheckCircle className="w-5 h-5"/> Chính xác!</> : <><XCircle className="w-5 h-5"/> Sai rồi!</>}
+               </div>
+               {normalizeText(answeredThisQ) !== normalizeText(q.correctOptionId) && (
+                 <p className="text-sm mt-2">Đáp án đúng: <span className="font-bold">{q.correctOptionId}</span></p>
+               )}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className={`grid gap-3 ${q.type === 'true_false' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {q.options.map(opt => {
+            const isChosen = answeredThisQ === opt.id;
+            const isCorrect = opt.id === q.correctOptionId;
+            const showResult = !!answeredThisQ;
 
-          let cls = 'border-2 border-slate-200 bg-white text-slate-700';
-          if (showResult) {
-            if (isCorrect) cls = 'border-emerald-400 bg-emerald-50 text-emerald-800';
-            else if (isChosen && !isCorrect) cls = 'border-rose-400 bg-rose-50 text-rose-700';
-          } else if (isChosen) {
-            cls = 'border-sky-400 bg-sky-50 text-sky-800';
-          }
+            let cls = 'border-2 border-slate-200 bg-white text-slate-700';
+            if (showResult) {
+              if (isCorrect) cls = 'border-emerald-400 bg-emerald-50 text-emerald-800';
+              else if (isChosen && !isCorrect) cls = 'border-rose-400 bg-rose-50 text-rose-700';
+            } else if (isChosen) {
+              cls = 'border-sky-400 bg-sky-50 text-sky-800';
+            }
 
-          return (
-            <button
-              key={opt.id}
-              onClick={() => selectAnswer(opt.id)}
-              disabled={!!answeredThisQ}
-              className={`w-full flex items-center gap-3 p-4 rounded-2xl font-semibold text-left transition-all hover:shadow-sm ${cls} ${!answeredThisQ ? 'hover:border-sky-300 hover:bg-sky-50 active:scale-[0.99]' : ''}`}
-            >
-              <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-extrabold shrink-0 ${
-                showResult && isCorrect ? 'bg-emerald-400 text-white' :
-                showResult && isChosen && !isCorrect ? 'bg-rose-400 text-white' :
-                'bg-slate-100 text-slate-600'
-              }`}>{opt.id}</span>
-              <span>{opt.text}</span>
-              {showResult && isCorrect && <CheckCircle className="w-5 h-5 text-emerald-500 ml-auto shrink-0" />}
-              {showResult && isChosen && !isCorrect && <XCircle className="w-5 h-5 text-rose-500 ml-auto shrink-0" />}
-            </button>
-          );
-        })}
-      </div>
+            return (
+              <button
+                key={opt.id}
+                onClick={() => selectAnswer(opt.id)}
+                disabled={!!answeredThisQ}
+                className={`w-full flex items-center justify-center gap-3 p-4 rounded-2xl font-semibold transition-all hover:shadow-sm ${cls} ${!answeredThisQ ? 'hover:border-sky-300 hover:bg-sky-50 active:scale-[0.99]' : ''} ${q.type === 'true_false' ? 'text-lg py-6' : 'text-left'}`}
+              >
+                {q.type !== 'true_false' && (
+                  <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-extrabold shrink-0 ${
+                    showResult && isCorrect ? 'bg-emerald-400 text-white' :
+                    showResult && isChosen && !isCorrect ? 'bg-rose-400 text-white' :
+                    'bg-slate-100 text-slate-600'
+                  }`}>{opt.id}</span>
+                )}
+                <span className={q.type === 'true_false' ? 'text-center w-full' : ''}>{opt.text}</span>
+                {showResult && isCorrect && <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />}
+                {showResult && isChosen && !isCorrect && <XCircle className="w-5 h-5 text-rose-500 shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Explanation after answering */}
       {answeredThisQ && q.explanation && (
@@ -319,8 +443,8 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
       {/* Next button */}
       <button
         onClick={nextQuestion}
-        disabled={!answeredThisQ}
-        className="w-full flex items-center justify-center gap-2 py-3.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all shadow-sm shadow-sky-200"
+        disabled={!answeredThisQ && !(isFillBlank && fillBlankInput.trim())}
+        className="w-full flex items-center justify-center gap-2 py-3.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all shadow-sm shadow-sky-200 mt-4"
       >
         {currentIdx < questions.length - 1 ? <><ChevronRight className="w-5 h-5" />Câu tiếp theo</> : <><CheckCircle className="w-5 h-5" />Nộp bài</>}
       </button>
