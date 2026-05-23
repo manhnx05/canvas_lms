@@ -5,11 +5,11 @@ import { generateExamFromTextbook } from '@/src/lib/exam.ai.service';
 import prisma from '@/src/lib/prisma';
 
 export const POST = withErrorHandler(async (req: Request) => {
-  await requireAuth(req, ['teacher']);
-  
+  const user = await requireAuth(req, ['teacher']);
+
   const body = await req.json();
   const questions = await generateExamFromTextbook(body);
-  
+
   const exam = await prisma.exam.create({
     data: {
       title: body.title || `Đề thi ${body.subject} (Theo SGK)`,
@@ -19,10 +19,14 @@ export const POST = withErrorHandler(async (req: Request) => {
       totalScore: parseInt(body.totalScore) || 10,
       difficulty: body.difficulty || 'medium',
       questions: questions as any,
-      createdBy: body.createdBy || '',
+      // Use authenticated user's ID — do NOT trust body.createdBy
+      createdBy: user.id,
+      // Persist courseId when provided so the exam is linked from creation
+      courseId: body.courseId || null,
       status: 'draft',
     }
   });
-  
+
   return NextResponse.json({ exam, questions });
 });
+
