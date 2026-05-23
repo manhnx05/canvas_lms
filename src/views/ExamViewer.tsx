@@ -390,6 +390,7 @@ export const ExamViewer: React.FC = () => {
           </>
         )}
       </div>
+      )}
 
       {/* Thống kê học sinh làm bài */}
       {statistics && statistics.length > 0 && (
@@ -517,6 +518,8 @@ export const ExamViewer: React.FC = () => {
         </div>
 
       </div>
+      )}
+      </>
       )}
     </div>
   );
