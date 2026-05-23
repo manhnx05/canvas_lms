@@ -238,8 +238,10 @@ export const examService = {
 
     const count = await prisma.examAttempt.count({ where: { examId, userId } });
 
-    let attempt = existingAttempt;
-    if (!existingAttempt) {
+    let attempt;
+    if (existingAttempt) {
+      attempt = existingAttempt;
+    } else {
       attempt = await prisma.examAttempt.create({
         data: { examId, userId, attemptNumber: 1 },
         include: { answers: true }

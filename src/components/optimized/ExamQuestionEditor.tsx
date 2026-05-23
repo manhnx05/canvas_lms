@@ -2,6 +2,7 @@ import React from 'react';
 import { GripVertical, Trash2, Plus } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { RichTextEditor } from './RichTextEditor';
 
 const LEVELS = ['NB', 'TH', 'VD', 'VDC'] as const;
 const OPTION_IDS = ['A', 'B', 'C', 'D'] as const;
@@ -118,11 +119,9 @@ export function ExamQuestionEditor({ question, index, onChange, onDelete }: Exam
       {/* Question content */}
       <div className="mb-4">
         <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">Nội dung câu hỏi</label>
-        <textarea
+        <RichTextEditor
           value={question.content}
-          onChange={e => update('content', e.target.value)}
-          rows={2}
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none resize-none leading-relaxed"
+          onChange={val => update('content', val)}
           placeholder="Nhập nội dung câu hỏi..."
         />
       </div>
@@ -140,20 +139,23 @@ export function ExamQuestionEditor({ question, index, onChange, onDelete }: Exam
                   className={`flex items-center gap-2 p-2.5 rounded-xl border-2 transition-all ${isCorrect ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50'}`}
                 >
                   {/* Correct answer toggle */}
-                  <button
-                    onClick={() => update('answer', optId)}
-                    className={`w-7 h-7 rounded-full font-bold text-sm flex-shrink-0 border-2 transition-all ${isCorrect ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-gray-300 text-gray-500 hover:border-green-400'}`}
-                    title={isCorrect ? 'Đáp án đúng' : 'Đặt làm đáp án đúng'}
-                  >
-                    {optId}
-                  </button>
-                  <input
-                    type="text"
-                    value={getOptionText(question.options[optIdx] || '')}
-                    onChange={e => updateOption(optIdx, e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-sm text-gray-800 placeholder:text-gray-400"
-                    placeholder={`Đáp án ${optId}...`}
-                  />
+                  <div className="flex-shrink-0 pt-2">
+                    <button
+                      onClick={() => update('answer', optId)}
+                      className={`w-7 h-7 rounded-full font-bold text-sm flex items-center justify-center border-2 transition-all ${isCorrect ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-gray-300 text-gray-500 hover:border-green-400'}`}
+                      title={isCorrect ? 'Đáp án đúng' : 'Đặt làm đáp án đúng'}
+                    >
+                      {optId}
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <RichTextEditor
+                      value={getOptionText(question.options[optIdx] || '')}
+                      onChange={val => updateOption(optIdx, val)}
+                      placeholder={`Đáp án ${optId}...`}
+                      className="text-sm"
+                    />
+                  </div>
                 </div>
               );
             })}
@@ -165,11 +167,9 @@ export function ExamQuestionEditor({ question, index, onChange, onDelete }: Exam
       {/* Explanation */}
       <div>
         <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">Giải thích đáp án</label>
-        <textarea
+        <RichTextEditor
           value={question.explanation || ''}
-          onChange={e => update('explanation', e.target.value)}
-          rows={1}
-          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none resize-none"
+          onChange={val => update('explanation', val)}
           placeholder="Giải thích tại sao đáp án đúng (không bắt buộc)..."
         />
       </div>

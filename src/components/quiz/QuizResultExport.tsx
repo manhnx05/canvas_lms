@@ -56,20 +56,33 @@ export function QuizResultExport({ result, questions, topic, studentName, elemen
 
       questions.forEach((q, idx) => {
         const studentAns = result.answers[q.id];
-        const isFillBlank = q.type === 'fill_blank';
         let studentAnsText = studentAns || '(chưa trả lời)';
-        let correctAnsText = q.correctOptionId;
+        let correctAnsText: string = q.correctOptionId || '';
+        let isCorrect = false;
 
-        if (!isFillBlank) {
-           const sOpt = q.options.find(o => o.id === studentAns);
+        if (q.type === 'fill_blank') {
+           isCorrect = (studentAns || '').trim().toLowerCase() === (q.correctOptionId || '').trim().toLowerCase();
+        } else if (q.type === 'matching') {
+           try {
+             const ansObj = JSON.parse(studentAns || '{}');
+             isCorrect = !!q.matchingPairs && q.matchingPairs.every(p => ansObj[p.left] === p.right);
+             correctAnsText = 'Nối đúng các cặp';
+             studentAnsText = studentAns || '{}';
+           } catch { isCorrect = false; }
+        } else if (q.type === 'drag_drop') {
+           try {
+             const ansObj = JSON.parse(studentAns || '{}');
+             isCorrect = !!q.dragDropTokens && q.dragDropTokens.every((tok, idx) => ansObj[(idx + 1).toString()] === tok);
+             correctAnsText = JSON.stringify(q.dragDropTokens);
+             studentAnsText = studentAns || '{}';
+           } catch { isCorrect = false; }
+        } else {
+           isCorrect = studentAns === q.correctOptionId;
+           const sOpt = q.options?.find(o => o.id === studentAns);
            if (sOpt) studentAnsText = sOpt.text;
-           const cOpt = q.options.find(o => o.id === q.correctOptionId);
+           const cOpt = q.options?.find(o => o.id === q.correctOptionId);
            if (cOpt) correctAnsText = cOpt.text;
         }
-
-        const isCorrect = isFillBlank 
-           ? (studentAns || '').trim().toLowerCase() === (q.correctOptionId || '').trim().toLowerCase() 
-           : studentAns === q.correctOptionId;
 
         wsData.push([
           (idx + 1).toString(),

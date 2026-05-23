@@ -4,8 +4,7 @@ import { Download, Printer, ArrowLeft, DownloadCloud, Send, Calendar, Clock, Edi
 import ReactMarkdown from 'react-markdown';
 import { LatexRenderer } from '../components/LatexRenderer';
 import apiClient from '@/src/lib/apiClient';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import html2pdf from 'html2pdf.js';
 import { Document, Paragraph, TextRun, Packer } from 'docx';
 import { saveAs } from 'file-saver';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -143,19 +142,15 @@ export const ExamViewer: React.FC = () => {
   const handleDownloadPDF = async () => {
     if (!printRef.current) return;
     try {
-      // Tự động tải fonts vào HTML2Canvas qua scale lớn để nét
-      const canvas = await html2canvas(printRef.current, { 
-        scale: 2, 
-        useCORS: true,
-        logging: false
-      });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const opt = {
+        margin:       10,
+        filename:     `${exam?.title || 'De_thi'}.pdf`,
+        image:        { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      };
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${exam.title}.pdf`);
+      await html2pdf().from(printRef.current).set(opt).save();
     } catch (error) {
       console.error('Lỗi xuất PDF', error);
       alert('Không thể xuất PDF. Vui lòng sử dụng tính năng in của trình duyệt.');
