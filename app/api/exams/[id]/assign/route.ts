@@ -13,7 +13,7 @@ import { HttpError } from '@/src/utils/errorHandler';
  *  - Gửi Notification đến toàn bộ học sinh đã enrolled trong lớp
  */
 export const POST = withErrorHandler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
-  await requireAuth(req, ['teacher']);
+  const user = await requireAuth(req, ['teacher']);
 
   const { id } = await params;
   const { courseId, deadline, duration, maxAttempts } = await req.json();
@@ -23,6 +23,11 @@ export const POST = withErrorHandler(async (req: Request, { params }: { params: 
   // Kiểm tra đề thi tồn tại
   const exam = await prisma.exam.findUnique({ where: { id } });
   if (!exam) throw new HttpError(404, 'Không tìm thấy đề thi');
+
+  // Kiểm tra quyền sở hữu: chỉ giáo viên tạo ra đề mới được giao
+  if (exam.createdBy !== user.id) {
+    throw new HttpError(403, 'Bạn không có quyền giao đề thi này');
+  }
 
   // Kiểm tra lớp học tồn tại & lấy tên + danh sách học sinh
   const course = await prisma.course.findUnique({
