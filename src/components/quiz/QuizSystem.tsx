@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Brain, ChevronRight, RotateCcw, CheckCircle, XCircle,
-  Clock, Star, TrendingUp, AlertCircle, Loader, Download
+  Clock, Star, TrendingUp, AlertCircle, Loader
 } from 'lucide-react';
 import apiClient from '@/src/lib/apiClient';
 import { QuizResultExport } from './QuizResultExport';

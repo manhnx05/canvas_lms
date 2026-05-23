@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Settings, CheckCircle, Settings2, Sparkles, ArrowRight, ArrowLeft, Send, Clock, Calendar, Edit3, Eye, Save, Plus } from 'lucide-react';
+import { BookOpen, Settings, CheckCircle, Settings2, Sparkles, ArrowRight, ArrowLeft, Send, Clock, Calendar, Edit3, Eye, Save } from 'lucide-react';
 import { LatexRenderer } from '../components/LatexRenderer';
 import apiClient from '@/src/lib/apiClient';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';

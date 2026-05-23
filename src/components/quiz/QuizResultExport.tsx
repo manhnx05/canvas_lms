@@ -1,5 +1,4 @@
-import React from 'react';
-import { Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { FileText, FileSpreadsheet } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import * as XLSX from 'xlsx';

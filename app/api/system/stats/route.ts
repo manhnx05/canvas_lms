@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
       database: {
         status: 'unknown',
         stats: {}
-      }
+      } as any
     };
 
     // Get database statistics

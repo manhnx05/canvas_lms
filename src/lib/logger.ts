@@ -94,7 +94,7 @@ class Logger {
   /**
    * Core logging method
    */
-  private log(
+  public log(
     level: LogLevel,
     message: string,
     context?: Record<string, any>,
@@ -109,8 +109,8 @@ class Logger {
       level,
       message,
       timestamp: new Date().toISOString(),
-      context,
-      error
+      ...(context && { context }),
+      ...(error && { error })
     };
 
     // Store in memory

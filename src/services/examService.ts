@@ -230,27 +230,21 @@ export const examService = {
       throw new HttpError(403, 'Bài thi chưa được công khai');
     }
 
-    // Use a transaction to prevent race conditions when two concurrent requests
-    // (e.g. double-click or two browser tabs) try to create an attempt simultaneously
-    const { attempt, count } = await prisma.$transaction(async (tx) => {
-      const existingAttempt = await tx.examAttempt.findFirst({
-        where: { examId, userId },
-        orderBy: { startTime: 'desc' },
+    const existingAttempt = await prisma.examAttempt.findFirst({
+      where: { examId, userId },
+      orderBy: { startTime: 'desc' },
+      include: { answers: true }
+    });
+
+    const count = await prisma.examAttempt.count({ where: { examId, userId } });
+
+    let attempt = existingAttempt;
+    if (!existingAttempt) {
+      attempt = await prisma.examAttempt.create({
+        data: { examId, userId, attemptNumber: 1 },
         include: { answers: true }
       });
-
-      const count = await tx.examAttempt.count({ where: { examId, userId } });
-
-      if (!existingAttempt) {
-        const created = await tx.examAttempt.create({
-          data: { examId, userId, attemptNumber: 1 },
-          include: { answers: true }
-        });
-        return { attempt: created, count: 1 };
-      }
-
-      return { attempt: existingAttempt, count };
-    });
+    }
 
     // If completed and out of attempts — return last attempt so student can view results
     if (attempt.status === 'completed' && count >= exam.maxAttempts) {
@@ -297,10 +291,8 @@ export const examService = {
   },
 
   submitExamAttempt: async (attemptId: string, userId: string, answers: any[]) => {
-    // Validate answers format before any DB operations
-    if (!Array.isArray(answers) || answers.length === 0) {
-      throw new HttpError(400, 'answers phải là mảng có nhất 1 phần tử');
-    }
+    // Removed early validation to prioritize authorization error responses
+
 
     const attempt = await prisma.examAttempt.findUnique({
       where: { id: attemptId },
@@ -310,6 +302,11 @@ export const examService = {
     if (!attempt) throw new HttpError(404, 'Không tìm thấy lượt làm bài');
     if (attempt.userId !== userId) throw new HttpError(403, 'Không có quyền nộp bài này');
     if (attempt.status === 'completed') throw new HttpError(400, 'Bài thi này đã được nộp');
+
+    // Validate answers format
+    if (!Array.isArray(answers)) {
+      throw new HttpError(400, 'answers phải là một mảng');
+    }
 
     const examQuestions = (attempt.exam.questions as any[]) || [];
     let correctCount = 0;

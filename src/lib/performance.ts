@@ -38,7 +38,7 @@ class PerformanceMonitor {
       name,
       duration,
       timestamp: Date.now(),
-      metadata
+      ...(metadata && { metadata })
     };
 
     if (!this.metrics.has(name)) {
