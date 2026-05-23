@@ -180,6 +180,11 @@ export const examService = {
       customTopic, createdBy, title, courseId
     } = data;
 
+    // createdBy is mandatory — must come from JWT, never from client body directly
+    if (!createdBy || typeof createdBy !== 'string') {
+      throw new HttpError(400, 'createdBy là bắt buộc và phải là chuỗi hợp lệ');
+    }
+
     const params: ExamGenerationParams = {
       subject, grade,
       duration: parseInt(duration) || 45,
@@ -202,7 +207,7 @@ export const examService = {
         totalScore: params.totalScore,
         difficulty: params.difficulty,
         questions: questions as any,
-        createdBy: createdBy || '',
+        createdBy,
         courseId: courseId || null,
         status: 'draft',
       },
