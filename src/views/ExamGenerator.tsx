@@ -118,17 +118,12 @@ export const ExamGenerator: React.FC = () => {
       // Start elapsed timer so teacher sees AI is working
       const timer = setInterval(() => setLoadingElapsed(s => s + 1), 1000);
 
-      const userStr = localStorage.getItem('canvas_user');
-      const user = userStr ? JSON.parse(userStr) : null;
-
       const endpoint = config.textbookMode ? '/exams/generate-from-textbook' : '/exams/generate-ai-quick';
+      // createdBy is derived from JWT on the server — do NOT send from client
       const payload = config.textbookMode
-        ? { ...config, createdBy: user?.id, textbookData: textbook, examScopeLabel: config.examScopeLabel }
-        : { ...config, createdBy: user?.id, examScopeLabel: config.examScopeLabel };
+        ? { ...config, textbookData: textbook, examScopeLabel: config.examScopeLabel }
+        : { ...config, examScopeLabel: config.examScopeLabel };
 
-      // NOTE: do NOT chain .catch() here — apiClient already transforms
-      // AxiosError into a plain Error, so err.response is undefined inside .catch().
-      // Let the outer try/catch catch everything cleanly.
       const res = await apiClient.post(endpoint, payload);
 
       clearInterval(timer);
