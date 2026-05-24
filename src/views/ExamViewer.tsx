@@ -56,22 +56,34 @@ export const ExamViewer: React.FC = () => {
 
   const enterEditMode = () => {
     if (!exam || !exam.questions) return;
-    const cloned: EditableQuestion[] = exam.questions.map((q: any, i: number) => ({
-      id: q.id || `q${i + 1}`,
-      content: q.content || q.question || '',
-      level: q.level || 'NB',
-      type: q.type || 'multiple_choice',
-      options: Array.isArray(q.options) 
-        ? q.options.map((opt: any, idx: number) => {
-            if (typeof opt === 'string') return opt;
-            const letter = String.fromCharCode(65 + idx);
+    const cloned: EditableQuestion[] = exam.questions.map((q: any, i: number) => {
+      // 1. Ensure unique ID for dnd-kit SortableContext
+      const safeId = (q.id && String(q.id).trim() !== '') ? `${q.id}_${i}` : `q${i + 1}_${Date.now()}`;
+      
+      // 2. Ensure options are safe strings to prevent crash in ExamQuestionEditor
+      let safeOptions = ['A. ', 'B. ', 'C. ', 'D. '];
+      if (Array.isArray(q.options)) {
+        safeOptions = q.options.map((opt: any, idx: number) => {
+          if (typeof opt === 'string') return opt;
+          const letter = String.fromCharCode(65 + idx);
+          if (opt && typeof opt === 'object') {
             return `${letter}. ${opt.text || ''}`;
-          })
-        : ['A. ', 'B. ', 'C. ', 'D. '],
-      answer: q.answer || q.correctOptionId || 'A',
-      explanation: q.explanation || '',
-      score: q.score || 0.25,
-    }));
+          }
+          return `${letter}. `;
+        });
+      }
+
+      return {
+        id: safeId,
+        content: q.content || q.question || '',
+        level: q.level || 'NB',
+        type: q.type || 'multiple_choice',
+        options: safeOptions,
+        answer: q.answer || q.correctOptionId || 'A',
+        explanation: q.explanation || '',
+        score: q.score || 0.25,
+      };
+    });
     setEditedQuestions(cloned);
     setEditMode(true);
   };
