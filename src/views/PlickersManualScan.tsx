@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Send, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import type { PlickersSession } from '@/src/types';
 
@@ -97,7 +96,7 @@ export function PlickersManualScan() {
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+        
       </div>
     );
   }
@@ -125,7 +124,7 @@ export function PlickersManualScan() {
             to={`/plickers/${session.id}`}
             className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
           >
-            <ChevronLeft className="w-5 h-5" />
+            
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Manual Scan - {session.title}</h1>
@@ -223,13 +222,16 @@ export function PlickersManualScan() {
                       type="button"
                       onClick={() => setAnswer(opt)}
                       disabled={submitting}
-                      className={`py-2.5 rounded-xl font-bold border-2 transition-all ${
+                      className={`py-2.5 px-3 rounded-xl font-bold border-2 transition-all flex flex-col items-center justify-center gap-1 ${
                         answer === opt
                           ? 'border-violet-500 bg-violet-500 text-white'
                           : 'border-slate-200 text-slate-600 hover:border-violet-300'
                       }`}
                     >
-                      {opt}
+                      <span className="text-lg">{opt}</span>
+                      <span className="text-xs font-normal opacity-80 truncate w-full px-1">
+                        {(currentQuestion as any)[`option${opt}`] || ''}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -241,17 +243,7 @@ export function PlickersManualScan() {
               disabled={submitting || !cardNumber || !answer}
               className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Đang gửi...
-                </>
-              ) : (
-                <>
-                  <Send className="w-5 h-5" />
-                  Gửi câu trả lời
-                </>
-              )}
+              {submitting ? "⏳ Đang gửi..." : "Gửi câu trả lời"}
             </button>
           </form>
         )}
@@ -287,11 +279,7 @@ export function PlickersManualScan() {
                     
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-lg text-slate-700">{r.answer}</span>
-                      {isCorrect ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                      ) : (
-                        <XCircle className="w-5 h-5 text-rose-500" />
-                      )}
+                      {isCorrect ? "✅" : "❌"}
                     </div>
                   </div>
                 );

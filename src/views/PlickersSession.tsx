@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, BarChart3, Users, Loader2, ScanLine, ExternalLink, ArrowLeft, ArrowRight, MonitorPlay, AlertTriangle, TrendingDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import type { PlickersQuestion, PlickersResponse } from '@/src/types';
 
@@ -64,7 +63,7 @@ export function PlickersSession() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-slate-400 gap-2">
-        <Loader2 className="w-6 h-6 animate-spin" /> Đang tải dữ liệu...
+         Đang tải dữ liệu...
       </div>
     );
   }
@@ -190,7 +189,7 @@ export function PlickersSession() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link to="/plickers" className="p-2 bg-white border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-colors shadow-sm">
-            <ChevronLeft className="w-5 h-5" />
+            
           </Link>
           <div>
             <h1 className="text-xl font-extrabold text-slate-800">{session.title}</h1>
@@ -204,7 +203,7 @@ export function PlickersSession() {
             href={`/plickers/${session.id}/scan`}
             className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm"
           >
-            <ScanLine className="w-4 h-4" /> Manual Scan (Test)
+             Manual Scan (Test)
           </a>
            <a
             href={`/plickers/${session.id}/live`}
@@ -212,8 +211,8 @@ export function PlickersSession() {
             rel="noopener noreferrer"
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm"
           >
-            <MonitorPlay className="w-4 h-4" /> Bật Máy Chiếu (Live View)
-            <ExternalLink className="w-3 h-3 opacity-50" />
+             Bật Máy Chiếu (Live View)
+            
           </a>
            <a
             href={`${FLASK_URL}/`}
@@ -221,8 +220,8 @@ export function PlickersSession() {
             rel="noopener noreferrer"
             className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors"
           >
-            <ScanLine className="w-4 h-4" /> Quét Thẻ (Camera)
-            <ExternalLink className="w-3 h-3 opacity-50" />
+             Quét Thẻ (Camera)
+            
           </a>
         </div>
       </div>
@@ -241,7 +240,7 @@ export function PlickersSession() {
                 disabled={session.currentQ <= 0 || isChangingQuestion}
                 className="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
-                {isChangingQuestion ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowLeft className="w-5 h-5" />}
+                {isChangingQuestion ? "⏳" : "←"}
               </button>
               <span className="font-black w-24 text-center">Câu {session.currentQ + 1} / {questions.length}</span>
               <button 
@@ -249,7 +248,7 @@ export function PlickersSession() {
                 disabled={session.currentQ >= questions.length - 1 || isChangingQuestion}
                 className="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
-                {isChangingQuestion ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
+                {isChangingQuestion ? "⏳" : "→"}
               </button>
             </div>
           </div>
@@ -284,7 +283,7 @@ export function PlickersSession() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 bg-violet-100 text-violet-600 rounded-xl flex items-center justify-center shrink-0">
-            <BarChart3 className="w-6 h-6" />
+            
           </div>
           <div>
             <p className="text-slate-500 text-sm font-semibold">Tổng số câu hỏi</p>
@@ -293,7 +292,7 @@ export function PlickersSession() {
         </div>
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
-            <Users className="w-6 h-6" />
+            
           </div>
           <div>
             <p className="text-slate-500 text-sm font-semibold">Số học sinh đã quét</p>
@@ -302,7 +301,7 @@ export function PlickersSession() {
         </div>
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 bg-sky-100 text-sky-600 rounded-xl flex items-center justify-center shrink-0">
-            <ScanLine className="w-6 h-6" />
+            
           </div>
           <div>
             <p className="text-slate-500 text-sm font-semibold">Tổng lượt phản hồi</p>
@@ -318,10 +317,10 @@ export function PlickersSession() {
           {hardestQuestion && (
             <div className="bg-rose-50 border border-rose-100 rounded-3xl p-6 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-10">
-                <AlertTriangle className="w-24 h-24 text-rose-500" />
+                
               </div>
               <h3 className="text-rose-800 font-extrabold text-lg flex items-center gap-2 mb-4 relative z-10">
-                <AlertTriangle className="w-5 h-5" /> Điểm Mù Kiến Thức
+                 Điểm Mù Kiến Thức
               </h3>
               <div className="bg-white/60 p-4 rounded-2xl relative z-10">
                 <span className="text-xs font-bold text-rose-500 mb-1 block uppercase tracking-wider">
@@ -346,10 +345,10 @@ export function PlickersSession() {
           {strugglingStudents.length > 0 && (
             <div className="bg-amber-50 border border-amber-100 rounded-3xl p-6 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-10">
-                <TrendingDown className="w-24 h-24 text-amber-500" />
+                
               </div>
               <h3 className="text-amber-800 font-extrabold text-lg flex items-center gap-2 mb-4 relative z-10">
-                <TrendingDown className="w-5 h-5" /> Nhóm Học Sinh Mất Gốc
+                 Nhóm Học Sinh Mất Gốc
               </h3>
               <div className="relative z-10 max-h-40 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
                 {strugglingStudents.map(st => (
