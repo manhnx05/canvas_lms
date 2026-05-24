@@ -372,6 +372,20 @@ export function Plickers({ role }: PlickersProps) {
                         placeholder="Nội dung câu hỏi..."
                         className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2 text-sm focus:border-violet-400 outline-none"
                       />
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        {(['A', 'B', 'C', 'D'] as const).map(opt => (
+                          <div key={opt} className="flex items-center gap-2">
+                            <span className="font-bold text-slate-500 w-4">{opt}</span>
+                            <input
+                              type="text"
+                              value={(q as any)['option' + opt] || ''}
+                              onChange={e => updateQuestion(i, 'option' + opt, e.target.value)}
+                              placeholder={`Nội dung đáp án ${opt}...`}
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:border-violet-400 outline-none"
+                            />
+                          </div>
+                        ))}
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-slate-500 font-semibold">Đáp án đúng:</span>
                         {['A', 'B', 'C', 'D'].map(opt => (

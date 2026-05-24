@@ -103,16 +103,34 @@ export const ExamGenerator: React.FC = () => {
 
   const enterEditMode = () => {
     // Deep clone questions into editable format
-    const cloned: EditableQuestion[] = generatedQuestions.map((q, i) => ({
-      id: q.id || `q${i + 1}`,
-      content: q.content || '',
-      level: q.level || 'NB',
-      type: q.type || 'multiple_choice',
-      options: Array.isArray(q.options) ? q.options : ['A. ', 'B. ', 'C. ', 'D. '],
-      answer: q.answer || 'A',
-      explanation: q.explanation || '',
-      score: q.score || 0.25,
-    }));
+    const cloned: EditableQuestion[] = generatedQuestions.map((q, i) => {
+      // 1. Ensure unique ID for dnd-kit SortableContext
+      const safeId = (q.id && String(q.id).trim() !== '') ? `${q.id}_${i}` : `q${i + 1}_${Date.now()}`;
+      
+      // 2. Ensure options are safe strings to prevent crash in ExamQuestionEditor
+      let safeOptions = ['A. ', 'B. ', 'C. ', 'D. '];
+      if (Array.isArray(q.options)) {
+        safeOptions = q.options.map((opt: any, idx: number) => {
+          if (typeof opt === 'string') return opt;
+          const letter = String.fromCharCode(65 + idx);
+          if (opt && typeof opt === 'object') {
+            return `${letter}. ${opt.text || ''}`;
+          }
+          return `${letter}. `;
+        });
+      }
+
+      return {
+        id: safeId,
+        content: q.content || '',
+        level: q.level || 'NB',
+        type: q.type || 'multiple_choice',
+        options: safeOptions,
+        answer: q.answer || 'A',
+        explanation: q.explanation || '',
+        score: q.score || 0.25,
+      };
+    });
     setEditedQuestions(cloned);
     setEditMode(true);
   };

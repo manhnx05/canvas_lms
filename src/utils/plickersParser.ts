@@ -1,6 +1,10 @@
 export interface ParsedQuestion {
   text: string;
   correctAnswer: string;
+  optionA?: string;
+  optionB?: string;
+  optionC?: string;
+  optionD?: string;
 }
 
 /**
@@ -18,6 +22,10 @@ export function parseQuestionsFromText(importText: string): ParsedQuestion[] {
   
   let currentQ = '';
   let currentAns = '';
+  let currentOptA = '';
+  let currentOptB = '';
+  let currentOptC = '';
+  let currentOptD = '';
   
   for (const line of lines) {
     const txt = line.trim();
@@ -40,18 +48,35 @@ export function parseQuestionsFromText(importText: string): ParsedQuestion[] {
       if (currentQ.trim()) {
         newQuestions.push({ 
           text: currentQ.trim(), 
-          correctAnswer: currentAns 
+          correctAnswer: currentAns,
+          optionA: currentOptA || undefined,
+          optionB: currentOptB || undefined,
+          optionC: currentOptC || undefined,
+          optionD: currentOptD || undefined,
         });
       }
       
       // Start new question
       currentQ = txt.replace(/^Câu \d+:\s*/i, '').replace(/^[0-9]+\.\s*/, '');
       currentAns = ''; // Reset answer
+      currentOptA = '';
+      currentOptB = '';
+      currentOptC = '';
+      currentOptD = '';
     } 
-    // Tìm phần tử đáp án A. B. C. D. -> Bỏ qua không thiết lập vào correctAnswer
-    else if (/^[A-D]\./i.test(txt)) {
-      // Bỏ qua options text vì Plickers không yêu cầu nhúng trực tiếp option vào form UI câu hỏi
-    } 
+    // Tìm phần tử đáp án A. B. C. D.
+    else if (/^A\./i.test(txt)) {
+      currentOptA = txt.replace(/^A\.\s*/i, '').trim();
+    }
+    else if (/^B\./i.test(txt)) {
+      currentOptB = txt.replace(/^B\.\s*/i, '').trim();
+    }
+    else if (/^C\./i.test(txt)) {
+      currentOptC = txt.replace(/^C\.\s*/i, '').trim();
+    }
+    else if (/^D\./i.test(txt)) {
+      currentOptD = txt.replace(/^D\.\s*/i, '').trim();
+    }
     // Nếu dòng thuần văn bản, gán làm fallback hoặc nối vào câu hỏi hiện tại
     else {
       if (!currentQ && newQuestions.length === 0) {
@@ -68,7 +93,11 @@ export function parseQuestionsFromText(importText: string): ParsedQuestion[] {
   if (currentQ.trim()) {
     newQuestions.push({ 
       text: currentQ.trim(), 
-      correctAnswer: currentAns 
+      correctAnswer: currentAns,
+      optionA: currentOptA || undefined,
+      optionB: currentOptB || undefined,
+      optionC: currentOptC || undefined,
+      optionD: currentOptD || undefined,
     });
   }
   

@@ -165,7 +165,7 @@ export function PlickersLiveView() {
                       <span className={`w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-2xl
                         ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-slate-100'}
                       `}>{opt}</span>
-                      <span className="opacity-0">Lựa chọn {opt}</span> {/* Dummy text because options not in schema initially */}
+                      <span className="flex-1">{(currentQuestion as any)[`option${opt}`] || ''}</span>
                     </div>
                   );
                 })}
