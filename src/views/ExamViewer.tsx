@@ -158,20 +158,47 @@ export const ExamViewer: React.FC = () => {
   };
 
   const handleDownloadPDF = async () => {
-    if (!printRef.current) return;
+    if (!exam) return;
     const toastId = toast.loading('Đang tạo PDF, vui lòng đợi...');
     try {
-      const element = printRef.current;
       const html2pdf = (await import('html2pdf.js')).default;
+      
+      // Tạo một chuỗi HTML độc lập không chứa class TailwindCSS v4.
+      // Việc này giải quyết triệt để lỗi crash 'unsupported color function "lab"' của html2canvas.
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #000;">
+          <h1 style="text-align: center; font-size: 24px; text-transform: uppercase;">${exam.title || 'Đề thi'}</h1>
+          <p style="text-align: center; font-size: 16px; color: #333;">
+            Môn: ${exam.subject} - Lớp: ${exam.grade} - Thời gian: ${exam.duration} phút
+          </p>
+          <hr style="margin: 20px 0; border: 1px solid #ccc;" />
+          
+          ${exam.questions.map((q: any, i: number) => `
+            <div style="margin-bottom: 25px; page-break-inside: avoid;">
+              <div style="font-weight: bold; margin-bottom: 10px;">Câu ${i + 1} (${q.score}đ): ${q.content}</div>
+              <div style="margin-left: 20px;">
+                ${Array.isArray(q.options) ? q.options.map((opt: string) => `<div style="margin-bottom: 5px;">${opt}</div>`).join('') : ''}
+              </div>
+              ${viewAnswers ? `
+                <div style="margin-top: 10px; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #4CAF50;">
+                  <p style="margin: 0 0 5px 0;"><strong>Đáp án: ${q.answer}</strong></p>
+                  ${q.explanation ? `<p style="margin: 0; font-style: italic;">Giải thích: ${q.explanation}</p>` : ''}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+
       const opt = {
-        margin:       10,
-        filename:     `${exam?.title || 'De_thi'}.pdf`,
+        margin:       15,
+        filename:     `${exam.title || 'De_thi'}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false, windowWidth: 1024 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
       
-      await html2pdf().set(opt).from(element).save();
+      await html2pdf().set(opt).from(htmlContent).save();
       
       toast.success('Xuất PDF thành công!', { id: toastId });
     } catch (error) {
