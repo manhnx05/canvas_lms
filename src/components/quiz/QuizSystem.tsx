@@ -92,6 +92,7 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
     if (timeLeft === 0 && phase === 'quiz') {
       submitQuiz();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, phase]);
 
   const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -151,31 +152,33 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
 
   const submitQuiz = async () => {
     // If last question was fill_blank and not saved
+    let finalAnswers = answers;
     if (questions[currentIdx]?.type === 'fill_blank' && !answers[questions[currentIdx].id] && fillBlankInput) {
-       answers[questions[currentIdx].id] = fillBlankInput;
-       setAnswers({...answers});
+       finalAnswers = { ...answers, [questions[currentIdx].id]: fillBlankInput };
+       setAnswers(finalAnswers);
     }
 
     setPhase('submitting');
     const correct = questions.filter(q => {
-      if (!answers[q.id]) return false;
+      const qAns = finalAnswers[q.id];
+      if (!qAns) return false;
       
       if (q.type === 'fill_blank') {
-        return normalizeText(answers[q.id]) === normalizeText(q.correctOptionId || '');
+        return normalizeText(qAns) === normalizeText(q.correctOptionId || '');
       }
       if (q.type === 'matching') {
         try {
-          const ansObj = JSON.parse(answers[q.id] || '{}');
+          const ansObj = JSON.parse(qAns || '{}');
           return q.matchingPairs?.every(p => ansObj[p.left] === p.right);
         } catch { return false; }
       }
       if (q.type === 'drag_drop') {
         try {
-          const ansObj = JSON.parse(answers[q.id] || '{}');
+          const ansObj = JSON.parse(qAns || '{}');
           return q.dragDropTokens?.every((tok, idx) => ansObj[(idx + 1).toString()] === tok);
         } catch { return false; }
       }
-      return answers[q.id] === q.correctOptionId;
+      return qAns === q.correctOptionId;
     }).length;
     
     const timeTaken = Math.floor((Date.now() - startTime) / 1000);
@@ -183,14 +186,14 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
 
     let aiFeedback: string | undefined;
     try {
-      const res = await apiClient.post('/ai/evaluate-submission', { questions, answers, studentName: studentName || currentUser.name });
+      const res = await apiClient.post('/ai/evaluate-submission', { questions, answers: finalAnswers, studentName: studentName || currentUser.name });
       const data = res.data;
       aiFeedback = data.feedback;
     } catch (e) { console.error(e); }
 
     if (assignmentId && currentUser.id) {
       try {
-        await apiClient.post(`/assignments/${assignmentId}/submit`, { userId: currentUser.id, answers: { answers, aiFeedback, score: correct, total: questions.length } });
+        await apiClient.post(`/assignments/${assignmentId}/submit`, { userId: currentUser.id, answers: { answers: finalAnswers, aiFeedback, score: correct, total: questions.length } });
       } catch (e) { console.error(e); }
     }
 
@@ -198,7 +201,7 @@ export function QuizSystem({ assignmentId, questions: initialQuestions, topic, o
       score: correct, 
       total: questions.length, 
       percentage, 
-      answers, 
+      answers: finalAnswers, 
       aiFeedback: aiFeedback || "", 
       timeTaken 
     };
