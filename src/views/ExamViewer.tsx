@@ -4,8 +4,7 @@ import { Download, Printer, ArrowLeft, DownloadCloud, Send, Calendar, Clock, Edi
 import ReactMarkdown from 'react-markdown';
 import { LatexRenderer } from '../components/LatexRenderer';
 import apiClient from '@/src/lib/apiClient';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+// html2canvas and jspdf imports removed
 import { Document, Paragraph, TextRun, Packer } from 'docx';
 import { saveAs } from 'file-saver';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -158,51 +157,13 @@ export const ExamViewer: React.FC = () => {
     }
   };
 
-  const handleDownloadPDF = async () => {
-    if (!printRef.current) return;
-    const toastId = toast.loading('Đang tạo PDF, vui lòng đợi...');
-    try {
-      const element = printRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      const contentWidth = pdfWidth - margin * 2;
-      const imgHeight = (canvas.height * contentWidth) / canvas.width;
-      
-      let heightLeft = imgHeight;
-      let position = margin;
-
-      pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      while (heightLeft >= 0) {
-        position = position - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-
-      pdf.save(`${exam?.title || 'De_thi'}.pdf`);
-      toast.success('Xuất PDF thành công!', { id: toastId });
-    } catch (error) {
-      console.error('Lỗi xuất PDF', error);
-      toast.error('Không thể xuất PDF. Đã xảy ra lỗi.', { id: toastId });
-    }
+  const handleDownloadPDF = () => {
+    // Sử dụng tính năng In PDF mặc định của trình duyệt (Native Print).
+    // Tính năng này tốt hơn gấp 100 lần so với html2canvas:
+    // 1. Text trong PDF có thể bôi đen và copy được (Vector text thay vì Image).
+    // 2. Không bao giờ bị lỗi cắt ngang dòng chữ khi sang trang mới.
+    // 3. Tận dụng tối đa các class Tailwind 'print:' đã được định nghĩa sẵn.
+    window.print();
   };
 
   const handleDownloadWord = async () => {
