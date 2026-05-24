@@ -157,13 +157,27 @@ export const ExamViewer: React.FC = () => {
     }
   };
 
-  const handleDownloadPDF = () => {
-    // Sử dụng tính năng In PDF mặc định của trình duyệt (Native Print).
-    // Tính năng này tốt hơn gấp 100 lần so với html2canvas:
-    // 1. Text trong PDF có thể bôi đen và copy được (Vector text thay vì Image).
-    // 2. Không bao giờ bị lỗi cắt ngang dòng chữ khi sang trang mới.
-    // 3. Tận dụng tối đa các class Tailwind 'print:' đã được định nghĩa sẵn.
-    window.print();
+  const handleDownloadPDF = async () => {
+    if (!printRef.current) return;
+    const toastId = toast.loading('Đang tạo PDF, vui lòng đợi...');
+    try {
+      const element = printRef.current;
+      const html2pdf = (await import('html2pdf.js')).default;
+      const opt = {
+        margin:       10,
+        filename:     `${exam?.title || 'De_thi'}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false, windowWidth: 1024 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      await html2pdf().set(opt).from(element).save();
+      
+      toast.success('Xuất PDF thành công!', { id: toastId });
+    } catch (error) {
+      console.error('Lỗi xuất PDF', error);
+      toast.error('Không thể xuất PDF. Đã xảy ra lỗi.', { id: toastId });
+    }
   };
 
   const handleDownloadWord = async () => {
