@@ -61,7 +61,13 @@ export const ExamViewer: React.FC = () => {
       content: q.content || q.question || '',
       level: q.level || 'NB',
       type: q.type || 'multiple_choice',
-      options: Array.isArray(q.options) ? q.options : ['A. ', 'B. ', 'C. ', 'D. '],
+      options: Array.isArray(q.options) 
+        ? q.options.map((opt: any, idx: number) => {
+            if (typeof opt === 'string') return opt;
+            const letter = String.fromCharCode(65 + idx);
+            return `${letter}. ${opt.text || ''}`;
+          })
+        : ['A. ', 'B. ', 'C. ', 'D. '],
       answer: q.answer || q.correctOptionId || 'A',
       explanation: q.explanation || '',
       score: q.score || 0.25,
