@@ -69,7 +69,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const formats = [
     'header',
     'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet',
+    'list',
     'color', 'background',
     'align',
     'blockquote', 'code-block',
