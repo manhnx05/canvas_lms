@@ -63,7 +63,6 @@ export async function GET(req: NextRequest) {
         courseCount,
         assignmentCount,
         examCount,
-        plickersSessionCount,
         conversationCount,
         notificationCount
       ] = await Promise.all([
@@ -71,7 +70,6 @@ export async function GET(req: NextRequest) {
         prisma.course.count(),
         prisma.assignment.count(),
         prisma.exam.count(),
-        prisma.plickersSession.count(),
         prisma.conversation.count(),
         prisma.notification.count()
       ]);
@@ -86,7 +84,6 @@ export async function GET(req: NextRequest) {
           courses: courseCount,
           assignments: assignmentCount,
           exams: examCount,
-          plickersSessions: plickersSessionCount,
           conversations: conversationCount,
           notifications: notificationCount
         }

@@ -35,7 +35,7 @@ export const GET = withErrorHandler(async (req: NextRequest, { params }: { param
 });
 
 // PATCH /api/courses/[id]/enrollments
-// Expected body: { enrollmentId: string, plickerCardId: number | null }
+// Expected body: { enrollmentId: string }
 export const PATCH = withErrorHandler(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   await requireAuth(req, ['teacher']);
   const { id } = await params;
@@ -50,32 +50,10 @@ export const PATCH = withErrorHandler(async (req: NextRequest, { params }: { par
   }
   
   const validatedData = validateRequestBody(updateEnrollmentSchema, sanitizedBody);
-  const { enrollmentId, plickerCardId } = validatedData;
+  const { enrollmentId } = validatedData;
 
   // Validate enrollment ID
   validateUUID(enrollmentId, 'Enrollment ID');
-
-  // Check for duplicate plickerCardId in the same course (if provided)
-  if (plickerCardId !== null && plickerCardId !== undefined) {
-    const duplicate = await prisma.enrollment.findFirst({
-      where: {
-        courseId,
-        plickerCardId: plickerCardId,
-        id: { not: enrollmentId } // Exclude current enrollment
-      },
-      include: {
-        user: {
-          select: { name: true }
-        }
-      }
-    });
-
-    if (duplicate) {
-      return NextResponse.json({ 
-        error: `Thẻ số ${plickerCardId} đã được gán cho học sinh ${duplicate.user.name}. Vui lòng chọn số thẻ khác.` 
-      }, { status: 400 });
-    }
-  }
 
   // Ensure enrollment belongs to this course and update
   const enrollment = await prisma.enrollment.update({
@@ -83,9 +61,7 @@ export const PATCH = withErrorHandler(async (req: NextRequest, { params }: { par
       id: enrollmentId,
       courseId // Security check
     },
-    data: {
-      plickerCardId: plickerCardId !== undefined ? plickerCardId : null
-    },
+    data: {},
     include: {
       user: {
         select: {

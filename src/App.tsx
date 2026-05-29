@@ -29,10 +29,6 @@ const ExamGenerator = lazy(() => import('./views/ExamGenerator').then(m => ({ de
 const ExamViewer = lazy(() => import('./views/ExamViewer').then(m => ({ default: m.ExamViewer })));
 const ExamTaking = lazy(() => import('./views/ExamTaking').then(m => ({ default: m.ExamTaking })));
 const AIGrading = lazy(() => import('./views/AiGrading').then(m => ({ default: m.AIGrading })));
-const Plickers = lazy(() => import('./views/Plickers').then(m => ({ default: m.Plickers })));
-const PlickersSession = lazy(() => import('./views/PlickersSession').then(m => ({ default: m.PlickersSession })));
-const PlickersManualScan = lazy(() => import('./views/PlickersManualScan').then(m => ({ default: m.PlickersManualScan })));
-const PlickersLiveView = lazy(() => import('./views/PlickersLiveView').then(m => ({ default: m.PlickersLiveView })));
 const SystemMonitor = lazy(() => import('./views/SystemMonitor').then(m => ({ default: m.SystemMonitor })));
 
 const AppContent = React.memo(function AppContent() {
@@ -70,10 +66,6 @@ const AppContent = React.memo(function AppContent() {
               <Route path="/courses" element={<LazyRoute><Courses role={role} /></LazyRoute>} />
               <Route path="/courses/:id" element={<LazyRoute><CourseDetail role={role} /></LazyRoute>} />
               <Route path="/assignments" element={<LazyRoute><Assignments role={role} /></LazyRoute>} />
-              <Route path="/plickers" element={<LazyRoute><Plickers role={role} /></LazyRoute>} />
-              <Route path="/plickers/:id" element={<LazyRoute><PlickersSession /></LazyRoute>} />
-              <Route path="/plickers/:id/scan" element={<LazyRoute><PlickersManualScan /></LazyRoute>} />
-              <Route path="/plickers/:id/live" element={<LazyRoute><PlickersLiveView /></LazyRoute>} />
               <Route path="/ai-grading" element={<LazyRoute><AIGrading /></LazyRoute>} />
               <Route path="/assignments/:id" element={<LazyRoute><AssignmentDetail role={role} /></LazyRoute>} />
               <Route path="/inbox" element={<LazyRoute><Inbox /></LazyRoute>} />

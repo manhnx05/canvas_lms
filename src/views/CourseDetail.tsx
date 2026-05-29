@@ -7,8 +7,6 @@ import { AnnouncementsTab } from '../features/course/AnnouncementsTab';
 import { AssignmentsTab } from '../features/course/AssignmentsTab';
 import { GradesTab } from '../features/course/GradesTab';
 import { MembersTab } from '../features/course/MembersTab';
-import { PlickersCardTab } from '../features/course/PlickersCardTab';
-import { ScanLine } from 'lucide-react';
 
 import { useCourseDetail } from '../hooks/useCourseDetail';
 
@@ -24,10 +22,6 @@ export function CourseDetail({ role }: { role: Role }) {
     { id: 'grades', icon: BarChart, label: 'Điểm Số' },
     { id: 'members', icon: Users, label: 'Thành Viên' },
   ];
-
-  if (role === 'teacher') {
-    tabs.push({ id: 'plickers', icon: ScanLine, label: 'Thẻ Plickers' });
-  }
 
   if (loading || !course) return <div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
 
@@ -89,9 +83,6 @@ export function CourseDetail({ role }: { role: Role }) {
           )}
           {activeTab === 'members' && (
             <MembersTab courseTitle={course.title} teacher={course.teacher} members={course.people || []} role={role} />
-          )}
-          {activeTab === 'plickers' && (
-            <PlickersCardTab courseId={course.id} />
           )}
         </div>
       </div>
