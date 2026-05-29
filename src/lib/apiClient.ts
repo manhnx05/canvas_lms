@@ -42,8 +42,9 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('canvas_token');
         localStorage.removeItem('canvas_user');
         
-        // Only redirect if not already on login page
-        if (window.location.pathname !== '/login') {
+        // Only redirect if not already on login page and not a login request
+        const isLoginRequest = error.config?.url?.includes('/auth/login');
+        if (!isLoginRequest && window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
       }
