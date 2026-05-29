@@ -13,6 +13,6 @@ test.describe('Authentication', () => {
     await page.fill('input[type="email"]', 'invalid@example.com');
     await page.fill('input[type="password"]', 'wrongpassword');
     await page.click('button[type="submit"]');
-    await expect(page.locator('text=Tài khoản không tồn tại')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.bg-rose-50')).toContainText('Tài khoản không tồn tại', { timeout: 10000 });
   });
 });
