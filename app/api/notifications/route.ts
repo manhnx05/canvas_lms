@@ -1,23 +1,18 @@
 import { NextResponse } from 'next/server';
 import { notificationService } from '@/src/services/notificationService';
+import { requireAuth } from '@/src/middleware/auth';
+import { withErrorHandler } from '@/src/utils/errorHandler';
 
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId') || '';
-    const notifications = await notificationService.getNotifications(userId);
-    return NextResponse.json(notifications);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+export const GET = withErrorHandler(async (req: Request) => {
+  const user = await requireAuth(req);
+  const notifications = await notificationService.getNotifications(user.id);
+  return NextResponse.json(notifications);
+});
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const notification = await notificationService.createNotification(body);
-    return NextResponse.json(notification, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+export const POST = withErrorHandler(async (req: Request) => {
+  const user = await requireAuth(req);
+  const body = await req.json();
+  // Optional: enforce that created notification is for this user, or check admin roles
+  const notification = await notificationService.createNotification({ ...body, userId: user.id });
+  return NextResponse.json(notification, { status: 201 });
+});
