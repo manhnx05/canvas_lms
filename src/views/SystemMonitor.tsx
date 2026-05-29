@@ -50,7 +50,6 @@ interface SystemStats {
       courses: number;
       assignments: number;
       exams: number;
-      plickersSessions: number;
       conversations: number;
       notifications: number;
     };

@@ -162,8 +162,6 @@ export const cacheKeys = {
   courseAssignments: (courseId: string) => `course:${courseId}:assignments`,
   exam: (id: string) => `exam:${id}`,
   examAttempts: (examId: string) => `exam:${examId}:attempts`,
-  plickersSession: (id: string) => `plickers:${id}`,
-  plickersResponses: (sessionId: string) => `plickers:${sessionId}:responses`,
   notifications: (userId: string) => `user:${userId}:notifications`,
   conversations: (userId: string) => `user:${userId}:conversations`,
   dashboardStats: (userId: string) => `dashboard:${userId}:stats`
@@ -174,7 +172,6 @@ export const cacheTags = {
   course: (id: string) => `course:${id}`,
   assignment: (id: string) => `assignment:${id}`,
   exam: (id: string) => `exam:${id}`,
-  plickers: (sessionId: string) => `plickers:${sessionId}`,
   notifications: (userId: string) => `notifications:${userId}`,
   conversations: (userId: string) => `conversations:${userId}`
 };

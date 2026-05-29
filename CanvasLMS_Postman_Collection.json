@@ -23,12 +23,20 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -41,12 +49,20 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -59,12 +75,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/users/me",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "me"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
             }
           }
         },
@@ -75,8 +99,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["health"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
             }
           }
         }
@@ -90,12 +118,19 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/courses",
-              "host": ["{{baseUrl}}"],
-              "path": ["courses"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses"
+              ]
             }
           }
         },
@@ -104,13 +139,23 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/courses",
-              "host": ["{{baseUrl}}"],
-              "path": ["courses"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -123,12 +168,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/courses/COURSE_ID_HERE",
-              "host": ["{{baseUrl}}"],
-              "path": ["courses", "COURSE_ID_HERE"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "COURSE_ID_HERE"
+              ]
             }
           }
         },
@@ -137,13 +190,25 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/courses/COURSE_ID_HERE/enrollments",
-              "host": ["{{baseUrl}}"],
-              "path": ["courses", "COURSE_ID_HERE", "enrollments"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "COURSE_ID_HERE",
+                "enrollments"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -156,13 +221,25 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/courses/COURSE_ID_HERE/modules",
-              "host": ["{{baseUrl}}"],
-              "path": ["courses", "COURSE_ID_HERE", "modules"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "COURSE_ID_HERE",
+                "modules"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -175,19 +252,42 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/courses/COURSE_ID_HERE/modules/MODULE_ID_HERE/items",
-              "host": ["{{baseUrl}}"],
-              "path": ["courses", "COURSE_ID_HERE", "modules", "MODULE_ID_HERE", "items"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "COURSE_ID_HERE",
+                "modules",
+                "MODULE_ID_HERE",
+                "items"
+              ]
             },
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "title", "value": "Tài liệu học tập tuần 1", "type": "text" },
-                { "key": "type", "value": "file", "type": "text" },
-                { "key": "file", "type": "file", "src": "" }
+                {
+                  "key": "title",
+                  "value": "Tài liệu học tập tuần 1",
+                  "type": "text"
+                },
+                {
+                  "key": "type",
+                  "value": "file",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
               ]
             }
           }
@@ -197,13 +297,25 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/courses/COURSE_ID_HERE/announcements",
-              "host": ["{{baseUrl}}"],
-              "path": ["courses", "COURSE_ID_HERE", "announcements"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "COURSE_ID_HERE",
+                "announcements"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -221,15 +333,26 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/assignments?courseId=COURSE_ID_HERE",
-              "host": ["{{baseUrl}}"],
-              "path": ["assignments"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assignments"
+              ]
             },
             "query": [
-              { "key": "courseId", "value": "COURSE_ID_HERE", "description": "Optional Filter" }
+              {
+                "key": "courseId",
+                "value": "COURSE_ID_HERE",
+                "description": "Optional Filter"
+              }
             ]
           }
         },
@@ -238,13 +361,23 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/assignments",
-              "host": ["{{baseUrl}}"],
-              "path": ["assignments"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assignments"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -257,12 +390,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/assignments/ASSIGNMENT_ID_HERE",
-              "host": ["{{baseUrl}}"],
-              "path": ["assignments", "ASSIGNMENT_ID_HERE"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assignments",
+                "ASSIGNMENT_ID_HERE"
+              ]
             }
           }
         },
@@ -271,18 +412,35 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/assignments/ASSIGNMENT_ID_HERE/submit",
-              "host": ["{{baseUrl}}"],
-              "path": ["assignments", "ASSIGNMENT_ID_HERE", "submit"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assignments",
+                "ASSIGNMENT_ID_HERE",
+                "submit"
+              ]
             },
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "file", "type": "file", "src": "" },
-                { "key": "answers", "value": "{}", "type": "text" }
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "answers",
+                  "value": "{}",
+                  "type": "text"
+                }
               ]
             }
           }
@@ -292,13 +450,25 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/assignments/ASSIGNMENT_ID_HERE/grade",
-              "host": ["{{baseUrl}}"],
-              "path": ["assignments", "ASSIGNMENT_ID_HERE", "grade"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assignments",
+                "ASSIGNMENT_ID_HERE",
+                "grade"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -316,12 +486,19 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/exams",
-              "host": ["{{baseUrl}}"],
-              "path": ["exams"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "exams"
+              ]
             }
           }
         },
@@ -330,13 +507,23 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/exams",
-              "host": ["{{baseUrl}}"],
-              "path": ["exams"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "exams"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -349,12 +536,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/exams/EXAM_ID_HERE",
-              "host": ["{{baseUrl}}"],
-              "path": ["exams", "EXAM_ID_HERE"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "exams",
+                "EXAM_ID_HERE"
+              ]
             }
           }
         },
@@ -363,12 +558,21 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/exams/EXAM_ID_HERE/attempt",
-              "host": ["{{baseUrl}}"],
-              "path": ["exams", "EXAM_ID_HERE", "attempt"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "exams",
+                "EXAM_ID_HERE",
+                "attempt"
+              ]
             }
           }
         },
@@ -377,13 +581,25 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/exams/EXAM_ID_HERE/attempt",
-              "host": ["{{baseUrl}}"],
-              "path": ["exams", "EXAM_ID_HERE", "attempt"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "exams",
+                "EXAM_ID_HERE",
+                "attempt"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -396,107 +612,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/exams/EXAM_ID_HERE/submit",
-              "host": ["{{baseUrl}}"],
-              "path": ["exams", "EXAM_ID_HERE", "submit"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "exams",
+                "EXAM_ID_HERE",
+                "submit"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"attemptId\": \"ATTEMPT_ID_HERE\"\n}"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Plickers",
-      "item": [
-        {
-          "name": "Get Sessions",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/plickers/sessions",
-              "host": ["{{baseUrl}}"],
-              "path": ["plickers", "sessions"]
-            }
-          }
-        },
-        {
-          "name": "Create Session",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/plickers/sessions",
-              "host": ["{{baseUrl}}"],
-              "path": ["plickers", "sessions"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Kiểm tra bài cũ\",\n  \"courseId\": \"COURSE_ID_HERE\",\n  \"questions\": [\n    {\n      \"text\": \"Thủ đô của Việt Nam là gì?\",\n      \"correctAnswer\": \"A\",\n      \"order\": 1\n    }\n  ]\n}"
-            }
-          }
-        },
-        {
-          "name": "Get Session Detail",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/plickers/sessions/SESSION_ID_HERE",
-              "host": ["{{baseUrl}}"],
-              "path": ["plickers", "sessions", "SESSION_ID_HERE"]
-            }
-          }
-        },
-        {
-          "name": "Scan Response",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/plickers/sessions/SESSION_ID_HERE/scan",
-              "host": ["{{baseUrl}}"],
-              "path": ["plickers", "sessions", "SESSION_ID_HERE", "scan"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"questionId\": \"QUESTION_ID_HERE\",\n  \"cardNumber\": 1,\n  \"answer\": \"A\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Update Session State",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/plickers/sessions/SESSION_ID_HERE",
-              "host": ["{{baseUrl}}"],
-              "path": ["plickers", "sessions", "SESSION_ID_HERE"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"active\",\n  \"currentQ\": 1,\n  \"showAnswer\": false\n}"
             }
           }
         }
@@ -510,12 +648,19 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/conversations",
-              "host": ["{{baseUrl}}"],
-              "path": ["conversations"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations"
+              ]
             }
           }
         },
@@ -524,12 +669,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/conversations/CONV_ID_HERE",
-              "host": ["{{baseUrl}}"],
-              "path": ["conversations", "CONV_ID_HERE"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "CONV_ID_HERE"
+              ]
             }
           }
         },
@@ -538,13 +691,25 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/conversations/CONV_ID_HERE/messages",
-              "host": ["{{baseUrl}}"],
-              "path": ["conversations", "CONV_ID_HERE", "messages"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "CONV_ID_HERE",
+                "messages"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -557,13 +722,23 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/conversations",
-              "host": ["{{baseUrl}}"],
-              "path": ["conversations"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -576,12 +751,21 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/conversations/CONV_ID_HERE/read",
-              "host": ["{{baseUrl}}"],
-              "path": ["conversations", "CONV_ID_HERE", "read"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "CONV_ID_HERE",
+                "read"
+              ]
             }
           }
         }
@@ -595,12 +779,19 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/notifications",
-              "host": ["{{baseUrl}}"],
-              "path": ["notifications"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ]
             }
           }
         },
@@ -609,12 +800,20 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/notifications/read-all",
-              "host": ["{{baseUrl}}"],
-              "path": ["notifications", "read-all"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "read-all"
+              ]
             }
           }
         }
@@ -628,12 +827,19 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/rewards",
-              "host": ["{{baseUrl}}"],
-              "path": ["rewards"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rewards"
+              ]
             }
           }
         }
@@ -647,12 +853,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/teacher/dashboard",
-              "host": ["{{baseUrl}}"],
-              "path": ["teacher", "dashboard"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "teacher",
+                "dashboard"
+              ]
             }
           }
         },
@@ -661,12 +875,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/teacher/students?courseId=COURSE_ID_HERE",
-              "host": ["{{baseUrl}}"],
-              "path": ["teacher", "students"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "teacher",
+                "students"
+              ]
             }
           }
         }
@@ -680,13 +902,24 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/ai/evaluate-submission",
-              "host": ["{{baseUrl}}"],
-              "path": ["ai", "evaluate-submission"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "evaluate-submission"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -699,13 +932,24 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/ai-grading/chat",
-              "host": ["{{baseUrl}}"],
-              "path": ["ai-grading", "chat"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai-grading",
+                "chat"
+              ]
             },
             "body": {
               "mode": "raw",

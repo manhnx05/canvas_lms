@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText, MessageCircle, Bot, ScanLine, X } from 'lucide-react';
+import { BookOpen, MessageSquare, Users, Home, Bell, Search, Menu, Trophy, PenTool, LogOut, ChevronLeft, ChevronRight, Brain, FileText, MessageCircle, Bot, X } from 'lucide-react';
 import { Role } from '@/src/types';
 import { MemoizedNavItem } from './optimized/MemoizedNavItem';
 
@@ -40,7 +40,6 @@ export const Layout = React.memo(function Layout({ role, onLogout, children }: {
       { icon: BookOpen, label: 'Lớp học', path: '/courses' },
       { icon: Users, label: 'Quản lý Học Sinh', path: '/students' },
       { icon: FileText, label: 'Ra đề thi AI', path: '/exams' },
-      { icon: ScanLine, label: 'Plickers', path: '/plickers' },
       { icon: Bot, label: 'Chấm bài AI ', path: '/ai-grading' },
       { icon: Brain, label: 'Đánh giá AI', path: '/evaluation' },
       { icon: MessageCircle, label: 'Hỏi AI', path: '/ai-chat' },

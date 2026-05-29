@@ -34,6 +34,7 @@ export const POST = withRateLimit(
 
     const response = NextResponse.json({
       message: 'Đăng nhập thành công',
+      token,
       user: { 
         id: user.id, 
         name: user.name, 

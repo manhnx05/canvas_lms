@@ -36,6 +36,7 @@ export const POST = withErrorHandler(async (req: Request) => {
 
   const response = NextResponse.json({ 
     message: 'Đăng ký thành công!', 
+    token,
     user: { 
       id: updated.id, 
       name: updated.name, 

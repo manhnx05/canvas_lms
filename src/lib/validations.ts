@@ -128,42 +128,8 @@ export const createExamSchema = z.object({
   courseId: uuidSchema.optional()
 });
 
-// Plickers validations
-export const createPlickersSessionSchema = z.object({
-  title: z.string().min(1, 'Tiêu đề không được để trống').max(200, 'Tiêu đề không được quá 200 ký tự'),
-  courseId: uuidSchema.optional(),
-  teacherId: uuidSchema,
-  questions: z.array(z.object({
-    text: z.string().min(1, 'Câu hỏi không được để trống').max(500, 'Câu hỏi không được quá 500 ký tự'),
-    optionA: z.string().max(200, 'Đáp án A không được quá 200 ký tự').optional(),
-    optionB: z.string().max(200, 'Đáp án B không được quá 200 ký tự').optional(),
-    optionC: z.string().max(200, 'Đáp án C không được quá 200 ký tự').optional(),
-    optionD: z.string().max(200, 'Đáp án D không được quá 200 ký tự').optional(),
-    correctAnswer: z.enum(['A', 'B', 'C', 'D']).optional(),
-    order: z.number().int().min(0).optional()
-  })).min(1, 'Phải có ít nhất 1 câu hỏi').max(50, 'Không được quá 50 câu hỏi')
-});
-
-export const updatePlickersSessionSchema = z.object({
-  title: z.string().min(1, 'Tiêu đề không được để trống').max(200, 'Tiêu đề không được quá 200 ký tự').optional(),
-  status: z.enum(['idle', 'active', 'ended']).optional(),
-  currentQ: z.number().int().min(0).optional(),
-  showAnswer: z.boolean().optional(),
-  showGraph: z.boolean().optional()
-});
-
-export const createPlickersResponseSchema = z.object({
-  sessionId: uuidSchema,
-  questionId: uuidSchema,
-  cardNumber: z.number().int().min(1, 'Số thẻ phải >= 1').max(40, 'Số thẻ phải <= 40'),
-  answer: z.enum(['A', 'B', 'C', 'D'], {
-    message: 'Đáp án phải là A, B, C hoặc D'
-  })
-});
-
 export const updateEnrollmentSchema = z.object({
-  enrollmentId: uuidSchema,
-  plickerCardId: z.number().int().min(1, 'Số thẻ phải >= 1').max(40, 'Số thẻ phải <= 40').nullable()
+  enrollmentId: uuidSchema
 });
 
 // Security validations
