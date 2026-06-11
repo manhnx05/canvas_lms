@@ -15,18 +15,19 @@ vi.mock('fs', () => ({
 vi.mock('@google/generative-ai', () => {
   const mockGenerateContent = vi.fn();
   return {
-    GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
-      getGenerativeModel: vi.fn().mockReturnValue({
+    GoogleGenerativeAI: class {
+      getGenerativeModel = vi.fn().mockReturnValue({
         generateContent: mockGenerateContent,
-      }),
-    })),
+      });
+    },
     // Export mock for assertion
     _mockGenerateContent: mockGenerateContent,
   };
 });
 
 // Import the mocked function
-import { _mockGenerateContent } from '@google/generative-ai' as any;
+import { _mockGenerateContent } from '@google/generative-ai';
+const mockGenerateContent = _mockGenerateContent as any;
 
 describe('exam.ai.service', () => {
   beforeEach(() => {
@@ -68,7 +69,7 @@ describe('exam.ai.service', () => {
         }
       ]`;
       
-      _mockGenerateContent.mockResolvedValueOnce({
+      mockGenerateContent.mockResolvedValueOnce({
         response: { text: () => mockJsonResponse }
       });
 
@@ -84,9 +85,9 @@ describe('exam.ai.service', () => {
     });
 
     it('TC-EXAM-AI-005: retry 1 lần nếu AI lỗi quota, ném lỗi thân thiện', async () => {
-      _mockGenerateContent
-        .mockRejectedValueOnce(new Error('Quota exceeded'))
-        .mockRejectedValueOnce(new Error('Quota exceeded'));
+      mockGenerateContent
+        .mockRejectedValueOnce(new Error())
+        .mockRejectedValueOnce(new Error());
 
       await expect(
         generateExamWithAI({
@@ -97,7 +98,7 @@ describe('exam.ai.service', () => {
     });
     
     it('TC-EXAM-AI-006: ném lỗi nếu AI không trả về JSON hợp lệ', async () => {
-      _mockGenerateContent.mockResolvedValue({
+      mockGenerateContent.mockResolvedValue({
         response: { text: () => 'I am sorry, I cannot do that.' }
       });
 
@@ -123,7 +124,7 @@ describe('exam.ai.service', () => {
         }
       ]`;
       
-      _mockGenerateContent.mockResolvedValueOnce({
+      mockGenerateContent.mockResolvedValueOnce({
         response: { text: () => mockJsonResponse }
       });
 
@@ -143,7 +144,7 @@ describe('exam.ai.service', () => {
       const result = await generateExamFromTextbook(params);
       expect(result).toHaveLength(1);
       // Verify AI is called
-      expect(_mockGenerateContent).toHaveBeenCalled();
+      expect(mockGenerateContent).toHaveBeenCalled();
     });
   });
 });
