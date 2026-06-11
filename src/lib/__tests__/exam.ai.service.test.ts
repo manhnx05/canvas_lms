@@ -12,22 +12,19 @@ vi.mock('fs', () => ({
   existsSync: vi.fn(),
 }));
 
+const { mockGenerateContent } = vi.hoisted(() => {
+  return { mockGenerateContent: vi.fn() };
+});
+
 vi.mock('@google/generative-ai', () => {
-  const mockGenerateContent = vi.fn();
   return {
     GoogleGenerativeAI: class {
       getGenerativeModel = vi.fn().mockReturnValue({
         generateContent: mockGenerateContent,
       });
     },
-    // Export mock for assertion
-    _mockGenerateContent: mockGenerateContent,
   };
 });
-
-// Import the mocked function
-import { _mockGenerateContent } from '@google/generative-ai';
-const mockGenerateContent = _mockGenerateContent as any;
 
 describe('exam.ai.service', () => {
   beforeEach(() => {
