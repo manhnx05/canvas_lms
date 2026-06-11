@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { cache, cacheKeys, cacheTags, cacheTTL, withCache } from '../cache';
+import { cache, withCache } from '../cache';
 
 describe('InMemoryCache', () => {
   beforeEach(() => {

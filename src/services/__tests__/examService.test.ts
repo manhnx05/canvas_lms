@@ -11,16 +11,27 @@ vi.mock('@/src/lib/prisma', () => ({
   default: {
     exam: {
       findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     },
     examAttempt: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
+      findMany: vi.fn(),
       create: vi.fn(),
       count: vi.fn(),
       update: vi.fn(),
     },
     examAnswer: {
       createMany: vi.fn(),
+    },
+    examFile: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
+      findUnique: vi.fn(),
     }
   }
 }));
@@ -290,7 +301,6 @@ describe('examService missing coverage', () => {
 
   it('TC-EXAM-005: deleteExam xóa file và exam', async () => {
     // Mock examFile query
-    prisma.examFile = { findMany: vi.fn(), create: vi.fn(), delete: vi.fn(), findUnique: vi.fn() } as any;
     (prisma.examFile.findMany as any).mockResolvedValue([{ id: 'f1', url: '/fake.pdf' }]);
     (prisma.exam.delete as any).mockResolvedValue({ id: 'e1' });
     
@@ -309,8 +319,6 @@ describe('examService missing coverage', () => {
   });
 
   it('TC-EXAM-007: uploadExamFile và deleteExamFile', async () => {
-    prisma.examFile = { findMany: vi.fn(), create: vi.fn(), delete: vi.fn(), findUnique: vi.fn() } as any;
-    
     (prisma.examFile.create as any).mockResolvedValue({ id: 'f1' });
     const uploadRes = await examService.uploadExamFile({ originalname: 'file.pdf', size: 100, path: 'x.pdf' }, 'e1');
     expect(uploadRes.id).toBe('f1');

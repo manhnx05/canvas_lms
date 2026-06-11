@@ -4,7 +4,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { extractTextFromFile, generateExamWithAI, generateExamFromTextbook } from '../exam.ai.service';
 import * as fs from 'fs';
-import * as path from 'path';
 
 // Mock dependencies
 vi.mock('fs', () => ({
