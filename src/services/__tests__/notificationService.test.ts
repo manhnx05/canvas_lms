@@ -51,6 +51,11 @@ describe('[UNIT] notificationService.getNotifications', () => {
     const result = await notificationService.getNotifications('u-no-notif');
     expect(result).toHaveLength(0);
   });
+
+  it('TC-NOTIF-008: ném lỗi khi prisma.notification.findMany gặp sự cố (DB down)', async () => {
+    (prisma.notification.findMany as any).mockRejectedValue(new Error('Database connection failed'));
+    await expect(notificationService.getNotifications('u1')).rejects.toThrow('Database connection failed');
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -127,5 +132,14 @@ describe('[UNIT] notificationService.createNotification', () => {
     });
 
     expect(result.content).toBe('');
+  });
+
+  it('TC-NOTIF-009: ném lỗi khi prisma.notification.create gặp sự cố', async () => {
+    (prisma.notification.create as any).mockRejectedValue(new Error('Prisma error'));
+    await expect(notificationService.createNotification({
+      userId: 'u1',
+      title: 'Lỗi',
+      content: 'Nội dung',
+    })).rejects.toThrow('Prisma error');
   });
 });
