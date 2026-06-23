@@ -43,7 +43,7 @@ export const createCourseSchema = z.object({
 export const updateCourseSchema = createCourseSchema.partial();
 
 export const enrollmentSchema = z.object({
-  userId: uuidSchema,
+  userId: z.string().min(1, 'ID người dùng không được để trống'),
   courseId: uuidSchema
 });
 
