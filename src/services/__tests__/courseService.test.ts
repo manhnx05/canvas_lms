@@ -268,3 +268,44 @@ describe('[UNIT] courseService.createModuleItem', () => {
     expect(result.order).toBe(2);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UNIT — Missing coverage tests
+// ─────────────────────────────────────────────────────────────────────────────
+describe('[UNIT] courseService missing coverage', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('TC-COURSE-017: updateAnnouncement thành công', async () => {
+    (prisma.announcement.update as any).mockResolvedValue({ id: 'ann-1', title: 'New Title' });
+    const result = await courseService.updateAnnouncement('ann-1', { title: 'New Title', content: 'C' });
+    expect(result.title).toBe('New Title');
+    expect(prisma.announcement.update).toHaveBeenCalledWith({
+      where: { id: 'ann-1' },
+      data: { title: 'New Title', content: 'C' }
+    });
+  });
+
+  it('TC-COURSE-018: deleteAnnouncement thành công', async () => {
+    (prisma.announcement.delete as any).mockResolvedValue({ id: 'ann-1' });
+    await courseService.deleteAnnouncement('ann-1');
+    expect(prisma.announcement.delete).toHaveBeenCalledWith({ where: { id: 'ann-1' } });
+  });
+
+  it('TC-COURSE-019: reorderModuleItems thành công', async () => {
+    (prisma.$transaction as any).mockResolvedValue([]);
+    await courseService.reorderModuleItems([{ id: 'item-1', order: 2 }, { id: 'item-2', order: 1 }]);
+    expect(prisma.$transaction).toHaveBeenCalled();
+  });
+
+  it('TC-COURSE-020: deleteModule thành công', async () => {
+    (prisma.courseModule.delete as any).mockResolvedValue({ id: 'mod-1' });
+    await courseService.deleteModule('mod-1');
+    expect(prisma.courseModule.delete).toHaveBeenCalledWith({ where: { id: 'mod-1' } });
+  });
+
+  it('TC-COURSE-021: deleteModuleItem thành công', async () => {
+    (prisma.moduleItem.delete as any).mockResolvedValue({ id: 'item-1' });
+    await courseService.deleteModuleItem('item-1');
+    expect(prisma.moduleItem.delete).toHaveBeenCalledWith({ where: { id: 'item-1' } });
+  });
+});

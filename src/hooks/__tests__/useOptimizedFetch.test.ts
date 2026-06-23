@@ -9,6 +9,7 @@ global.fetch = mockFetch;
 describe('useOptimizedFetch', () => {
   beforeEach(() => {
     mockFetch.mockReset();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     // Mock local storage
     const mockLocalStorage = {
       getItem: vi.fn().mockReturnValue('fake-token'),
@@ -23,6 +24,7 @@ describe('useOptimizedFetch', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('fetches data successfully', async () => {

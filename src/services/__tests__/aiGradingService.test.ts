@@ -4,7 +4,7 @@
  * UNIT TESTS — aiGradingService
  * Coverage: analyzeWorksheet, chatWithContext
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock Gemini model
 const mockGenerateContent = vi.fn();
@@ -41,6 +41,12 @@ describe('[UNIT] aiGradingService.analyzeWorksheet', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.GEMINI_API_KEY = 'test-api-key';
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('TC-AI-GRADE-001: phân tích worksheet thành công với 1 ảnh', async () => {
@@ -201,6 +207,12 @@ describe('[UNIT] aiGradingService.chatWithContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.GEMINI_API_KEY = 'test-api-key';
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('TC-AI-GRADE-009: chat thành công với history', async () => {
