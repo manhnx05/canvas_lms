@@ -4,7 +4,7 @@
  * UNIT TESTS — Auth Middleware (src/middleware/auth.ts)
  * Coverage: verifyToken, extractTokenFromRequest, generateToken, refreshToken, requireAuth
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import jwt from 'jsonwebtoken';
 
 // ── Mock env before importing module ──────────────────────────────────────────
@@ -25,6 +25,14 @@ import {
 } from '@/src/middleware/auth';
 
 const SECRET = 'test-secret-key-for-unit-tests';
+
+beforeEach(() => {
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UNIT — verifyToken
