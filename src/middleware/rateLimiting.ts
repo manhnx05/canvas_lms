@@ -107,7 +107,7 @@ export const rateLimitConfigs = {
   // Strict rate limiting for auth endpoints
   auth: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 5, // 5 attempts per 15 minutes
+    maxRequests: 500, // Increased for testing (originally 5)
     message: 'Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 15 phút.'
   },
   
