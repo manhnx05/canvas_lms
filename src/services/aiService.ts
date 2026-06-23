@@ -87,7 +87,7 @@ export const aiService = {
     const { questions, answers, studentName, assignmentTitle, assignmentContext } = data;
     
     if (!process.env.GEMINI_API_KEY) {
-      throw new HttpError(500, 'System is missing GEMINI_API_KEY');
+      return "Đây là dữ liệu nhận xét mẫu do chưa cấu hình GEMINI_API_KEY.\n\n**1. Phần đã tốt**\n- Kiến thức: Học sinh làm rất tốt.\n- Năng lực: Tư duy logic khá.\n\n**2. Phần hạn chế**\n- Kiến thức: Cần ôn tập thêm.\n- Năng lực: Cần cẩn thận hơn.\n\n**3. Lời khuyên/ lời đề xuất cải thiện**\n- Hãy làm nhiều bài tập hơn nhé.";
     }
 
     const model = getGeminiModel();
@@ -129,7 +129,7 @@ export const aiService = {
     }
 
     if (!process.env.GEMINI_API_KEY) {
-      throw new HttpError(500, 'Hệ thống chưa cấu hình GEMINI_API_KEY');
+      return "Chào bạn, đây là tin nhắn mẫu phản hồi từ AI (Do chưa cài đặt GEMINI_API_KEY). Chúc bạn học tập tốt! 🎓";
     }
 
     const model = getGeminiModel();
