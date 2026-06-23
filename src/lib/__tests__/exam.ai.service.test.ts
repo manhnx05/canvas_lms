@@ -1,7 +1,7 @@
 /**
  * @vitest-environment node
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { extractTextFromFile, generateExamWithAI, generateExamFromTextbook } from '../exam.ai.service';
 import * as fs from 'fs';
 
@@ -28,6 +28,12 @@ vi.mock('@google/generative-ai', () => {
 describe('exam.ai.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('extractTextFromFile', () => {
