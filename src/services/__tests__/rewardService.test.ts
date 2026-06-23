@@ -43,6 +43,11 @@ describe('[UNIT] rewardService.getRewards', () => {
     const result = await rewardService.getRewards();
     expect(result).toHaveLength(0);
   });
+
+  it('TC-REWARD-007: ném lỗi khi prisma.reward.findMany gặp sự cố', async () => {
+    (prisma.reward.findMany as any).mockRejectedValue(new Error('DB Timeout'));
+    await expect(rewardService.getRewards()).rejects.toThrow('DB Timeout');
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -77,5 +82,10 @@ describe('[UNIT] rewardService.getPoints', () => {
     (prisma.user.findUnique as any).mockResolvedValue({ stars: -10 });
     const result = await rewardService.getPoints('u-negative');
     expect(result).toBe(-10);
+  });
+
+  it('TC-REWARD-008: ném lỗi khi prisma.user.findUnique gặp sự cố', async () => {
+    (prisma.user.findUnique as any).mockRejectedValue(new Error('Connection error'));
+    await expect(rewardService.getPoints('u1')).rejects.toThrow('Connection error');
   });
 });
