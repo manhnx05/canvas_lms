@@ -4,7 +4,7 @@
  * UNIT TESTS — auth middleware
  * Coverage: verifyToken, extractTokenFromRequest, generateToken, refreshToken, requireAuth
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 
@@ -25,6 +25,14 @@ import {
   requireAuth,
   createAuthMiddleware,
 } from '../auth';
+
+beforeEach(() => {
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UNIT — verifyToken
