@@ -28,8 +28,9 @@ export const GET = withErrorHandler(async (req: Request) => {
 });
 
 export const POST = withErrorHandler(async (req: Request) => {
-  await requireAuth(req, ['teacher']);
+  const user = await requireAuth(req, ['teacher']);
   const data = await req.json();
+  data.createdBy = user.id;
   const exam = await examService.createExam(data);
   return NextResponse.json(exam, { status: 201 });
 });
