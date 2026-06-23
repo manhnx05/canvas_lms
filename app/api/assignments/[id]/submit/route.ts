@@ -5,7 +5,7 @@ import { submitAssignmentSchema, validateRequestBody, validateUUID } from '@/src
 import { withErrorHandler } from '@/src/utils/errorHandler';
 
 export const POST = withErrorHandler(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
-  const user = await requireAuth(req, ['student']);
+  const user = await requireAuth(req, ['student', 'teacher']);
   const { id } = await params;
   
   validateUUID(id, 'Assignment ID');
