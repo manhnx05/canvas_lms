@@ -7,7 +7,7 @@
  * Coverage: HttpError, ValidationError, AuthenticationError, AuthorizationError, NotFoundError,
  *           handleApiError (Prisma P2002/P2025/P2003), withErrorHandler wrapper
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock next/server before import
 vi.mock('next/server', () => ({
@@ -25,6 +25,14 @@ import {
   handleApiError,
   withErrorHandler,
 } from '@/src/utils/errorHandler';
+
+beforeEach(() => {
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SMOKE — Kiểm tra các Error class tồn tại và có đúng shape
