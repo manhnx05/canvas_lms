@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://canvas:canvas_password@db:5432/canvas_lms?schema=public}
+      - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key_for_canvas_lms_2026}
+      # Uncomment and add your API keys here if needed
+      # - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # - RESEND_API_KEY=${RESEND_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - canvas-network
+
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-canvas}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-canvas_password}
+      - POSTGRES_DB=${POSTGRES_DB:-canvas_lms}
+    volumes:
+      - canvas_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U canvas -d canvas_lms"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - canvas-network
+
+volumes:
+  canvas_db_data:
+
+networks:
+  canvas-network:
+    driver: bridge
