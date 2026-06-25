@@ -79,11 +79,11 @@ describe('[UNIT] aiService.evaluateSubmission', () => {
     expect(result).toContain('Phần đã tốt');
   });
 
-  it('TC-AI-007: ném HttpError 500 nếu GEMINI_API_KEY không tồn tại', async () => {
+  it('TC-AI-007: trả về mẫu nhận xét nếu GEMINI_API_KEY không tồn tại', async () => {
     delete process.env.GEMINI_API_KEY;
-    await expect(
-      aiService.evaluateSubmission({ questions: [], answers: {} })
-    ).rejects.toMatchObject({ status: 500 });
+    const result = await aiService.evaluateSubmission({ questions: [], answers: {} });
+    expect(typeof result).toBe('string');
+    expect(result).toContain('Đây là dữ liệu nhận xét mẫu do chưa cấu hình GEMINI_API_KEY');
     process.env.GEMINI_API_KEY = 'fake-key';
   });
 
@@ -112,9 +112,11 @@ describe('[UNIT] aiService.chat', () => {
     await expect(aiService.chat({ message: '   ' })).rejects.toMatchObject({ status: 400 });
   });
 
-  it('TC-AI-011: ném HttpError 500 nếu thiếu GEMINI_API_KEY', async () => {
+  it('TC-AI-011: trả về mẫu chat nếu thiếu GEMINI_API_KEY', async () => {
     delete process.env.GEMINI_API_KEY;
-    await expect(aiService.chat({ message: 'Hello?' })).rejects.toMatchObject({ status: 500 });
+    const result = await aiService.chat({ message: 'Hello?' });
+    expect(typeof result).toBe('string');
+    expect(result).toContain('Chào bạn, đây là tin nhắn mẫu phản hồi từ AI (Do chưa cài đặt GEMINI_API_KEY)');
     process.env.GEMINI_API_KEY = 'fake-key';
   });
 
