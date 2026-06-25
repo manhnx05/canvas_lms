@@ -1,0 +1,16 @@
+# Use this workspace to collaborate
+workspace:
+  id: ca4177ed-f143-418f-82b2-829c1a317fe1
+
+localResources:
+  collections:
+    - ..\CanvasLMS_Postman_Collection.json
+  docs:
+    - ..\README.md
+    - ..\implementation_plan.md
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ..\postman\collections\Canvas LMS API Tests: fa84590d-3b15-48ae-a856-e7569753c75a
