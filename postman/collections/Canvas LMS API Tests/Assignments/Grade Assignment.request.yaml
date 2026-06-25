@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/assignments/ASSIGNMENT_ID_HERE/grade"
+method: POST
+headers:
+  Authorization: Bearer {{token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "submissionId": "SUBMISSION_ID_HERE",
+      "score": 9.5,
+      "feedback": "Bài làm rất tốt, đáng khen!"
+    }
+order: 5000

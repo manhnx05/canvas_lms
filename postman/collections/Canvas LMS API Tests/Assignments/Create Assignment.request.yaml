@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/assignments"
+method: POST
+headers:
+  Authorization: Bearer {{token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "title": "Bài tập về nhà số 1",
+      "courseId": "COURSE_ID_HERE",
+      "courseName": "Tên Khóa Học",
+      "dueDate": "2024-12-31T23:59:59",
+      "starsReward": 5,
+      "type": "writing",
+      "description": "Hãy viết 1 đoạn văn về kỳ nghỉ của em."
+    }
+order: 2000

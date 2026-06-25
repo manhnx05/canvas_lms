@@ -1,0 +1,5 @@
+$kind: collection
+description: Bộ Collection dùng để test toàn bộ các chức năng Backend API của hệ thống Canvas LMS
+variables:
+  baseUrl: http://localhost:3000/api
+  token: ENTER_YOUR_JWT_TOKEN_HERE

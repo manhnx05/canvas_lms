@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/ai/evaluate-submission"
+method: POST
+headers:
+  Authorization: Bearer {{token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "teacherPrompt": "Chấm điểm nội dung học sinh đã trình bày.",
+      "title": "Viết văn tả cảnh",
+      "description": "Tả cảnh trường em",
+      "studentAnswers": {
+        "essay": "Trường em vào mùa thu tuyệt đẹp..."
+      }
+    }
+order: 1000

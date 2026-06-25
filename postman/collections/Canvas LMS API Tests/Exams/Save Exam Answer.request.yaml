@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/exams/EXAM_ID_HERE/attempt"
+method: PUT
+headers:
+  Authorization: Bearer {{token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "attemptId": "ATTEMPT_ID_HERE",
+      "questionId": "QUESTION_ID_HERE",
+      "optionId": "A"
+    }
+order: 5000

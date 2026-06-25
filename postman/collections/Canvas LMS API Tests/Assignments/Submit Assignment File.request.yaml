@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{baseUrl}}/assignments/ASSIGNMENT_ID_HERE/submit"
+method: POST
+headers:
+  Authorization: Bearer {{token}}
+body:
+  type: formdata
+  content:
+    - type: file
+      key: file
+      src:
+        - ""
+    - type: text
+      key: answers
+      value: "{}"
+order: 4000

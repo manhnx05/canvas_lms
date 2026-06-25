@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/conversations"
+method: POST
+headers:
+  Authorization: Bearer {{token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "receiverId": "RECEIVER_USER_ID_HERE",
+      "subject": "Hỏi đáp Khóa học Toán",
+      "content": "Xin chào! Lâu quá không gặp."
+    }
+order: 4000

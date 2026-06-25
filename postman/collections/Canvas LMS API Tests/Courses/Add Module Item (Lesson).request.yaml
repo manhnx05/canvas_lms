@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/courses/COURSE_ID_HERE/modules/MODULE_ID_HERE/items"
+method: POST
+headers:
+  Authorization: Bearer {{token}}
+body:
+  type: formdata
+  content:
+    - type: text
+      key: title
+      value: Tài liệu học tập tuần 1
+    - type: text
+      key: type
+      value: file
+    - type: file
+      key: file
+      src:
+        - ""
+order: 6000

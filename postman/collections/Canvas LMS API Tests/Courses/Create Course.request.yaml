@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/courses"
+method: POST
+headers:
+  Authorization: Bearer {{token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "title": "Toán Học Cơ Bản",
+      "color": "#3498db",
+      "icon": "calculator"
+    }
+order: 2000

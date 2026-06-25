@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/exams/EXAM_ID_HERE/submit"
+method: POST
+headers:
+  Authorization: Bearer {{token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "attemptId": "ATTEMPT_ID_HERE"
+    }
+order: 6000

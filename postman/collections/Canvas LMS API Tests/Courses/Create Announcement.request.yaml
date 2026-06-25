@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/courses/COURSE_ID_HERE/announcements"
+method: POST
+headers:
+  Authorization: Bearer {{token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "title": "Thông báo nghỉ học",
+      "content": "Hôm nay cô có việc bận, các em nghỉ nha!"
+    }
+order: 7000
