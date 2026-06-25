@@ -78,4 +78,3 @@ Dự án được thiết lập hệ thống kiểm thử tự động chặt ch
 - `prisma/`: Định nghĩa lược đồ CSDL và dữ liệu mẫu (Seed).
 
 ---
-*Lưu ý: Dự án đã dọn dẹp các tính năng cũ (như Plickers) để tối ưu hệ thống, nâng cao hiệu năng và tập trung toàn lực vào chức năng chấm bài tự động bằng AI.*
